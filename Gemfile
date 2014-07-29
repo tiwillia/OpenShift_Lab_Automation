@@ -16,8 +16,8 @@ end
 
 group :development, :test do
   gem 'sqlite3'
-  gem 'minitest'
-  gem 'pry'
+  gem 'minitest' # Necessary to bring up the rails console from inside a gear
+  gem 'pry'      # Way helpful in development
   gem 'thor', '= 0.14.6'
 end
 
@@ -33,6 +33,7 @@ group :assets do
   gem 'uglifier', '>= 1.0.3'
 end
 
+# Beautify that app
 gem 'jquery-rails'
 
 # To use ActiveModel has_secure_password
@@ -50,4 +51,17 @@ gem 'jquery-rails'
 # To use debugger
 # gem 'debugger'
 
+# Strong parameters is built into rails 4, so lets use it
+gem 'strong_parameters'
+
+# Gotta talk to openstack somehow
 gem 'openstack'
+
+# This integrates twitter's bootstrap
+gem "therubyracer"
+gem "less-rails" #Sprockets (what Rails 3.1 uses for its asset pipeline) supports LESS
+gem "twitter-bootstrap-rails",
+  :git => 'git://github.com/seyhunak/twitter-bootstrap-rails.git',
+  :branch => 'bootstrap3'
+gem 'jquery-ui-rails'
+
