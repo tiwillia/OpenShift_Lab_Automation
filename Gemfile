@@ -17,6 +17,7 @@ end
 group :development, :test do
   gem 'sqlite3'
   gem 'minitest'
+  gem 'pry'
   gem 'thor', '= 0.14.6'
 end
 
@@ -48,3 +49,5 @@ gem 'jquery-rails'
 
 # To use debugger
 # gem 'debugger'
+
+gem 'openstack'
