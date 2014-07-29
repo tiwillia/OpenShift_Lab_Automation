@@ -19,6 +19,7 @@ ActiveRecord::Schema.define(:version => 20140729184848) do
     t.text     "floating_ip"
     t.text     "internal_ip"
     t.text     "fqdn"
+    t.integer  "project_id"
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
   end
@@ -28,8 +29,8 @@ ActiveRecord::Schema.define(:version => 20140729184848) do
     t.text     "controller"
     t.text     "geo"
     t.text     "username"
+    t.text     "password"
     t.text     "api_url"
-    t.text     "api_key"
     t.text     "auth_tenant"
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
@@ -55,6 +56,7 @@ ActiveRecord::Schema.define(:version => 20140729184848) do
     t.text     "openshift_password"
     t.text     "bind_key"
     t.text     "valid_gear_sizes"
+    t.integer  "lab_id"
     t.datetime "created_at",              :null => false
     t.datetime "updated_at",              :null => false
   end

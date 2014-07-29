@@ -45,38 +45,41 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="#">RailsApp</a>
+        <a class="navbar-brand" href="/">OpenShift Labs</a>
         <div class="navbar-collapse collapse navbar-responsive-collapse">
           <ul class="nav navbar-nav">
-            <li><%= link_to "Link1", "/path1"  %></li>
-            <li><%= link_to "Link2", "/path2"  %></li>
-            <li><%= link_to "Link3", "/path3"  %></li>
+            <li><%= link_to "OpenStack Hosts", "/labs"  %></li>
+            <li><%= link_to "OpenShift Labs", "/projects"  %></li>
           </ul>
         </div>
       </div>
     </div>
 
     <div class="container">
-      <div class="row">
-        <div class="col-lg-9">
-          <%= bootstrap_flash %>
-          <%= yield %>
+      <!-- flash notices -->
+      <% if flash[:success] || flash[:info] || flash[:error] %>
+        <div class="row">
+          <div class="col-md-4">
+            <% if flash[:success] %>
+              <% alert_type = "success"; alert = flash[:success] %>
+            <% elsif flash[:info] %>
+              <% alert_type = "info"; alert = flash[:info] %>
+            <% elsif flash[:error] %>
+              <% alert_type = "danger"; alert = flash[:error] %>
+            <% end %>
+            <div class="alert alert-<%= alert_type %> alert-dismissable">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <strong><%= alert %></strong>
+            </div>
+          </div>
         </div>
-        <div class="col-lg-3">
-          <div class="well sidebar-nav">
-            <h3>Sidebar</h3>
-            <ul class="nav nav-list">
-              <li class="nav-header">Sidebar</li>
-              <li><%= link_to "Link1", "/path1"  %></li>
-              <li><%= link_to "Link2", "/path2"  %></li>
-              <li><%= link_to "Link3", "/path3"  %></li>
-            </ul>
-          </div><!--/.well -->
-        </div><!--/span-->
-      </div><!--/row-->
+      <% end %>
+
+      <%= yield %>
 
       <footer>
-        <p>&copy; Company 2014</p>
+        <br />
+        <%= link_to "Back", :back, :class => "btn btn-default col-md-offset-12" %>
       </footer>
 
     </div> <!-- /container -->

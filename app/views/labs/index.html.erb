@@ -1,0 +1,33 @@
+<div class="col-md-10">
+  <h1>OpenStack Lab Environments</h1>
+</div>
+<div class="col-md-2">
+  <a href="/labs/new" class="btn btn-primary">New Lab</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Name</th>
+      <th>Region</th>
+      <th>API URL</th>
+      <th>Tenant</th>
+      <th>Username</th>
+      <th>Password</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% @labs.each do |lab| %>
+    <tr>
+      <td><a href="/labs/<%= lab.id %>" class="btn btn-default">View</a></td>
+      <td><%= lab.name %></td>
+      <td><%= lab.geo %></td>
+      <td><%= lab.api_url %></td>
+      <td><%= lab.auth_tenant %></td>
+      <td><%= lab.username %></td>
+      <td><%= lab.password %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+

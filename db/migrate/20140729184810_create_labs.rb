@@ -5,8 +5,8 @@ class CreateLabs < ActiveRecord::Migration
       t.text :controller
       t.text :geo
       t.text :username
+      t.text :password
       t.text :api_url
-      t.text :api_key
       t.text :auth_tenant
       t.timestamps
     end

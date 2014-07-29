@@ -1,0 +1,48 @@
+<%= form_for @lab, :html => {:role => "form"} do |f| %>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="form-group">
+        <%= f.label "Name", :class => "control-label" %>
+          <%= f.text_field :name, :class => "form-control", :placeholer => "Lab Environment Name" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Region", :class => "control-label" %><br>
+          <%= f.select :controller, options_for_select([["RDU", "RDU"],["PNQ","PNQ"],["APAC","APAC"],["EMEA","EMEA"]], "RDU"), {}, {:class => "form-control"}  %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Controller Host", :class => "control-label" %>
+          <%= f.text_field :controller, :class => "form-control", :placeholer => "10.10.73.6" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Username", :class => "control-label" %>
+          <%= f.text_field :username, :class => "form-control", :placeholer => "admin" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Password", :class => "control-label" %>
+          <%= f.text_field :password, :class => "form-control", :placeholer => "TODO" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Auth Tenant", :class => "control-label" %>
+          <%= f.text_field :auth_tenant, :class => "form-control", :placeholer => "admin" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "API Auth URL", :class => "control-label" %>
+          <%= f.text_field :api_url, :class => "form-control", :placeholer => "http://10.10.73.6:35357/v2.0/" %>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="well well-small">
+        <h4 class="text-center">All fields required</h4>
+        <p class="lead">
+          <ul>
+            <li>Name can be anything.</li>
+            <li>Controller Host should be an ip or FQDN.</li>
+            <li>Username is the administrative tenant user username.</li>
+            <li>Api Auth URL can be found in auto-generated keystonrc files.</li>
+          </ul>
+        </p>
+      </div>
+    </div><!-- col-md-4 --!>
+  </div> <!-- Row --!>
+  <%= f.submit 'Submit Lab', :class => "btn btn-primary" %>
+<% end %>
