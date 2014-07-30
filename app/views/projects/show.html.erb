@@ -77,6 +77,7 @@
               <td>Type(s)</td>
               <td>Floating IP</td>
               <td>Internal IP</td>
+              <td></td>
             </tr>
           </thead>  
           <tbody>
@@ -86,6 +87,7 @@
                 <td><%= inst.types.join(", ") %></td>
                 <td><%= inst.floating_ip %></td>
                 <td><%= inst.internal_ip %></td>
+                <td><a href="#" class="btn btn-info" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></td>
               </tr>
             <% end %>
           </tbody>
@@ -94,6 +96,12 @@
     </div>
   </div>
   <div class="col-md-2">
-    <a href="/instances/new" class="btn btn-primary">New Instance</a>
+    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newInstance">Create New Instance</a>
   </div>
 </div>
+
+<%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
+<% @project.instances.each do |inst| %>
+  <% next if inst.id.nil? %>
+  <%= render :template => "instances/edit", :locals => {:project_id => @project.id, :inst => inst} %>
+<% end %>

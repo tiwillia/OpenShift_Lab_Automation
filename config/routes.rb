@@ -1,5 +1,6 @@
 RailsApp::Application.routes.draw do
 
+  resources :instances
   resources :projects
   resources :labs
   root :to => 'welcome#index'
