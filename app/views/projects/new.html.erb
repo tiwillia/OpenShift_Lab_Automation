@@ -1,2 +1,103 @@
-<h1>Projects#new</h1>
-<p>Find me in app/views/projects/new.html.erb</p>
+
+<div class="modal fade" id="newProject" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">New Project - OpenShift Lab Environment</h4>
+      </div>
+      <div class="modal-body">
+        <p>Adding a project assumes that there is a tenant (aka project) on the associated openstack lab system already created. You will need to have access to this tenatn/project so that you can enter all of the details about networking, ip addresses, etc below.</p>
+        <%= form_for @lab.projects.new, :html => {:role => "form"} do |f| %>
+          <div class="well">
+            <div class="form-group">
+              <%= f.label "Name", :class => "control-label" %>
+                <%= f.text_field :name, :class => "form-control" %>
+                <p class="help-block">This should be the case-sensitive name of the tenant/project on the OpenStack lab.</p>
+            </div>
+            <div class="form-group">
+              <%= f.label "Domain", :class => "control-label" %>
+                <%= f.text_field :domain, :class => "form-control" %>
+                <p class="help-block">Domain for the openshift environment.</p>
+            </div>
+            <div class="form-group">
+              <%= f.label "Image Name", :class => "control-label" %>
+                <%= f.text_field :image, :class => "form-control" %>
+                <p class="help-block">Name of the image to be used by each instance.</p>
+            </div>
+            <div class="form-group">
+              <%= f.label "Network Name", :class => "control-label" %>
+                <%= f.text_field :network, :class => "form-control" %>
+                <p class="help-block">Name of the network used by the environment. Note that this should already be set up appropriately, with a subnet and connection to the exteral network via a router.</p>
+            </div>
+            <div class="form-group">
+              <%= f.label "Secuirty Group", :class => "control-label" %>
+                <%= f.text_field :security_group, :class => "form-control" %>
+                <p class="help-block">Name of the security group to use for each instance.</p>
+            </div>
+<hr />
+            <div class="form-group">
+              <%= f.label "OpenShift Initial User Username", :class => "control-label" %>
+                <%= f.text_field :openshift_username, :class => "form-control", :value => "admin" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "OpenShift Initial User Password", :class => "control-label" %>
+                <%= f.text_field :openshift_password, :class => "form-control", :value => "redhat" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "Valid Gear Sizes", :class => "control-label" %>
+                <%= f.text_field :valid_gear_sizes, :class => "form-control", :value => "small,medium,large" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "Bind Key", :class => "control-label" %>
+                <%= f.text_field :bind_key, :class => "form-control", :value => "14mtlM+km934L9JiMZ4b5q9Y+ZYC2wb1MeGbR7a/vnVZmRt26nOJOibpzkQpiOJNuAV0MkSahNhQk5b+SQqxRQ==" %>
+            </div>
+<hr />
+            <div class="form-group">
+              <%= f.label "Mcollective Username", :class => "control-label" %>
+                <%= f.text_field :mcollective_username, :class => "form-control", :value => "mcollective" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "Mcollective Password", :class => "control-label" %>
+                <%= f.text_field :mcollective_password, :class => "form-control", :value => "redhat" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "Activemq Admin Password", :class => "control-label" %>
+                <%= f.text_field :activemq_admin_password, :class => "form-control", :value => "redhat" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "Activemq User Password", :class => "control-label" %>
+                <%= f.text_field :activemq_user_password, :class => "form-control", :value => "redhat" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "MongoDB Admin Username", :class => "control-label" %>
+                <%= f.text_field :mongodb_admin_username, :class => "form-control", :value => "admin" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "MongoDB Admin Password", :class => "control-label" %>
+                <%= f.text_field :mongodb_admin_password, :class => "form-control", :value => "redhat" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "MongoDB Username", :class => "control-label" %>
+                <%= f.text_field :mongodb_username, :class => "form-control", :value => "openshift" %>
+            </div>
+            <div class="form-group">
+              <%= f.label "MongoDB Password", :class => "control-label" %>
+                <%= f.text_field :mongodb_password, :class => "form-control", :value => "redhat" %>
+            </div>
+
+
+
+
+
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <%= f.hidden_field :lab_id, :value => lab_id %>
+          <%= f.submit 'Submit', :class => "btn btn-primary" %>
+        <% end %>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

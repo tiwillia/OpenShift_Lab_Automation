@@ -1,2 +1,99 @@
-<h1>Projects#show</h1>
-<p>Find me in app/views/projects/show.html.erb</p>
+<div class="row">
+  <div class="col-md-10">
+    <h1>OpenShift Lab: <%= @project.name %></h1>
+  </div>
+  <div class="col-md-2">
+    <a href="/projects/<%= @project.id %>/edit" class="btn btn-info">Edit</a>
+  </div>
+</div>
+<hr />
+<div class="row">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title text-center">OpenStack Config</h3>
+      </div>
+      <div class="panel-body">
+        <dl class="dl-horizontal">
+          <dt>Tenant Name:</dt>
+          <dd><%= @project.name %></dd>
+          <dt>Domain:</dt>
+          <dd><%= @project.domain %></dd>
+          <dt>Network Name:</dt>
+          <dd><%= @project.network %></dd>
+          <dt>Image Name:</dt>
+          <dd><%= @project.image %></dd>
+          <dt>Security Group:</dt>
+          <dd><%= @project.security_group %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title text-center">Credentials</h3>
+      </div>
+      <div class="panel-body">
+        <dl class="dl-horizontal">
+          <dt>OpenShift Username:</dt>
+          <dd><%= @project.openshift_username %></dd>
+          <dt>OpenShfit Password:</dt>
+          <dd><%= @project.openshift_password %></dd>
+          <dt>Mcollective Username:</dt>
+          <dd><%= @project.mcollective_username %></dd>
+          <dt>Mcollective Password:</dt>
+          <dd><%= @project.mcollective_password %></dd>
+          <dt>Activemq Admin Pass:</dt>
+          <dd><%= @project.activemq_admin_password %></dd>
+          <dt>Activemq User Pass:</dt>
+          <dd><%= @project.activemq_user_password %></dd>
+          <dt>Mongodb Username:</dt>
+          <dd><%= @project.mongodb_username %></dd>
+          <dt>Mongodb Password:</dt>
+          <dd><%= @project.mongodb_password %></dd>
+          <dt>Mongodb Admin User:</dt>
+          <dd><%= @project.mongodb_admin_username %></dd>
+          <dt>Mongodb Admin Pass:</dt>
+          <dd><%= @project.mongodb_admin_password %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+<hr />
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title text-center">Instances</h3>
+      </div>
+      <div class="panel-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <td>Hostname</td>
+              <td>Type(s)</td>
+              <td>Floating IP</td>
+              <td>Internal IP</td>
+            </tr>
+          </thead>  
+          <tbody>
+            <% @project.instances.each do |inst| %>
+              <tr>
+                <td><%= inst.name %></td>
+                <td><%= inst.types.join(", ") %></td>
+                <td><%= inst.floating_ip %></td>
+                <td><%= inst.internal_ip %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <a href="/instances/new" class="btn btn-primary">New Instance</a>
+  </div>
+</div>

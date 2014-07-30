@@ -6,7 +6,7 @@
         <h3 class="panel-title">Details</h3>
       </div>
       <div class="col-md-1">
-        <a href="/labs/<%= @lab.id %>/edit" class="btn btn-primary">Edit</a>
+        <a href="/labs/<%= @lab.id %>/edit" class="btn btn-info">Edit</a>
       </div>
     </div>
   </div>
@@ -30,7 +30,37 @@
   </div>
 </div>
 <br>
-<h2>Projects (OpenShift Lab Environments)</h2>
-<% if @lab.projects.empty? %>
-  <p class="text-center">No Projects exist! Create one!</p>
-<% end %>
+<div class="row">
+  <div class="col-md-10">
+    <h2>Projects (OpenShift Lab Environments)</h2>
+  </div>
+  <div class="col-md-2">
+    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newProject">Create New Project</a>
+  </div>
+</div>
+<div class="panel-group" id="accordian">
+  <% @lab.projects.each do |project| %>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <div class="row">
+            <div class="col-md-6">
+              <a data-toggle="collapse" data-parent="#accordian" href="#collapse<%= project.id%>">
+                <h4><%= project.name %></h4>
+              </a>
+            </div>
+            <div class="col-md-6">
+              <p class="text-right"><a href="/projects/<%= project.id %>" class="btn btn-default">View Project Page</a></p>
+            </div>
+          </div>
+        </h4>
+      </div>
+      <div id="collapse<%= project.id %>" class="panel-collapse collapse">
+        <div class="panel-body">
+          <p class="lead">Instance count: <%= project.instances.count %></p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+<%= render :template => "projects/new", :locals => {:lab_id => @lab.id} %>

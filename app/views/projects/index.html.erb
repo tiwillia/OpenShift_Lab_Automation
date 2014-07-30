@@ -1,2 +1,29 @@
-<h1>Projects#index</h1>
-<p>Find me in app/views/projects/index.html.erb</p>
+<div class="col-md-10">
+  <h1>OpenShift Projects</h1>
+</div>
+<div class="col-md-2">
+  <a href="/projects/new" class="btn btn-primary">New Lab</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Region</th>
+      <th>Name</th>
+      <th>Domain</th>
+      <th># of Instances</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% @projects.each do |pro| %>
+    <tr>
+      <td><a href="/projects/<%= pro.id %>" class="btn btn-default">View</a></td>
+      <td><%= Lab.find(pro.lab_id).geo %></td>
+      <td><%= pro.name %></td>
+      <td><%= pro.domain %></td>
+      <td><%= pro.instances.count %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+
