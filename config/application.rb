@@ -9,6 +9,17 @@ if defined?(Bundler)
   # Bundler.require(:default, :assets, Rails.env)
 end
 
+if ENV['OPENSHIFT_DATA_DIR']
+  config_file_location = ENV['OPENSHIFT_DATA_DIR'] + "/application.yml"
+else
+  config_file_location = "../application.yml"
+end
+
+# This block below adds a global YAML configuration file in config/application.yml
+CONFIG = YAML.load(File.read(File.expand_path(config_file_location, __FILE__)))
+CONFIG.merge! CONFIG.fetch(Rails.env, {})
+CONFIG.symbolize_keys! 
+
 module RailsApp
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.

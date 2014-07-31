@@ -75,6 +75,7 @@ GEM
     minitest (5.1.0)
     multi_json (1.8.2)
     mysql2 (0.3.14)
+    net-ssh (2.8.0)
     openstack (1.1.2)
       json
     pg (0.17.0)
@@ -149,6 +150,7 @@ DEPENDENCIES
   less-rails
   minitest
   mysql2
+  net-ssh
   openstack
   pg
   pry

@@ -1,0 +1,5 @@
+# Configuration goes here in YAML
+# These can be called in code with CONFIG[:key]
+rhsm_username: "rhn-support-KERB"
+rhsm_password: "password"
+rhsm_pool_id: "8a85f9833e1404a9013e3cddf99305e6"

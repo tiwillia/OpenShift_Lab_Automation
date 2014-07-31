@@ -37,6 +37,10 @@
             </div>
 <hr />
             <div class="form-group">
+              <%= f.label "OpenShift Version", :class => "control-label" %><br>
+                <%= f.select :ose_version, options_for_select([["1.2", "1.2"],["2.0","2.0"],["2.1","2.1"]], "2.1"), {}, {:class => "form-control"}  %>
+            </div>
+            <div class="form-group">
               <%= f.label "OpenShift Initial User Username", :class => "control-label" %>
                 <%= f.text_field :openshift_username, :class => "form-control", :value => "admin" %>
             </div>

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140730150736) do
+ActiveRecord::Schema.define(:version => 20140731225352) do
 
   create_table "instances", :force => true do |t|
     t.text     "name"
@@ -20,9 +20,11 @@ ActiveRecord::Schema.define(:version => 20140730150736) do
     t.text     "internal_ip"
     t.text     "fqdn"
     t.integer  "project_id"
-    t.datetime "created_at",    :null => false
-    t.datetime "updated_at",    :null => false
+    t.datetime "created_at",        :null => false
+    t.datetime "updated_at",        :null => false
     t.text     "root_password"
+    t.text     "install_variables"
+    t.string   "gear_size"
   end
 
   create_table "labs", :force => true do |t|
@@ -60,6 +62,7 @@ ActiveRecord::Schema.define(:version => 20140730150736) do
     t.integer  "lab_id"
     t.datetime "created_at",              :null => false
     t.datetime "updated_at",              :null => false
+    t.string   "ose_version"
   end
 
 end

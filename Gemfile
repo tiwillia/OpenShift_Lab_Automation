@@ -65,3 +65,5 @@ gem "twitter-bootstrap-rails",
   :branch => 'bootstrap3'
 gem 'jquery-ui-rails'
 
+# We need to be able to run commands on instances
+gem 'net-ssh'
