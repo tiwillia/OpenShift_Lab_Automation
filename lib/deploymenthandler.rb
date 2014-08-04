@@ -135,8 +135,8 @@ private
     Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 begin..." 
     phase2.each {|i| project.start_one(i.id)}    
     phase3.each {|i| project.start_one(i.id)}    
-    Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 complete, waiting 2 minutes..." 
-    sleep 120
+    Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 complete, waiting 5 minutes..." 
+    sleep 300
     Rails.logger.info "DEPLOYMENTS: Phase 4 begin..." 
     phase4.each {|i| project.start_one(i.id)}    
     Rails.logger.info "DEPLOYMENTS: Phase 4 complete, waiting for completion..." 
@@ -160,7 +160,7 @@ private
    
     Rails.logger.info "DEPLOYMENTS: Deployment complete, running post configure..." 
     ssh = Net::SSH.start(broker_instance.floating_ip, 'root', :password => broker_instance.root_password, :paranoid => false)
-    ssh.exec!("sh /root/openshift.sh actions=post_deploy")
+    ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy")
     Rails.logger.info "DEPLOYMENTS: Deployment complete!"
     ssh.close
 
