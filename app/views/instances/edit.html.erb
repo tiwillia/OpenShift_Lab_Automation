@@ -19,9 +19,17 @@
                 <p class="help-block">Comma-separated list of one or more of: broker,node,activemq,mongodb,datastore,named.</p>
             </div>
             <div class="form-group">
+              <%= f.label "Flavor", :class => "control-label" %>
+                <%= f.select :flavor, options_for_select(@flavors, inst.flavor), {}, {:class => "form-control"} %>
+            </div>
+            <div class="form-group">
               <%= f.label "Floating IP", :class => "control-label" %>
-                <%= f.text_field :floating_ip, :class => "form-control" %>
+                <%= f.select :floating_ip, options_for_select(@floating_ips, inst.floating_ip), {}, {:class => "form-control"} %>
                 <p class="help-block">Externally accessible IP for this instance. Must be allocated to the openstack tenant.</p>
+            </div>
+            <div class="form-group">
+              <%= f.label "Image", :class => "control-label" %>
+                <%= f.select :image, options_for_select(@images, inst.image), {}, {:class => "form-control"} %>
             </div>
             <div class="form-group">
               <%= f.label "Root Password", :class => "control-label" %>

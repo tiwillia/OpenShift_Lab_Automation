@@ -36,6 +36,11 @@ class ProjectsController < ApplicationController
 
   def show
     @project = Project.find(params[:id])
+    @images = @project.images
+    @floating_ips = @project.floating_ips
+    @flavors = @project.flavors
+    @ready, @reason = @project.ready?
+    
   end
 
   def destroy
@@ -47,6 +52,48 @@ class ProjectsController < ApplicationController
       flash[:error] = "Project could not be removed."
       redirect_to :back
     end
+  end
+
+  def start_all
+    @project = Project.find(params[:id])
+    @project.start_all
+    flash[:success] = "Project queued to start."
+    redirect_to project_path(@project)
+  end
+
+  def stop_all
+    @project = Project.find(params[:id])
+    @project.stop_all
+    flash[:success] = "Project stopped."
+    redirect_to project_path(@project)
+  end
+  
+  def start_one
+    @project = Project.find(params[:id])
+    @project.start_one(params[:instance_id])
+    flash[:success] = "Instance started."
+    redirect_to project_path(@project)
+  end
+  
+  def restart_all
+    @project = Project.find(params[:id])
+    @project.start_all
+    flash[:success] = "Project queued to start."
+    redirect_to project_path(@project)
+  end
+
+  def stop_one
+    @project = Project.find(params[:id])
+    @project.start_all
+    flash[:success] = "Project queued to start."
+    redirect_to project_path(@project)
+  end
+
+  def restart_one
+    @project = Project.find(params[:id])
+    @project.start_all
+    flash[:success] = "Project queued to start."
+    redirect_to project_path(@project)
   end
 
 private

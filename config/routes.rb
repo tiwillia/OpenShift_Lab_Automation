@@ -2,6 +2,10 @@ RailsApp::Application.routes.draw do
 
   resources :instances
   resources :projects
+  match 'projects/:id/start' => 'projects#start_all'
+  match 'projects/:id/stop' => 'projects#start_all'
+  match 'instances/:id/start' => 'projects#start_one(:id)'
+  match 'instances/:id/stop' => 'projects#stop_one(:id)'
   resources :labs
   root :to => 'welcome#index'
 

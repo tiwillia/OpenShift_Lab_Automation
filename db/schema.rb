@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140731225352) do
+ActiveRecord::Schema.define(:version => 20140801152851) do
 
   create_table "instances", :force => true do |t|
     t.text     "name"
@@ -25,6 +25,8 @@ ActiveRecord::Schema.define(:version => 20140731225352) do
     t.text     "root_password"
     t.text     "install_variables"
     t.string   "gear_size"
+    t.string   "flavor"
+    t.string   "image"
   end
 
   create_table "labs", :force => true do |t|
@@ -42,7 +44,6 @@ ActiveRecord::Schema.define(:version => 20140731225352) do
   create_table "projects", :force => true do |t|
     t.text     "name"
     t.text     "network"
-    t.text     "image"
     t.text     "security_group"
     t.text     "domain"
     t.text     "floating_ips"

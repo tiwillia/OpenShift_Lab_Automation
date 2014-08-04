@@ -8,8 +8,12 @@ class Lab < ActiveRecord::Base
     ostack.authok?
   end
 
-  def get_connection(tenant = self.auth_tenant)
+  def get_compute(tenant = self.auth_tenant)
     OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => tenant, :service_type => "compute"})
+  end
+
+  def get_neutron(tenant = self.auth_tenant)
+    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => tenant, :service_type => "network"})
   end
 
 end

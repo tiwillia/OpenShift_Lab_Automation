@@ -55,14 +55,18 @@ EOF
     if self.types.include?("broker") || self.types.include?("named") || self.types.include?("activemq") || self.types.include?("mongodb")
       cinit = cinit + <<EOF
 - subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms
-- yum install openshift-enterprise-release
-EOF
-    else
-      cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms
-- yum install openshift-enterprise-release
 EOF
     end
+    
+    if self.types.include?("node")
+      cinit = cinit + <<EOF
+- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms
+EOF
+    end
+
+    cinit = cinit + <<EOF
+- yum install openshift-enterprise-release -y
+EOF
 
     # Validate and fix repository priorities as needed
     if self.types.include?("node")
@@ -88,7 +92,8 @@ EOF
 EOF
 
     # Add all variables generated for install script
-    generate_variables.each do |key,value|
+    vars = generate_variables
+    vars.each do |key,value|
       cinit = cinit + <<EOF
 - export #{key}="#{value}"
 EOF
@@ -96,7 +101,8 @@ EOF
 
     # Run the script! Woo!
     cinit = cinit + <<EOF
-- sh /root/openshift.sh
+- echo "STARTED" > /root/.install_tracker
+- sh /root/openshift.sh &> /root/.install_log
 EOF
 
     # Do some extra jazz requried for nodes
@@ -120,13 +126,14 @@ EOF
     
     # Reboot all systems after install
     cinit = cinit + <<EOF
+- echo "DONE" > /root/.install_tracker
 - reboot
 EOF
 
-    self.cloud_init = cinit
+    cinit
   end 
  
-  private
+#  private
 
   # Create FQDN
   def determine_fqdn
@@ -146,11 +153,6 @@ EOF
       # CONF_ACTIONS=do_all_actions,configure_datastore_add_replicants
       # CONF_DOMAIN="example.com"
       # CONF_HOSTS_DOMAIN="hosts.example.com"
-      # CONF_BROKER_HOSTNAME="broker.example.com"
-      # CONF_NODE_HOSTNAME="node.example.com"
-      # CONF_NAMED_HOSTNAME="ns1.example.com"
-      # CONF_ACTIVEMQ_HOSTNAME="activemq.example.com"
-      # CONF_DATASTORE_HOSTNAME="datastore.example.com"
       # CONF_NAMED_ENTRIES="broker:192.168.0.1,node:192.168.0.2"
       # CONF_NAMED_IP_ADDR=10.10.10.10
       # CONF_BIND_KEY=""
@@ -192,7 +194,10 @@ EOF
     variables = { :CONF_DOMAIN => project_details[:domain],
                   :CONF_NAMED_IP_ADDR => project_details[:named_ip],
                   :CONF_NAMED_HOSTNAME => project_details[:named_hostname],
-                  :CONF_NAMED_ENTRIES => project_details[:named_entries].join(","),
+                  :CONF_DATASTORE_HOSTNAME => project_details[:datastore_replicants].first,
+                  :CONF_ACTIVEMQ_HOSTNAME => project_details[:activemq_replicants].first,
+                  :CONF_BROKER_HOSTNAME => project_details[:broker_hostname],
+                  :CONF_NODE_HOSTNAME => project_details[:node_hostname],
                   :CONF_INSTALL_COMPONENTS => self.types.join(","),
                   :CONF_INSTALL_METHOD => "none",
                   :CONF_KEEP_HOSTNAME => "true",
@@ -207,7 +212,11 @@ EOF
                   :CONF_OPENSHIFT_USER1 => project_details[:openshift_username],
                   :CONF_OPENSHIFT_PASSWORD1 => project_details[:openshift_password],
                   :CONF_BIND_KEY => project_details[:bind_key] }
-   
+ 
+    if self.types.include?("named")
+      variables[:CONF_NAMED_ENTRIES] = project_details[:named_entries].join(",")
+    end
+ 
     if self.types.include?("node")
       variables[:CONF_VALID_GEAR_SIZES] = self.gear_size
     else
@@ -217,7 +226,11 @@ EOF
     if project_details[:datastore_replicants].count == 1 || !self.types.include?("datastore")
       variables[:CONF_ACTIONS] = "do_all_actions"
     else
-      variables[:CONF_ACTIONS] = "do_all_actions,configure_datastore_add_replicants"
+      if self.fqdn == project_details[:datastore_replicants].first
+        variables[:CONF_ACTIONS] = "do_all_actions,configure_datastore_add_replicants" 
+      else
+        variables[:CONF_ACTIONS] = "do_all_actions"
+      end
     end
 
     if project_details[:datastore_replicants].count > 2

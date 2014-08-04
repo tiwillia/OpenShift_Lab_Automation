@@ -6,6 +6,80 @@
     <a href="/projects/<%= @project.id %>/edit" class="btn btn-info">Edit</a>
   </div>
 </div>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title text-center">
+      <% if @ready %>
+        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Ready for deployment!</span>
+    </h3>
+  </div>
+</div>
+      <% else %>
+        <span class="text-danger"><span class="glyphicon glyphicon-remove"></span> Not ready for deployment.</span>
+    </h3>
+  </div>
+  <div class="panel-body">
+    <%= @reason %>
+  </div>
+</div>
+      <% end %>
+<hr />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title text-center">Instances</h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <td>Hostname</td>
+          <td>Type(s)</td>
+          <td>Floating IP</td>
+          <td>Root Password</td>
+          <td>Image</td>
+          <td>Flavor</td>
+          <td>Gear Size</td>
+          <td></td>
+        </tr>
+      </thead>  
+      <tbody>
+        <% instances = @project.instances.sort_by{|i| i.name } %>
+        <% instances.each do |inst| %>
+          <tr>
+            <td><%= inst.name %></td>
+            <td><%= inst.types.join(", ") %></td>
+            <td><%= inst.floating_ip %></td>
+            <td><%= inst.root_password %></td>
+            <td><%= inst.image %></td>
+            <td><%= inst.flavor %></td>
+            <td><%= inst.gear_size if inst.types.include?("node") %></td>
+            <td>
+              <div class="dropdown">
+                <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                <li><a href="#">Start</a></li>
+                <li><a href="#">Stop</a></li>
+                <li><a href="#">Restart</a></li>
+                <hr />
+                <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
+                <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Delete</a></li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <div class="col-md-6">
+    <div class="btn-group">
+    <a href="/projects/<%= @project.id %>/start_all" class="btn btn-success">Start All</a>
+    <a href="/projects/<%= @project.id %>/stop_all" class="btn btn-danger">Stop All</a>
+    <a href="/projects/<%= @project.id %>/restart_all" class="btn btn-warning">Restart All</a>
+    </div>
+  </div>
+  <div class="col-md-4"></div><div class="col-md-2"><a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newInstance">Create New Instance</a></div>
+  </div>
+</div>
 <hr />
 <div class="row">
   <div class="col-md-6">
@@ -21,8 +95,6 @@
           <dd><%= @project.domain %></dd>
           <dt>Network Name:</dt>
           <dd><%= @project.network %></dd>
-          <dt>Image Name:</dt>
-          <dd><%= @project.image %></dd>
           <dt>Security Group:</dt>
           <dd><%= @project.security_group %></dd>
         </dl>
@@ -59,44 +131,6 @@
         </dl>
       </div>
     </div>
-  </div>
-</div>
-<hr />
-<div class="row">
-  <div class="col-md-2"></div>
-  <div class="col-md-8">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title text-center">Instances</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <td>Hostname</td>
-              <td>Type(s)</td>
-              <td>Floating IP</td>
-              <td>Internal IP</td>
-              <td></td>
-            </tr>
-          </thead>  
-          <tbody>
-            <% @project.instances.each do |inst| %>
-              <tr>
-                <td><%= inst.name %></td>
-                <td><%= inst.types.join(", ") %></td>
-                <td><%= inst.floating_ip %></td>
-                <td><%= inst.internal_ip %></td>
-                <td><a href="#" class="btn btn-info" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newInstance">Create New Instance</a>
   </div>
 </div>
 
