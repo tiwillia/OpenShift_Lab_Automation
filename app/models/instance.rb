@@ -95,7 +95,7 @@ EOF
     vars = generate_variables
     vars.each do |key,value|
       cinit = cinit + <<EOF
-- export #{key}="#{value}" >> /root/.install_variables
+- echo 'export #{key}="#{value}"' >> /root/.install_variables
 EOF
     end
     cinit = cinit + <<EOF
