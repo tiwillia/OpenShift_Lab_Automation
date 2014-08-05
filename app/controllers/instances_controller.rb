@@ -12,7 +12,9 @@ class InstancesController < ApplicationController
       flash[:success] = "Instance Successfully created."
       redirect_to :back
     else
-      flash[:error] = "Instance could not be created."
+      errors = []
+      errors = @instance.errors.full_messages
+      flash[:error] = errors.join(", ")
       redirect_to :back
     end 
   end
@@ -29,7 +31,8 @@ class InstancesController < ApplicationController
       flash[:success] = "Instance Successfully updated."
       redirect_to :back
     else
-      flash[:error] = "Instance could not be updated."
+      errors = @instance.errors.full_messages
+      flash[:error] = errors.join(", ")
       redirect_to :back
     end  
   end
@@ -43,6 +46,36 @@ class InstancesController < ApplicationController
       flash[:error] = "Instance could not be removed."
       redirect_to :back
     end 
+  end
+
+  def start
+    @instance = Instance.find(params[:id])
+    if @instance.start
+      flash[:success] = "Instance started!"
+    else
+      flash[:error] = "Instance did not start."
+    end
+    redirect_to :back
+  end
+
+  def stop
+    @instance = Instance.find(params[:id])
+    if @instance.stop
+      flash[:success] = "Instance stopped!"
+    else
+      flash[:error] = "Instance did not stop."
+    end
+    redirect_to :back
+  end
+
+  def restart
+    @instance = Instance.find(params[:id])
+    if @instance.restart
+      flash[:success] = "Instance restarted!"
+    else
+      flash[:error] = "Instance did not restart."
+    end
+    redirect_to :back
   end
 
 private

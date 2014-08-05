@@ -57,9 +57,9 @@
               <div class="dropdown">
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                <li><a href="#">Start</a></li>
-                <li><a href="#">Stop</a></li>
-                <li><a href="#">Restart</a></li>
+                <li><a href="/instances/<%= inst.id %>/start">Start</a></li>
+                <li><a href="/instances/<%= inst.id %>/stop">Stop</a></li>
+                <li><a href="/instances/<%= inst.id %>/restart">Restart</a></li>
                 <hr />
                 <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
                 <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Delete</a></li>

@@ -6,6 +6,8 @@ class Project < ActiveRecord::Base
   belongs_to :lab
   has_many :instances
 
+  validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
+
   def start_all
     DEPLOYMENT_HANDLER.enqueue({:action => "start", :instances => self.instances, :project => self})
   end
@@ -14,88 +16,11 @@ class Project < ActiveRecord::Base
     DEPLOYMENT_HANDLER.enqueue({:action => "stop", :instances => self.instances, :project => self})
   end
 
-  def start_one(id)
-    # Get the connection and isntance
-    c = get_connection
-    q = get_connection("neutron")
-    inst = Instance.find(id)
-
-    # Get the image id
-    image_id = c.images.select {|i| i[:name] == inst.image}.first[:id]
-    if image_id.nil?
-      Rails.logger.error "No image provided for instance: #{inst.fqdn} in project: #{self.name}."
-      return false
-    end
-
-    # Get the flavor id
-    flavor_id = c.flavors.select {|i| i[:name] == inst.flavor}.first[:id]
-    if flavor_id.nil?
-      Rails.logger.error "No flavor provided for instance: #{inst.fqdn} in project: #{self.name}."
-      return false
-    end
-
-    # Get the network id
-    network_id = q.networks.select {|n| n.name == self.network}.first.id
-    if network_id.nil?
-      Rails.logger.error "No network provided for instance: #{inst.fqdn} in project: #{self.name}."
-      return false
-    end
-
-    # Get the floating ip id
-    floating_ip_id = c.floating_ips.select {|f| f.ip == inst.floating_ip}.first.id
-
-    # Get the security group
-    sec_grp = self.security_group
-
-    # Encode the cloud_init data
-    cloud_init = Base64.encode64(inst.cloud_init)
-
-    tries = 3
-    begin
-      server = c.create_server(:name => inst.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
-    rescue => e
-      tries -= 1
-      if tries > 0
-        retry
-      else
-        Rails.logger.error "Tried to start #{inst.fqdn} 3 times, failing each time. Giving up..."
-        Rails.logger.error "Message: #{e.message}"
-        Rails.logger.error "Backtrace: #{e.backtrace}"
-        return false
-      end
-    end
-
-    server_id = server.id
-    server_status = server.status
-    until server_status == "ACTIVE"
-      Rails.logger.info "Waiting for #{inst.fqdn} to become active. Current status is \"#{server.status}\""
-      sleep 3
-      server_status = c.get_server(server.id).status
-    end
-    c.attach_floating_ip({:server_id => server_id, :ip_id => floating_ip_id})
-    
-    true 
-    
-  end
-
-  def stop_one(id)
-    c = get_connection
-    inst = Instance.find(id) 
-    s = c.servers.select {|s| s[:name] == inst.name}.first
-    server = c.get_server(s[:id])
-    server.delete! 
-  end
-
   def restart_all
     start_all
     stop_all
   end
   
-  def restart_one(id)
-    start_one(id)
-    stop_one(id)
-  end
-
   def details
     return nil if not self.ready?
     
@@ -208,8 +133,6 @@ class Project < ActiveRecord::Base
     ip_a
   end
 
-private
-  
   def get_connection(type = "compute")
     if type == "compute"
       Lab.find(self.lab_id).get_compute(self.name)

@@ -14,7 +14,8 @@ class ProjectsController < ApplicationController
       flash[:success] = "Project successfully created."
       redirect_to project_path(@project)
     else
-      flash[:error] = "Project could not be created."
+      errors = @project.errors.full_messages
+      flash[:error] = errors.join(", ")
       redirect_to :back
     end
   end
@@ -29,7 +30,8 @@ class ProjectsController < ApplicationController
       flash[:success] = "Project successfully updated."
       redirect_to project_path(@project)
     else
-      flash[:error] = "Project could not be updated."
+      errors = @project.errors.full_messages
+      flash[:error] = errors.join(", ")
       redirect_to :back
     end
   end

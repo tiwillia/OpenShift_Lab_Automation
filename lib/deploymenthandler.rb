@@ -132,16 +132,16 @@ private
     Rails.logger.info "DEPLOYMENTS: Phase2: #{phase2}" 
     Rails.logger.info "DEPLOYMENTS: Phase3: #{phase3}" 
     Rails.logger.info "DEPLOYMENTS: Phase4: #{phase4}" 
-    phase1.each {|i| raise "Starting #{i.fqdn} failed" if not project.start_one(i.id) }   
+    phase1.each {|i| raise "Starting #{i.fqdn} failed" if not i.start }   
     Rails.logger.info "DEPLOYMENTS: Phase one started, waiting 2 minutes..." 
     sleep 120 
     Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 begin..." 
-    phase2.each {|i| project.start_one(i.id)}    
-    phase3.each {|i| project.start_one(i.id)}    
+    phase2.each {|i| i.start}    
+    phase3.each {|i| i.start}    
     Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
     Rails.logger.info "DEPLOYMENTS: Phase 4 begin..." 
-    phase4.each {|i| project.start_one(i.id)}    
+    phase4.each {|i| i.start}    
     Rails.logger.info "DEPLOYMENTS: Phase 4 complete, waiting for completion..." 
 
     sleep 30
@@ -185,7 +185,7 @@ private
 
   def destroy_deployment(project)
     project.instances.each do |inst|
-      project.stop_one(inst.id)
+      inst.stop
     end
   end
 

@@ -4,8 +4,10 @@ RailsApp::Application.routes.draw do
   resources :projects
   match 'projects/:id/start' => 'projects#start_all'
   match 'projects/:id/stop' => 'projects#stop_all'
-  match 'instances/:id/start' => 'projects#start_one(:id)'
-  match 'instances/:id/stop' => 'projects#stop_one(:id)'
+  match 'projects/:id/restart' => 'projects#restart_all'
+  match 'instances/:id/start' => 'instances#start'
+  match 'instances/:id/stop' => 'instances#stop'
+  match 'instances/:id/restart' => 'instances#restart'
   resources :labs
   root :to => 'welcome#index'
 

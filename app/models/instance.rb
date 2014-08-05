@@ -8,6 +8,90 @@ class Instance < ActiveRecord::Base
 
   before_save :determine_fqdn
 
+  validates :name, :floating_ip, :root_password, :flavor, :image, :project, presence: true
+  validates :root_password, length: { minimum: 3 }
+  validate :types_check
+
+  def start
+    # Get the connection and isntance
+    p = Project.find(self.project_id)
+    c = p.get_connection
+    q = p.get_connection("neutron")
+
+    # Get the image id
+    image_id = c.images.select {|i| i[:name] == self.image}.first[:id]
+    if image_id.nil?
+      Rails.logger.error "No image provided for instance: #{self.fqdn} in project: #{p.name}."
+      return false
+    end
+
+    # Get the flavor id
+    flavor_id = c.flavors.select {|i| i[:name] == self.flavor}.first[:id]
+    if flavor_id.nil?
+      Rails.logger.error "No flavor provided for instance: #{self.fqdn} in project: #{p.name}."
+      return false
+    end
+
+    # Get the network id
+    network_id = q.networks.select {|n| n.name == p.network}.first.id
+    if network_id.nil?
+      Rails.logger.error "No network provided for instance: #{self.fqdn} in project: #{p.name}."
+      return false
+    end
+
+    # Get the floating ip id
+    floating_ip_id = c.floating_ips.select {|f| f.ip == self.floating_ip}.first.id
+
+    # Get the security group
+    sec_grp = p.security_group
+
+    # Encode the cloud_init data
+    cloud_init = Base64.encode64(self.cloud_init)
+
+    tries = 3
+    begin
+      server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
+    rescue => e
+      tries -= 1
+      if tries > 0
+        retry
+      else
+        Rails.logger.error "Tried to start #{self.fqdn} 3 times, failing each time. Giving up..."
+        Rails.logger.error "Message: #{e.message}"
+        Rails.logger.error "Backtrace: #{e.backtrace}"
+        return false
+      end
+    end
+
+    server_id = server.id
+    server_status = server.status
+    until server_status == "ACTIVE"
+      Rails.logger.info "Waiting for #{self.fqdn} to become active. Current status is \"#{server.status}\""
+      sleep 3
+      server_status = c.get_server(server.id).status
+    end
+    c.attach_floating_ip({:server_id => server_id, :ip_id => floating_ip_id})
+
+    true
+  
+  end
+
+  def stop
+    p = Project.find(self.project_id)
+    c = p.get_connection
+    s = c.servers.select {|s| s[:name] == self.name}.first
+    server = c.get_server(s[:id])
+    server.delete!
+  end
+
+  def restart
+    if stop
+      start
+    else
+      false
+    end
+  end
+
   # Generate cloudinit details 
   def cloud_init
 
@@ -136,14 +220,20 @@ EOF
     cinit
   end 
  
-#  private
+  private
 
   # Create FQDN
   def determine_fqdn
     fqdn = self.name + "." + Project.find(self.project_id).domain
     self.fqdn = fqdn
   end
- 
+
+  def types_check
+    self.types = types.map {|t| t.downcase}
+    self.types.each do |t|
+      errors.add(:types, "#{t} is not a valid type") unless CONFIG[:types].include? t
+    end
+  end 
 
   # Generate Installation script variables
   def generate_variables

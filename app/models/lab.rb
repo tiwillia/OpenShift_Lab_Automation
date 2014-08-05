@@ -3,6 +3,8 @@ class Lab < ActiveRecord::Base
 
   has_many :projects
 
+  validates :name,:controller,:username,:password,:api_url,:auth_tenant, presence: true
+
   def alive?
     ostack = get_connection
     ostack.authok?

@@ -14,7 +14,8 @@ class LabsController < ApplicationController
       flash[:success] = "Lab #{new_lab_params[:name]} created."
       redirect_to lab_path(@lab)
     else
-      flash[:error] = "Lab could not be created."
+      errors = @lab.errors.full_messages
+      flash[:error] = errors.join(", ")
       redirect_to new_lab_path
     end
   end
@@ -29,7 +30,8 @@ class LabsController < ApplicationController
       flash[:success] = "Lab #{edit_lab_params[:name]} successfully modified."
       redirect_to lab_path(@lab)
     else
-      flash[:error] = "Lab could not be modified."
+      errors = @lab.errors.full_messages
+      flash[:error] = errors.join(", ")
       redirect_to new_lab_path
     end
   end
