@@ -132,7 +132,7 @@ private
     Rails.logger.info "DEPLOYMENTS: Phase2: #{phase2}" 
     Rails.logger.info "DEPLOYMENTS: Phase3: #{phase3}" 
     Rails.logger.info "DEPLOYMENTS: Phase4: #{phase4}" 
-    phase1.each {|i| raise "Starting #{i.fqdn} failed" if not i.start }   
+    phase1.each {|i| i.start }   
     Rails.logger.info "DEPLOYMENTS: Phase one started, waiting 2 minutes..." 
     sleep 120 
     Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 begin..." 
@@ -151,14 +151,16 @@ private
     all_complete = false 
     complete_instances = []
 
+    # Wait for all instances to complete
     until all_complete do
       project.instances.each do |inst|
         # Close the ssh sesion each time, as the host will likely reboot.
+        result = ""
         until result == "DONE"
-          sleep 120
           ssh = ssh_session(inst)
           result = ssh.exec!("cat /root/.install_tracker").chomp
           ssh.close
+          sleep 120 unless result == "DONE"
         end
         complete_instances << inst
         Rails.logger.info "DEPLOYMENTS: #{inst.fqdn} complete!"
@@ -168,19 +170,58 @@ private
       end
     end
 
-    if defined?(datastore_instance)
+    # Datastore replicant configuration
+    if datastore_instance.class == Instance
       Rails.logger.info "DEPLOYMENTS: Configuring replica set..."
-      ssh = ssh_session(datastore_instance)
-      ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=configure_datastore_add_replicants >> /root/.install_log")
-      ssh.close
-      Rails.logger.info "DEPLOYMENTS: Datastore replicas configured."
+      replicants_complete = false
+      tries = 0
+      until replicants_complete || tries > 5 do
+        tries += 1
+        ssh = ssh_session(datastore_instance)
+        ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=configure_datastore_add_replicants >> /root/.install_log")
+        exit_code = ssh.exec!("echo $?").chomp
+        ssh.close
+        if exit_code == "0"
+          replicants_complete = true
+        else
+          Rails.logger.error "DEPLOYMENTS: Replica set configuration failed, trying again..."
+          sleep 30
+        end
+      end
+      if replicants_complete
+        Rails.logger.info "DEPLOYMENTS: Datastore replicas configured."
+      else
+        Rails.logger.error "DEPLOYMENTS: Could not configure datstore after #{tries} tries. Giving up."
+      end
     end
 
-    Rails.logger.info "DEPLOYMENTS: Deployment complete, running post configure..." 
-    ssh = ssh_session(broker_instance)
-    ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy >> /root/.install_log")
+    # Post deployment script
+    if project.ose_version =~ /2\.[1,2,3]/
+      Rails.logger.info "DEPLOYMENTS: Running post deploy..."
+      post_deploy_complete = false
+      tries = 0
+      until post_deploy_complete || tries > 5 do
+        tries += 1
+        ssh = ssh_session(broker_instance)
+        ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy >> /root/.install_log")
+        exit_code = ssh.exec!("echo $?").chomp
+        ssh.close
+        if exit_code == "0"
+          post_deploy_complete = true
+        else
+          Rails.logger.error "DEPLOYMENTS: Post deployment failed, trying again..."
+          sleep 30
+        end
+      end
+      if post_deploy_complete
+        Rails.logger.info "DEPLOYMENTS: Post deployment complete."
+      else
+        Rails.logger.error "DEPLOYMENTS: Could not post deploy after #{tries} tries. Giving up."
+      end
+    end
+    
     Rails.logger.info "DEPLOYMENTS: Deployment complete!"
-    ssh.close
+
   end
 
   def destroy_deployment(project)
@@ -203,7 +244,7 @@ private
     rescue => e
       tries += 1
       if tries < 6
-        Rails.logger.error "DEPLOYMENTS: SSH failed on attempt ##{tries} with #{e.class}. Retrying..."
+        Rails.logger.error "DEPLOYMENTS: SSH to #{instance.fqdn} failed on attempt ##{tries} with #{e.class}. Retrying..."
         sleep 10
         retry
       else

@@ -314,7 +314,7 @@ EOF
     end
  
     if self.types.include?("node")
-      variables[:CONF_NODE_PRIFLE] = self.gear_size
+      variables[:CONF_NODE_PROFILE] = self.gear_size
     end
 
 

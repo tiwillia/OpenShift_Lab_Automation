@@ -58,7 +58,7 @@
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
                 <li><a href="/instances/<%= inst.id %>/start">Start</a></li>
-                <li><a href="/instances/<%= inst.id %>/stop">Stop</a></li>
+                <li><a href="/instances/<%= inst.id %>/stop" data-confirm="Are you sure you want to stop all <%= inst.fqdn %>?">Stop</a></li>
                 <li><a href="/instances/<%= inst.id %>/restart">Restart</a></li>
                 <hr />
                 <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
@@ -73,7 +73,7 @@
   <div class="col-md-6">
     <div class="btn-group">
     <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Start All</a>
-    <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger">Stop All</a>
+    <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger" data-confirm="Are you sure you want to stop all <%= @project.name%> instances?">Stop All</a>
     <a href="/projects/<%= @project.id %>/restart" class="btn btn-warning">Restart All</a>
     </div>
   </div>

@@ -70,32 +70,16 @@ class ProjectsController < ApplicationController
     redirect_to project_path(@project)
   end
   
-  def start_one
-    @project = Project.find(params[:id])
-    @project.start_one(params[:instance_id])
-    flash[:success] = "Instance started."
-    redirect_to project_path(@project)
-  end
-  
   def restart_all
     @project = Project.find(params[:id])
-    @project.start_all
-    flash[:success] = "Project queued to start."
-    redirect_to project_path(@project)
-  end
-
-  def stop_one
-    @project = Project.find(params[:id])
-    @project.start_all
-    flash[:success] = "Project queued to start."
-    redirect_to project_path(@project)
-  end
-
-  def restart_one
-    @project = Project.find(params[:id])
-    @project.start_all
-    flash[:success] = "Project queued to start."
-    redirect_to project_path(@project)
+    if @project.stop_all
+      @project.start_all
+      flash[:success] = "Project destroyed and queued to start."
+      redirect_to project_path(@project)
+    else
+      flash[:error] = "Project could not be restarted."
+      redirect_to project_path(@project)
+    end
   end
 
 private
