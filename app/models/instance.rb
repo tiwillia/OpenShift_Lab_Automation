@@ -190,6 +190,7 @@ EOF
       # CONF_VALID_GEAR_SIZES="small"
       # CONF_BROKER_KRB_SERVICE_NAME=""
       # CONF_BROKER_KRB_AUTH_REALMS=""
+      # CONF_NODE_PROFILE
 
     variables = Hash.new
     project_details = Project.find(self.project_id).details
@@ -214,31 +215,25 @@ EOF
                   :CONF_ACTIVEMQ_AMQ_USER_PASSWORD => project_details[:activemq_user_password],
                   :CONF_OPENSHIFT_USER1 => project_details[:openshift_username],
                   :CONF_OPENSHIFT_PASSWORD1 => project_details[:openshift_password],
-                  :CONF_BIND_KEY => project_details[:bind_key] }
+                  :CONF_BIND_KEY => project_details[:bind_key], 
+                  :CONF_VALID_GEAR_SIZES => project_details[:valid_gear_sizes].join(","),
+                  :CONF_ACTIONS => "do_all_actions"}
  
     if self.types.include?("named")
       variables[:CONF_NAMED_ENTRIES] = project_details[:named_entries].join(",")
     end
  
     if self.types.include?("node")
-      variables[:CONF_VALID_GEAR_SIZES] = self.gear_size
-    else
-      variables[:CONF_VALID_GEAR_SIZES] = project_details[:valid_gear_sizes].join(",")
+      variables[:CONF_NODE_PRIFLE] = self.gear_size
     end
-     
-    if project_details[:datastore_replicants].count == 1 || !self.types.include?("datastore")
-      variables[:CONF_ACTIONS] = "do_all_actions"
-    else
-      if self.fqdn == project_details[:datastore_replicants].first
-        variables[:CONF_ACTIONS] = "do_all_actions,configure_datastore_add_replicants" 
-      else
-        variables[:CONF_ACTIONS] = "do_all_actions"
-      end
-    end
+
 
     if project_details[:datastore_replicants].count > 2
       variables[:CONF_DATASTORE_REPLICANTS] = project_details[:datastore_replicants].join(",")
+      variables[:CONF_MONGODB_KEY] = "lolMongodbIsWack"
+      variables[:CONF_MONGODB_REPLSET] = "ose"
     end
+
     if project_details[:activemq_replicants].count > 1
       variables[:CONF_ACTIVEMQ_REPLICANTS] = project_details[:activemq_replicants].join(",")
     end

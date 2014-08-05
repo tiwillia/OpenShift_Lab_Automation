@@ -80,10 +80,10 @@ class Project < ActiveRecord::Base
 
   def stop_one(id)
     c = get_connection
-    inst = Instance.find(id)
-    
+    inst = Instance.find(id) 
     s = c.servers.select {|s| s[:name] == inst.name}.first
-    s.delete! 
+    server = c.get_server(s[:id])
+    server.delete! 
   end
 
   def restart_all

@@ -56,32 +56,32 @@ private
     case work[:action]
 
     when "start"
-      Rails.logger.info "DEPLOYMENTS: Starting deployment for #{project.name}"
+      Rails.logger.info "DEPLOYMENTS: Starting deployment #{project.name}"
       begin
-        Rails.logger.info "DEPLOYMENTS: Started deployment for #{project.name}"
+        Rails.logger.info "DEPLOYMENTS: Started deployment #{project.name}"
         begin_deployment(project)
       rescue => e
-        Rails.logger.error "DEPLOYMENTS: ERROR could not start deployment for #{e.message}"
+        Rails.logger.error "DEPLOYMENTS: ERROR could not start deployment #{e.message}"
         Rails.logger.error "DEPLOYMENTS: #{e.backtrace}"
       end
 
     when "stop"
-      Rails.logger.info "DEPLOYMENTS: Stopping deployment for #{project.name}"
-      destroy_deployment(project)
+      Rails.logger.info "DEPLOYMENTS: Stopping deployment #{project.name}"
       begin
-        Rails.logger.info "DEPLOYMENTS: Stopped deployment for #{project.name}"
+        destroy_deployment(project)
+        Rails.logger.info "DEPLOYMENTS: Stopped deployment #{project.name}"
       rescue => e
-        Rails.logger.error "DEPLOYMENTS: ERROR could not stop deployment for #{e.message}"
+        Rails.logger.error "DEPLOYMENTS: ERROR could not stop deployment #{e.message}"
         Rails.logger.error "DEPLOYMENTS: #{e.backtrace}"
       end
 
     when "restart"
-      Rails.logger.info "DEPLOYMENTS: Restarting deployment for #{project.name}"
-      restart_deployment(project)
+      Rails.logger.info "DEPLOYMENTS: Restarting deployment #{project.name}"
       begin
-        Rails.logger.info "DEPLOYMENTS: Restarted deployment for #{project.name}"
+        restart_deployment(project)
+        Rails.logger.info "DEPLOYMENTS: Restarted deployment #{project.name}"
       rescue => e
-        Rails.logger.error "DEPLOYMENTS: ERROR could not restart deployment for #{e.message}"
+        Rails.logger.error "DEPLOYMENTS: ERROR could not restart deployment #{e.message}"
         Rails.logger.error "DEPLOYMENTS: #{e.backtrace}"
       end
      
@@ -105,6 +105,8 @@ private
     project_details = project.details
     Rails.logger.info "DEPLOYMENTS: Got project details: #{project_details.inspect.to_s}" 
 
+    datastore_instance = ""
+
     project.instances.each do |inst|
       case 
       when inst.types.include?("named")
@@ -112,6 +114,7 @@ private
       when inst.types.include?("activemq") || inst.types.include?("datastore")
         if project_details[:datastore_replicants].count > 1 && project_details[:datastore_replicants].first == inst.fqdn
           phase4 << inst  # If there are mongodb replicants, the first should be the last to get started
+          datastore_instance = inst
         else
           phase2 << inst
         end
@@ -135,8 +138,8 @@ private
     Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 begin..." 
     phase2.each {|i| project.start_one(i.id)}    
     phase3.each {|i| project.start_one(i.id)}    
-    Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 complete, waiting 5 minutes..." 
-    sleep 300
+    Rails.logger.info "DEPLOYMENTS: Phase 2 + 3 complete, waiting 2 minutes..." 
+    sleep 120
     Rails.logger.info "DEPLOYMENTS: Phase 4 begin..." 
     phase4.each {|i| project.start_one(i.id)}    
     Rails.logger.info "DEPLOYMENTS: Phase 4 complete, waiting for completion..." 
@@ -144,26 +147,73 @@ private
     sleep 30
 
     broker_instance = project.instances.select {|i| i.types.include?("broker") }.first
-    last_node_complete = false
     last_node = phase3.last
-    until last_node_complete == true do
-      # Close the ssh sesion each time, as the host will likely reboot.
-      ssh = Net::SSH.start(last_node.floating_ip, 'root', :password => last_node.root_password, :paranoid => false)
-      result = ssh.exec!("cat /root/.install_tracker").chomp
-      if result == "DONE"
-        last_node_complete = true
+    all_complete = false 
+    complete_instances = []
+
+    until all_complete do
+      project.instances.each do |inst|
+        # Close the ssh sesion each time, as the host will likely reboot.
+        until result == "DONE"
+          sleep 120
+          ssh = ssh_session(inst)
+          result = ssh.exec!("cat /root/.install_tracker").chomp
+          ssh.close
+        end
+        complete_instances << inst
+        Rails.logger.info "DEPLOYMENTS: #{inst.fqdn} complete!"
       end
-      Rails.logger.info "DEPLOYMENTS: Waiting for deployment completion..." 
-      ssh.close
-      sleep 120
+      if complete_instances.count == project.instances.count
+        all_complete = true
+      end
     end
-   
+
+    if defined?(datastore_instance)
+      Rails.logger.info "DEPLOYMENTS: Configuring replica set..."
+      ssh = ssh_session(datastore_instance)
+      ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=configure_datastore_add_replicants >> /root/.install_log")
+      ssh.close
+      Rails.logger.info "DEPLOYMENTS: Datastore replicas configured."
+    end
+
     Rails.logger.info "DEPLOYMENTS: Deployment complete, running post configure..." 
-    ssh = Net::SSH.start(broker_instance.floating_ip, 'root', :password => broker_instance.root_password, :paranoid => false)
-    ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy")
+    ssh = ssh_session(broker_instance)
+    ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy >> /root/.install_log")
     Rails.logger.info "DEPLOYMENTS: Deployment complete!"
     ssh.close
+  end
 
+  def destroy_deployment(project)
+    project.instances.each do |inst|
+      project.stop_one(inst.id)
+    end
+  end
+
+  def restart_deployment(project)
+    destroy_deployment(project)
+    begin_deployment(project)
+  end
+
+  def ssh_session(instance)
+    ip = instance.floating_ip
+    passwd = instance.root_password
+    tries = 0
+    begin
+      ssh = Net::SSH.start(ip, 'root', :password => passwd, :paranoid => false)
+    rescue => e
+      tries += 1
+      if tries < 6
+        Rails.logger.error "DEPLOYMENTS: SSH failed on attempt ##{tries} with #{e.class}. Retrying..."
+        sleep 10
+        retry
+      else
+        Rails.logger.error "DEPLOYMENTS: Could not ssh to #{instance.fqdn} after #{tries.to_s} tries:"
+        Rails.logger.error "DEPLOYMENTS: #{e.class} #{e.message}"
+        Rails.logger.error "DEPLOYMENTS: #{e.backtrace}"
+        raise e
+      end
+    end
+    return ssh
   end
 
 end
