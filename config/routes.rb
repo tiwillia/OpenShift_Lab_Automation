@@ -11,7 +11,7 @@ RailsApp::Application.routes.draw do
   match 'instances/:id/stop' => 'instances#stop'
   match 'instances/:id/restart' => 'instances#restart'
   resources :labs
-  root :to => 'welcome#index'
+  root :to => 'projects#index'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

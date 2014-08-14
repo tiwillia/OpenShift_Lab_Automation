@@ -1,8 +1,10 @@
 <div class="col-md-10">
-  <h1>OpenShift Projects</h1>
+  <h1>OpenShift Labs</h1>
 </div>
 <div class="col-md-2">
-  <a href="/projects/new" class="btn btn-primary">New Lab</a>
+  <% if current_user.admin? %>
+    <a href="/projects/new" class="btn btn-primary">New Lab</a>
+  <% end %>
 </div>
 <table class="table table-striped">
   <thead>
