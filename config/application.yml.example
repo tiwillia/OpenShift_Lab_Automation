@@ -1,5 +1,13 @@
 # Configuration goes here in YAML
 # These can be called in code with CONFIG[:key]
-rhsm_username: "rhn-support-KERB"
+URL: "lab-namespace.rhcloud.com"
+admin_email: "tiwillia@redhat.com"
+rhsm_username: "rhn_username"
 rhsm_password: "password"
-rhsm_pool_id: "8a85f9833e1404a9013e3cddf99305e6"
+rhsm_pool_id: "8a85f983de1434a1013b3ccdf9f302e6"
+types:
+  - "broker"
+  - "node"
+  - "activemq"
+  - "datastore"
+  - "named"
