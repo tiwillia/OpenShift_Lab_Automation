@@ -9,19 +9,23 @@
     <tr>
       <th></th>
       <th>Region</th>
+      <th>OSE Version</th>
       <th>Name</th>
       <th>Domain</th>
       <th># of Instances</th>
+      <th>Checked Out By</th>
     </tr>
   </thead>
   <tbody>
-  <% @projects.each do |pro| %>
+  <% @projects.each do |project| %>
     <tr>
-      <td><a href="/projects/<%= pro.id %>" class="btn btn-default">View</a></td>
-      <td><%= Lab.find(pro.lab_id).geo %></td>
-      <td><%= pro.name %></td>
-      <td><%= pro.domain %></td>
-      <td><%= pro.instances.count %></td>
+      <td><a href="/projects/<%= project.id %>" class="btn btn-default">View</a></td>
+      <td><%= Lab.find(project.lab_id).geo %></td>
+      <td><%= project.ose_version %></td>
+      <td><b><%= project.name %></b></td>
+      <td><%= project.domain %></td>
+      <td><%= project.instances.count %></td>
+      <td><% if project.checked_out? %><%= User.find(project.checked_out_by).name %><% else %><span class="text-success">Nobody!</span><% end %></td>
     </tr>
   <% end %>
   </tbody>

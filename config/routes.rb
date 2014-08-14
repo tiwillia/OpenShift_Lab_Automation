@@ -2,6 +2,8 @@ RailsApp::Application.routes.draw do
 
   resources :instances
   resources :projects
+  match 'projects/:id/check_out' => 'projects#check_out'
+  match 'projects/:id/uncheck_out' => 'projects#uncheck_out'
   match 'projects/:id/start' => 'projects#start_all'
   match 'projects/:id/stop' => 'projects#stop_all'
   match 'projects/:id/restart' => 'projects#restart_all'

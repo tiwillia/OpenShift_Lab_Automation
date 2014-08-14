@@ -1,5 +1,7 @@
 class LabsController < ApplicationController
 
+  before_filter :check_admin
+
   def index
     @labs = Lab.all
   end
@@ -60,6 +62,13 @@ private
 
   def edit_lab_params
     params.permit!
+  end
+
+  def check_admin
+    if not current_user.admin?
+      flash[:error] = "You must be an administrator to view this page"
+      redirect_to :back
+    end
   end
 
 end

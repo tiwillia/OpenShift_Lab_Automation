@@ -82,6 +82,41 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def check_out
+    user_id = current_user.id
+    @project = Project.find(params[:id])
+    if @project.checked_out?
+      user = User.find(@project.checked_out_by)
+      flash[:error] = "Project is already checked out to #{user.name}"
+      redirect_to project_path(@project)
+    else
+      if @project.check_out(user_id)
+        flash[:success] = "Project checked out."
+        redirect_to project_path(@project)  
+      else
+        flash[:error] = "Could not check out project, contact administrator."
+        redirect_to project_path(@project)
+      end
+    end
+  end
+
+  def uncheck_out
+    user_id = current_user.id
+    @project = Project.find(params[:id])
+    if @project.checked_out?
+      if @project.uncheck_out
+        flash[:success] = "Project is now available for check out."
+        redirect_to project_path(@project)  
+      else
+        flash[:error] = "Could not free project, contact administrator."
+        redirect_to project_path(@project)
+      end
+    else
+      flash[:error] = "Project is not checked out, cannot turn the project in."
+      redirect_to project_path(@project)
+    end
+  end
+
 private
 
   def new_project_params

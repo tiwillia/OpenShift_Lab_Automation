@@ -13,13 +13,13 @@ class DeploymentHandler
   # Add work to the queue.
   # work should be a hash like: {:action => "stop", :project => Project.obj}
   def enqueue(work)
-    dlog "DEPLOYMENTS: Adding work to queue: #{work.inspect}."
+    dlog "Adding work to queue: #{work.inspect}."
     @queue << work
     if not running?
-      dlog "DEPLOYMENTS: Starting deployment handler thread..."
+      dlog "Starting deployment handler thread..."
       start
     end
-    dlog("DEPLOYMENTS: #{@queue.inspect}",:debug)
+    dlog("#{@queue.inspect}",:debug)
   end
  
   # Check if the head thread is running 
@@ -32,7 +32,7 @@ private
   # This is the loop we run through constantly in the background to watch for work.
   def start
     if running?
-      dlog("DEPLOYMENTS: ERROR Tried to start running deployment handler.",:error)
+      dlog("ERROR Tried to start running deployment handler.",:error)
       return false
     end
     @thread = Thread.new do
@@ -41,10 +41,10 @@ private
           sleep 10
         end
         work = @queue.pop
-        dlog "DEPLOYMENTS: Work found in queue, starting..."
+        dlog "Work found in queue, starting..."
         Thread.new do
           do_work(work)
-          dlog "DEPLOYMENTS: Work completed."
+          dlog "Work completed."
         end
       end
     end
@@ -58,37 +58,37 @@ private
     case work[:action]
 
     when "start"
-      dlog "DEPLOYMENTS: Starting deployment #{project.name}"
+      dlog "Starting deployment #{project.name}"
       begin
-        dlog "DEPLOYMENTS: Started deployment #{project.name}"
+        dlog "Started deployment #{project.name}"
         begin_deployment(project)
       rescue => e
-        dlog("DEPLOYMENTS: ERROR could not start deployment #{e.message}", :error)
-        dlog("DEPLOYMENTS: #{e.backtrace}", :error)
+        dlog("ERROR could not start deployment #{e.message}", :error)
+        dlog("#{e.backtrace}", :error)
       end
 
     when "stop"
-      dlog "DEPLOYMENTS: Stopping deployment #{project.name}"
+      dlog "Stopping deployment #{project.name}"
       begin
         destroy_deployment(project)
-        dlog "DEPLOYMENTS: Stopped deployment #{project.name}"
+        dlog "Stopped deployment #{project.name}"
       rescue => e
-        dlog("DEPLOYMENTS: ERROR could not stop deployment #{e.message}"
-        dlog("DEPLOYMENTS: #{e.backtrace}"
+        dlog("ERROR could not stop deployment #{e.message}", :error)
+        dlog("#{e.backtrace}", :error)
       end
 
     when "restart"
-      dlog "DEPLOYMENTS: Restarting deployment #{project.name}"
+      dlog "Restarting deployment #{project.name}"
       begin
         restart_deployment(project)
-        dlog "DEPLOYMENTS: Restarted deployment #{project.name}"
+        dlog "Restarted deployment #{project.name}"
       rescue => e
-        dlog("DEPLOYMENTS: ERROR could not restart deployment #{e.message}"
-        dlog("DEPLOYMENTS: #{e.backtrace}"
+        dlog("ERROR could not restart deployment #{e.message}", :error)
+        dlog("#{e.backtrace}", :error)
       end
      
     else
-      dlog("DEPLOYMENTS: Action not recognized" 
+      dlog("Action not recognized", :error) 
     end
   end
 
@@ -103,9 +103,9 @@ private
     phase3 = []  # All nodes
     phase4 = []  # The final mongodb and the brokers
  
-    dlog "DEPLOYMENTS: Getting project details..." 
+    dlog "Getting project details..." 
     project_details = project.details
-    dlog "DEPLOYMENTS: Got project details: #{project_details.inspect.to_s}" 
+    dlog "Got project details: #{project_details.inspect.to_s}" 
 
     datastore_instance = ""
 
@@ -129,22 +129,22 @@ private
       end
     end
 
-    dlog "DEPLOYMENTS: Created phases, starting instances..." 
-    dlog "DEPLOYMENTS: Phase1: #{phase1}" 
-    dlog "DEPLOYMENTS: Phase2: #{phase2}" 
-    dlog "DEPLOYMENTS: Phase3: #{phase3}" 
-    dlog "DEPLOYMENTS: Phase4: #{phase4}" 
+    dlog "Created phases, starting instances..." 
+    dlog "Phase1: #{phase1}" 
+    dlog "Phase2: #{phase2}" 
+    dlog "Phase3: #{phase3}" 
+    dlog "Phase4: #{phase4}" 
     phase1.each {|i| i.start }   
-    dlog "DEPLOYMENTS: Phase one started, waiting 2 minutes..." 
+    dlog "Phase one started, waiting 2 minutes..." 
     sleep 120 
-    dlog "DEPLOYMENTS: Phase 2 + 3 begin..." 
+    dlog "Phase 2 + 3 begin..." 
     phase2.each {|i| i.start}    
     phase3.each {|i| i.start}    
-    dlog "DEPLOYMENTS: Phase 2 + 3 complete, waiting 2 minutes..." 
+    dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
-    dlog "DEPLOYMENTS: Phase 4 begin..." 
+    dlog "Phase 4 begin..." 
     phase4.each {|i| i.start}    
-    dlog "DEPLOYMENTS: Phase 4 complete, waiting for completion..." 
+    dlog "Phase 4 complete, waiting for completion..." 
 
     sleep 30
 
@@ -165,7 +165,7 @@ private
           sleep 120 unless result == "DONE"
         end
         complete_instances << inst
-        dlog "DEPLOYMENTS: #{inst.fqdn} complete!"
+        dlog "#{inst.fqdn} complete!"
       end
       if complete_instances.count == project.instances.count
         all_complete = true
@@ -174,7 +174,7 @@ private
 
     # Datastore replicant configuration
     if datastore_instance.class == Instance
-      dlog "DEPLOYMENTS: Configuring replica set..."
+      dlog "Configuring replica set..."
       replicants_complete = false
       tries = 0
       until replicants_complete || tries > 5 do
@@ -186,20 +186,20 @@ private
         if exit_code == "0"
           replicants_complete = true
         else
-          dlog("DEPLOYMENTS: Replica set configuration failed, trying again...", :error)
+          dlog("Replica set configuration failed, trying again...", :error)
           sleep 30
         end
       end
       if replicants_complete
-        dlog "DEPLOYMENTS: Datastore replicas configured."
+        dlog "Datastore replicas configured."
       else
-        dlog("DEPLOYMENTS: Could not configure datstore after #{tries} tries. Giving up.", :error)
+        dlog("Could not configure datstore after #{tries} tries. Giving up.", :error)
       end
     end
 
     # Post deployment script
     if project.ose_version =~ /2\.[1,2,3]/
-      dlog "DEPLOYMENTS: Running post deploy..."
+      dlog "Running post deploy..."
       post_deploy_complete = false
       tries = 0
       until post_deploy_complete || tries > 5 do
@@ -211,18 +211,18 @@ private
         if exit_code == "0"
           post_deploy_complete = true
         else
-          dlog("DEPLOYMENTS: Post deployment failed, trying again...", :error)
+          dlog("Post deployment failed, trying again...", :error)
           sleep 30
         end
       end
       if post_deploy_complete
-        dlog "DEPLOYMENTS: Post deployment complete."
+        dlog "Post deployment complete."
       else
-        dlog("DEPLOYMENTS: Could not post deploy after #{tries} tries. Giving up.", :error)
+        dlog("Could not post deploy after #{tries} tries. Giving up.", :error)
       end
     end
     
-    dlog "DEPLOYMENTS: Deployment complete!"
+    dlog "Deployment complete!"
 
   end
 
@@ -246,13 +246,13 @@ private
     rescue => e
       tries += 1
       if tries < 6
-        dlog("DEPLOYMENTS: SSH to #{instance.fqdn} failed on attempt ##{tries} with #{e.class}. Retrying...", :error)
+        dlog("SSH to #{instance.fqdn} failed on attempt ##{tries} with #{e.class}. Retrying...", :error)
         sleep 10
         retry
       else
-        dlog("DEPLOYMENTS: Could not ssh to #{instance.fqdn} after #{tries.to_s} tries:", :error)
-        dlog("DEPLOYMENTS: #{e.class} #{e.message}", :error)
-        dlog("DEPLOYMENTS: #{e.backtrace}", :error)
+        dlog("Could not ssh to #{instance.fqdn} after #{tries.to_s} tries:", :error)
+        dlog("#{e.class} #{e.message}", :error)
+        dlog("#{e.backtrace}", :error)
         raise e
       end
     end

@@ -67,3 +67,6 @@ gem 'jquery-ui-rails'
 
 # We need to be able to run commands on instances
 gem 'net-ssh'
+
+# Crack is necessary because its crack. Who doesn't enjoy crack?
+gem 'crack'

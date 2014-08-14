@@ -20,7 +20,41 @@ class Project < ActiveRecord::Base
     start_all
     stop_all
   end
-  
+ 
+  def check_out(user_id)
+    if User.where(:id => user_id) 
+      if self.update_attributes(:checked_out_by => user_id, :checked_out_at => DateTime.now)
+        return true
+      else
+        Rails.logger.error("Could not check out project #{self.id}")
+        return false
+      end
+    else
+      Rails.logger.error("Non-existing user checked out project #{self.id}")
+    end
+  end
+
+  def uncheck_out
+    if self.update_attributes(:checked_out_by => nil, :checked_out_at => nil)
+      return true
+    else
+      Rails.logger.error("Could not check out project #{self.id}")
+      return false
+    end
+  end
+
+  def checked_out?
+    !!self.checked_out_by
+  end
+
+  def user_can_edit?(user)
+    if user.admin? || self.checked_out_by == user.id
+      return true
+    else
+      return false
+    end
+  end
+ 
   def details
     return nil if not self.ready?
     
