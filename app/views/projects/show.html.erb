@@ -3,7 +3,7 @@
     <h1>OpenShift Lab: <%= @project.name %></h1>
   </div>
   <div class="col-md-2">
-    <% if @project.user_can_edit?(current_user) %>
+    <% if current_user.admin? %>
       <a href="/projects/<%= @project.id %>/edit" class="btn btn-info">Edit</a>
     <% end %>
     <% if @project.checked_out? %>
