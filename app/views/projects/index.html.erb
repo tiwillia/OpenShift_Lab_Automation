@@ -2,7 +2,7 @@
   <h1>OpenShift Labs</h1>
 </div>
 <div class="col-md-2">
-  <% if current_user.admin? %>
+  <% if logged_in? && current_user.admin? %>
     <a href="/projects/new" class="btn btn-primary">New Lab</a>
   <% end %>
 </div>

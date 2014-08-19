@@ -3,7 +3,7 @@
     <h1>OpenShift Lab: <%= @project.name %></h1>
   </div>
   <div class="col-md-2">
-    <% if current_user.admin? %>
+    <% if admin? %>
       <a href="/projects/<%= @project.id %>/edit" class="btn btn-info">Edit</a>
     <% end %>
     <% if @project.checked_out? %>
@@ -62,10 +62,13 @@
           <td>Image</td>
           <td>Flavor</td>
           <td>Gear Size</td>
+          <td>Deployed</td>
+          <td>Reachable</td>
           <td></td>
         </tr>
       </thead>  
       <tbody>
+        <% verified_user = current_user %>
         <% instances = @project.instances.sort_by{|i| i.name } %>
         <% instances.each do |inst| %>
           <tr>
@@ -77,16 +80,32 @@
             <td><%= inst.flavor %></td>
             <td><%= inst.gear_size if inst.types.include?("node") %></td>
             <td>
-              <% if @project.user_can_edit?(current_user) %>
+              <% if inst.deployment_completed %>
+                <span class="glyphicon glyphicon-ok"></span>
+              <% elsif inst.deployment_started %>
+                <span class="text-warning">In progress<span>
+              <% else %>
+                <span class="glyphicon glyphicon-remove"></span>
+              <% end %>
+            </td>
+            <td>
+              <% if inst.reachable %>
+                <span class="glyphicon glyphicon-ok"></span>
+              <% else %>
+                <span class="glyphicon glyphicon-remove"></span>
+              <% end %>
+            </td>
+            <td>
+              <% if @project.user_can_edit?(verified_user) %>
               <div class="dropdown">
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                <li><a href="/instances/<%= inst.id %>/start">Build</a></li>
-                <li><a href="/instances/<%= inst.id %>/stop" data-confirm="Are you sure you want to destroy <%= inst.fqdn %>?">Destroy</a></li>
-                <li><a href="/instances/<%= inst.id %>/restart" data-confirm="Are you sure you want to rebuild <%= inst.fqdn %>?">Rebuild</a></li>
+                <li><a href="/instances/<%= inst.id %>/start">Deploy</a></li>
+                <li><a href="/instances/<%= inst.id %>/stop" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
+                <li><a href="/instances/<%= inst.id %>/restart" data-confirm="Are you sure you want to redeploy <%= inst.fqdn %>?">Redeploy</a></li>
                 <hr />
                 <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
-                <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove</a></li>
+                <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove from project</a></li>
                 </ul>
               </div>
               <% end %>
@@ -98,9 +117,9 @@
   <% if @project.user_can_edit?(current_user) %>
   <div class="col-md-6">
     <div class="btn-group">
-    <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Build All</a>
-    <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger" data-confirm="Are you sure you want to destroy all <%= @project.name%> instances?">Destroy All</a>
-    <a href="/projects/<%= @project.id %>/restart" class="btn btn-warning" data-confirm="Are you sure you want to rebuild all <%= @project.name %> instances?">Rebuild All</a>
+    <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Deploy All</a>
+    <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
+    <a href="/projects/<%= @project.id %>/restart" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
     </div>
   </div>
   <div class="col-md-4"></div>

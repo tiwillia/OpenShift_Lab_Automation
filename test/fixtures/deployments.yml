@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  project_id: 1
+  action: MyText
+  complete: false
+  started: false
+  started_time: false
+  completed_time: false
+  started_by: 1
+
+two:
+  project_id: 1
+  action: MyText
+  complete: false
+  started: false
+  started_time: false
+  completed_time: false
+  started_by: 1

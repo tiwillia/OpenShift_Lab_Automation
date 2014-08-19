@@ -5,20 +5,38 @@ class Project < ActiveRecord::Base
  
   belongs_to :lab
   has_many :instances
+  has_many :deployments
 
   validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
 
   def start_all
-    DEPLOYMENT_HANDLER.enqueue({:action => "start", :instances => self.instances, :project => self})
+    deployment = self.deployments.new(:action => "build")
+    if deployment.save
+      deployment.begin
+      return true
+    else
+      return false
+    end
   end
   
   def stop_all
-    DEPLOYMENT_HANDLER.enqueue({:action => "stop", :instances => self.instances, :project => self})
+    deployment = self.deployments.new(:action => "tear_down")
+    if deployment.save
+      deployment.begin
+      return true
+    else
+      return false
+    end
   end
 
   def restart_all
-    start_all
-    stop_all
+    deployment = self.deployments.new(:action => "redploy")
+    if deployment.save
+      deployment.begin
+      return true
+    else
+      return false
+    end
   end
  
   def check_out(user_id)
@@ -48,7 +66,7 @@ class Project < ActiveRecord::Base
   end
 
   def user_can_edit?(user)
-    if user.admin? || self.checked_out_by == user.id
+    if user && (user.admin? || self.checked_out_by == user.id)
       return true
     else
       return false

@@ -11,7 +11,19 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140814150539) do
+ActiveRecord::Schema.define(:version => 20140814183447) do
+
+  create_table "deployments", :force => true do |t|
+    t.integer  "project_id"
+    t.integer  "started_by"
+    t.text     "action"
+    t.boolean  "complete",       :default => false
+    t.boolean  "started",        :default => false
+    t.datetime "started_time"
+    t.datetime "completed_time"
+    t.datetime "created_at",                        :null => false
+    t.datetime "updated_at",                        :null => false
+  end
 
   create_table "instances", :force => true do |t|
     t.text     "name"
@@ -20,13 +32,16 @@ ActiveRecord::Schema.define(:version => 20140814150539) do
     t.text     "internal_ip"
     t.text     "fqdn"
     t.integer  "project_id"
-    t.datetime "created_at",        :null => false
-    t.datetime "updated_at",        :null => false
+    t.datetime "created_at",                              :null => false
+    t.datetime "updated_at",                              :null => false
     t.text     "root_password"
     t.text     "install_variables"
     t.string   "gear_size"
     t.string   "flavor"
     t.string   "image"
+    t.boolean  "deployment_started",   :default => false
+    t.boolean  "deployment_completed", :default => false
+    t.boolean  "reachable",            :default => false
   end
 
   create_table "labs", :force => true do |t|

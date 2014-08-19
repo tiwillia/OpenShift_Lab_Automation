@@ -1,17 +1,18 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
-  before_filter :logged_in?
+#  before_filter :logged_in?
 
-  def logged_in?(redirect = true)
+  def logged_in?(redirect = false)
     if cookies[:rh_user]
       username = cookies[:rh_user].split("|").first
-      if User.where(:username => username).exists?
-        return true
+      user = User.where(:username => username)
+      if not user.empty?
+        return true, user.first
       else
         new_user = User.new(:username => username)
         if new_user.save!
-          return true
+          return true, new_user
         else
           flash[:error] = "Could not get user details from RHN."
           return false
@@ -24,15 +25,17 @@ class ApplicationController < ActionController::Base
   end 
 
   def admin?
-    current_user.admin?
+    if current_user
+      current_user.admin?
+    else
+      false
+    end
   end
 
-  def current_user
-    if logged_in?(false)
-      username = cookies[:rh_user].split("|").first
-      if user = User.where(:username => username).first
-        return user
-      end
+  def current_user(redirect = false)
+    bool, user = logged_in?(redirect)
+    if bool
+      return user
     end
     return nil
   end

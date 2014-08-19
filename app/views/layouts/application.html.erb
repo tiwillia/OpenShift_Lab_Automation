@@ -31,12 +31,12 @@
         <a class="navbar-brand" href="/">OpenShift Labs</a>
         <div class="navbar-collapse collapse navbar-responsive-collapse">
           <ul class="nav navbar-nav">
-            <% if logged_in?(true) && current_user.admin? %>
+            <% if logged_in? && current_user.admin? %>
               <li><%= link_to "OpenStack Hosts", "/labs"  %></li>
             <% end %>
             <li><%= link_to "OpenShift Labs", "/projects"  %></li>
           </ul>
-          <% if logged_in?(true) %>
+          <% if logged_in? %>
             <ul class="nav navbar-nav navbar-right">
               <li><p class="navbar-text"><%= current_user.name %></p></li>
             </ul>

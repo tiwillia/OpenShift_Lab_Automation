@@ -83,7 +83,7 @@ class ProjectsController < ApplicationController
   end
 
   def check_out
-    user_id = current_user.id
+    user_id = current_user(true).id
     @project = Project.find(params[:id])
     if @project.checked_out?
       user = User.find(@project.checked_out_by)

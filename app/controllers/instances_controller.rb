@@ -78,6 +78,12 @@ class InstancesController < ApplicationController
     redirect_to :back
   end
 
+  def callback_script
+    @instance = Instance.find(params[:id])
+    @deployment = Deployment.where(:project_id => Project.find(@instance.project_id).id).last
+    render :layout => false
+  end
+
 private
 
   def new_instance_params

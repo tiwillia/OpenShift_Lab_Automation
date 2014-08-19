@@ -66,7 +66,7 @@ class Instance < ActiveRecord::Base
     server_id = server.id
     server_status = server.status
     until server_status == "ACTIVE"
-      Rails.logger.info "Waiting for #{self.fqdn} to become active. Current status is \"#{server.status}\""
+      Rails.logger.debug "Waiting for #{self.fqdn} to become active. Current status is \"#{server.status}\""
       sleep 3
       server_status = c.get_server(server.id).status
     end
@@ -81,7 +81,12 @@ class Instance < ActiveRecord::Base
     c = p.get_connection
     s = c.servers.select {|s| s[:name] == self.name}.first
     server = c.get_server(s[:id])
-    server.delete!
+    if server.delete!
+      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
+      return true
+    else
+      return false
+    end
   end
 
   def restart
@@ -130,6 +135,7 @@ runcmd:
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
 - curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
+- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
 - subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]}
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]}
 - subscription-manager repos --disable=*
@@ -189,7 +195,7 @@ EOF
     # Run the script! Woo!
     cinit = cinit + <<EOF
 - echo "STARTED" > /root/.install_tracker
-- sh /root/openshift.sh &> /root/.install_log
+- sh /root/.install_handler.sh
 EOF
 
     # Do some extra jazz requried for nodes
@@ -220,7 +226,21 @@ EOF
     cinit
   end 
  
-  private
+private
+
+  # Returns true or false
+  # If false, also returns error message
+  def reachable?
+    begin
+      ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false)
+      ssh.exec!("hostname")
+    rescue => e
+      Rails.logger.error "Could not reach instance #{self.fqdn} due to: #{e.message}"
+      Rails.logger.error e.backtrace
+      return false, e.message
+    end
+    true
+  end
 
   # Create FQDN
   def determine_fqdn
