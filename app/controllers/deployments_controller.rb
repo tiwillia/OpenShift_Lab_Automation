@@ -4,6 +4,7 @@ class DeploymentsController < ApplicationController
     @deployment = Deployment.find(params[:id])
     instance_id = dep_params[:instance_id]
     message = dep_params[:message]
+    Rails.logger.debug("Got message from instance with id #{instance_id}: \"#{message}\". Sending to deployment...")
     @deployment.instance_message(instance_id, message)
     respond_to do |format|
       format.json { render :json => {:message => "Success"} }

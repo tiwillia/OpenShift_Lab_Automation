@@ -20,6 +20,10 @@ CONFIG = YAML.load(File.read(File.expand_path(config_file_location, __FILE__)))
 CONFIG.merge! CONFIG.fetch(Rails.env, {})
 CONFIG.symbolize_keys! 
 
+if ENV['OPENSHIFT_APP_DNS']
+  CONFIG[:URL] = ENV['OPENSHIFT_APP_DNS']
+end
+
 module RailsApp
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.

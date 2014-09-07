@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140814183447) do
+ActiveRecord::Schema.define(:version => 20140820192712) do
 
   create_table "deployments", :force => true do |t|
     t.integer  "project_id"
@@ -76,11 +76,12 @@ ActiveRecord::Schema.define(:version => 20140814183447) do
     t.text     "bind_key"
     t.text     "valid_gear_sizes"
     t.integer  "lab_id"
-    t.datetime "created_at",              :null => false
-    t.datetime "updated_at",              :null => false
+    t.datetime "created_at",                                 :null => false
+    t.datetime "updated_at",                                 :null => false
     t.string   "ose_version"
     t.integer  "checked_out_by"
     t.datetime "checked_out_at"
+    t.boolean  "deployed",                :default => false
   end
 
   create_table "users", :force => true do |t|

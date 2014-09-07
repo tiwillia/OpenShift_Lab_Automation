@@ -38,6 +38,15 @@ class Project < ActiveRecord::Base
       return false
     end
   end
+
+  def deployment_in_progress?
+    latest_deployment = self.deployments.last
+    if latest_deployment.started && latest_deployment.complete == false
+      true
+    else
+      false
+    end
+  end
  
   def check_out(user_id)
     if User.where(:id => user_id) 

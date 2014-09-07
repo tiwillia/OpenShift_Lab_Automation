@@ -1,6 +1,6 @@
 # Configuration goes here in YAML
 # These can be called in code with CONFIG[:key]
-URL: "lab-namespace.rhcloud.com"
+URL: "lab-namespace.rhcloud.com" # Only required if NOT running on openshift
 admin_email: "tiwillia@redhat.com"
 rhsm_username: "rhn_username"
 rhsm_password: "password"

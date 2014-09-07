@@ -12,6 +12,21 @@ class Instance < ActiveRecord::Base
   validates :root_password, length: { minimum: 3 }
   validate :types_check
 
+  # Returns true or false
+  # If false, also returns error message
+  def reachable?
+    self.update_attributes(:last_checked_reachable => DateTime.now)
+    begin
+      ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false)
+      ssh.exec!("hostname")
+    rescue => e
+      Rails.logger.error "Could not reach instance #{self.fqdn} due to: #{e.message}"
+      Rails.logger.error e.backtrace
+      return false, e.message
+    end
+    true
+  end
+
   def start
     # Get the connection and isntance
     p = Project.find(self.project_id)
@@ -136,21 +151,21 @@ runcmd:
 - mkdir -p /etc/pki/product
 - curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
 - curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
-- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]}
-- subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]}
-- subscription-manager repos --disable=*
+- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} &> /root/.rhsm_output
+- subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &> /root/.rhsm_output
+- subscription-manager repos --disable=* &> /root/.rhsm_output
 EOF
   
     # Enable repositories and install oo-admin-yum-validator
     if self.types.include?("broker") || self.types.include?("named") || self.types.include?("activemq") || self.types.include?("mongodb")
       cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms
+- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms &> /root/.rhsm_output
 EOF
     end
     
     if self.types.include?("node")
       cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms
+- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms &> /root/.rhsm_output
 EOF
     end
 
@@ -228,19 +243,6 @@ EOF
  
 private
 
-  # Returns true or false
-  # If false, also returns error message
-  def reachable?
-    begin
-      ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false)
-      ssh.exec!("hostname")
-    rescue => e
-      Rails.logger.error "Could not reach instance #{self.fqdn} due to: #{e.message}"
-      Rails.logger.error e.backtrace
-      return false, e.message
-    end
-    true
-  end
 
   # Create FQDN
   def determine_fqdn

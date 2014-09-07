@@ -41,8 +41,12 @@ class ProjectsController < ApplicationController
     @images = @project.images
     @floating_ips = @project.floating_ips
     @flavors = @project.flavors
-    @ready, @reason = @project.ready?
-    
+    most_recent_deployment = @project.deployments.last
+    if most_recent_deployment and most_recent_deployment.in_progress?
+      @deployment = most_recent_deployment
+    else
+      @deployment = nil
+    end
   end
 
   def destroy

@@ -15,25 +15,36 @@
     <% end %>
   </div>
 </div>
-<% if @project.user_can_edit?(current_user) %>
 <div class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title text-center">
-      <% if @ready %>
-        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Ready for deployment!</span>
+      <% if @project.deployed %>
+        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Environment deployed!</span>
+    </h3>
+  </div>
+</div>
+      <% elsif @deployment %>
+        <span class="text-info"><span class="glyphicon glyphicon-tasks"></span> Deployment in progress...</span>
     </h3>
   </div>
 </div>
       <% else %>
-        <span class="text-danger"><span class="glyphicon glyphicon-remove"></span> Not ready for deployment.</span>
+        <% ready, reason = @project.ready? %>
+        <% if ready %>
+        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Ready for Deployment!</span>
+    </h3>
+  </div>
+</div>
+        <% else %>
+        <span class="text-danger"><span class="glyphicon glyphicon-remove"></span> Deployment not ready.</span>
     </h3>
   </div>
   <div class="panel-body">
-    <%= @reason %>
+    <%= reason %>
   </div>
 </div>
+        <% end %>
       <% end %>
-<% end %>
 <hr />
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -90,9 +101,9 @@
             </td>
             <td>
               <% if inst.reachable %>
-                <span class="glyphicon glyphicon-ok"></span>
+                <span class="glyphicon glyphicon-ok" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>"></span>
               <% else %>
-                <span class="glyphicon glyphicon-remove"></span>
+                <a class="btn btn-default" id="check_inst_<%= inst.id %>">Check</a>
               <% end %>
             </td>
             <td>

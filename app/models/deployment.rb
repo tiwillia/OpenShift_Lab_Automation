@@ -1,6 +1,7 @@
 class Deployment < ActiveRecord::Base
 
   belongs_to :project
+  cattr_accessor :thread, :queue
 
   # Essentially, I need to move everything in the deployment handler to here. In begin, I need to
   # start a new thread to do the deployment. But then I need to be able to watch a queue for 
@@ -14,7 +15,7 @@ class Deployment < ActiveRecord::Base
       dlog("Attempted to begin deployment with id #{self.id} for project #{@project.id} while already running.",:error)
       return false
     end
-    @@thread = Thread.new {
+    self.thread = Thread.new {
       case self.action
 
       when "build"
@@ -51,15 +52,29 @@ class Deployment < ActiveRecord::Base
         dlog("Action not recognized", :error)
       end
     }
-    return true
+    if running?
+      self.update_attributes(:started => true, :started_time => DateTime.now)
+      return true
+    else
+      return false
+    end
   end
 
   def instance_message(instance_id, message)
-    @@queue.push({:instance_id => instance_id, :message => message})
+    Rails.logger.debug "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
+    self.queue.push({:instance_id => instance_id, :message => message})
+  end
+
+  def in_progress?
+    if self.started && !self.complete
+      true
+    else
+      false
+    end
   end
 
   def running?
-    @@thread && @@thread.alive?
+    self.thread && self.thread.alive?
   end
 
 private
@@ -125,11 +140,11 @@ private
 
     # Wait for all instances to complete
     until all_complete do
-      while @@queue.empty? do
+      while self.queue.empty? do
         dlog("Queue empty, waiting 10 secs...", :debug)
         sleep 10
       end
-      work = @@queue.pop
+      work = self.queue.pop
       instance = Instance.find(work[:instance_id])
       message = work[:message]
       case message
@@ -246,8 +261,8 @@ private
   end
 
   def define_instance_vars
-    @@thread = nil
-    @@queue = Queue.new
+    self.thread = nil
+    self.queue = Queue.new
     @project = Project.find(self.project_id)
   end
 

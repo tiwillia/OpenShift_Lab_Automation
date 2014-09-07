@@ -18,7 +18,7 @@ group :development, :test do
   gem 'sqlite3'
   gem 'minitest' # Necessary to bring up the rails console from inside a gear
   gem 'pry'      # Way helpful in development
-  gem 'thor', '= 0.14.6'
+  gem 'thor', '= 0.17'
 end
 
 # Gems used only for assets and not required
@@ -70,3 +70,6 @@ gem 'net-ssh'
 
 # Crack is necessary because its crack. Who doesn't enjoy crack?
 gem 'crack'
+
+# Resque is needed to do background jobs efficiently and effectively
+gem "resque", github: "resque/resque"
