@@ -1,9 +1,5 @@
 RailsApp::Application.configure do
 
-  Resque.redis = Redis.new(host:ENV['OPENSHIFT_REDIS_HOST'],
-                           port:ENV['OPENSHIFT_REDIS_PORT'],
-                           password:ENV['REDIS_PASSWORD'])
-
   # Settings specified here will take precedence over those in config/application.rb
 
   # Code is not reloaded between requests
