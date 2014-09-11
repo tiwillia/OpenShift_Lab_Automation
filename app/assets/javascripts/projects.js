@@ -11,7 +11,7 @@ $(document).ready(function() {
       if (result.reachable === "true") {
         $('.reachable_button[instance_id="' + inst_id + '"]').replaceWith('<span class="glyphicon glyphicon-ok"></span>')
       } else {
-        $('.reachable_button[instance_id="' + inst_id + '"]').replaceWith('<span class="glyphicon glyphicon-remove" title="' + result.err + '"></span>')
+        $('.reachable_button[instance_id="' + inst_id + '"]').replaceWith('<span class="glyphicon glyphicon-remove" title="' + result.error + '"></span>')
       }
     }); 
   });

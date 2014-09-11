@@ -22,8 +22,10 @@ class Instance < ActiveRecord::Base
     rescue => e
       Rails.logger.error "Could not reach instance #{self.fqdn} due to: #{e.message}"
       Rails.logger.error e.backtrace
+      self.update_attributes(:reachable => false)
       return false, e.message
     end
+    self.update_attributes(:reachable => true)
     true
   end
 
