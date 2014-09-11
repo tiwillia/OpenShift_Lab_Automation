@@ -1,9 +1,9 @@
 sh /root/openshift.sh &> /root/.install_log
 if [ $? == "0" ]; then 
-  curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"success","instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id %>/instance_message
+  curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"success","instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id %>/instance_message &>> /root/.install_log
   echo "SUCCESS" >> /root/.install_log
 else 
-  curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"failure","instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id%>/instance_message
+  curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"failure","instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id%>/instance_message &>> /root/.install_log
   echo "FAILURE" >> /root/.install_log
 fi
 

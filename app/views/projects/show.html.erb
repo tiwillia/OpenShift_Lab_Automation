@@ -24,7 +24,7 @@
   </div>
 </div>
       <% elsif @deployment %>
-        <span class="text-info"><span class="glyphicon glyphicon-tasks"></span> Deployment in progress...</span>
+        <span class="text-info"><span class="glyphicon glyphicon-tasks"></span> <%= @deployment.action.titleize %> in progress, started at <%= parse_date(@deployment.started_time) %>.</span>
     </h3>
   </div>
 </div>
@@ -101,9 +101,11 @@
             </td>
             <td>
               <% if inst.reachable %>
-                <span class="glyphicon glyphicon-ok" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>"></span>
+                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>"><span class="glyphicon glyphicon-ok" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>"></span> Check</a>
+              <% elsif inst.reachable == false && !inst.last_checked_reachable.nil? %>
+                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>"><span class="glyphicon glyphicon-remove" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>"></span> Check</a>
               <% else %>
-                <a class="btn btn-default" id="check_inst_<%= inst.id %>">Check</a>
+                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>">Check</a>
               <% end %>
             </td>
             <td>

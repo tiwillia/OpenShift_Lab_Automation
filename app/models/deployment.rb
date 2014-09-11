@@ -1,21 +1,20 @@
 class Deployment < ActiveRecord::Base
 
   belongs_to :project
-  cattr_accessor :thread, :queue
 
   # Essentially, I need to move everything in the deployment handler to here. In begin, I need to
   # start a new thread to do the deployment. But then I need to be able to watch a queue for 
   # when the instances come back. That shouldn't be too hard, just use the instance_message method to 
   # send it to a queue, which would be... an instance variable? Or perhaps a database entry?
 
-  after_initialize :define_instance_vars
+  after_create :define_instance_vars
 
   def begin
     if running?
       dlog("Attempted to begin deployment with id #{self.id} for project #{@project.id} while already running.",:error)
       return false
     end
-    self.thread = Thread.new {
+    DEPLOYMENT_THREADS[self.id] = Thread.new {
       case self.action
 
       when "build"
@@ -51,6 +50,8 @@ class Deployment < ActiveRecord::Base
       else
         dlog("Action not recognized", :error)
       end
+      self.finish
+  
     }
     if running?
       self.update_attributes(:started => true, :started_time => DateTime.now)
@@ -60,9 +61,15 @@ class Deployment < ActiveRecord::Base
     end
   end
 
+  def finish
+    self.update_attributes(:complete => true, :completed_time => DateTime.now) 
+  end
+
   def instance_message(instance_id, message)
-    Rails.logger.debug "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
-    self.queue.push({:instance_id => instance_id, :message => message})
+    dlog "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
+    dlog "OLD deployment queue: #{DEPLOYMENT_QUEUES[self.id].inspect}"
+    DEPLOYMENT_QUEUES[self.id].push({:instance_id => instance_id, :message => message})
+    dlog "NEW deployment queue: #{DEPLOYMENT_QUEUES[self.id].inspect}"
   end
 
   def in_progress?
@@ -74,7 +81,7 @@ class Deployment < ActiveRecord::Base
   end
 
   def running?
-    self.thread && self.thread.alive?
+    DEPLOYMENT_THREADS[self.id] && DEPLOYMENT_THREADS[self.id].alive?
   end
 
 private
@@ -127,11 +134,11 @@ private
     phase3.each {|i| i.start; i.update_attributes(:deployment_started => true)}    
     dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
+    dlog "Deployment queue before phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 begin..." 
     phase4.each {|i| i.start; i.update_attributes(:deployment_started => true)}    
+    dlog "Deployment queue after phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 complete, waiting for completion..." 
-
-    sleep 30
 
     broker_instance = @project.instances.select {|i| i.types.include?("broker") }.first
     last_node = phase3.last
@@ -139,24 +146,27 @@ private
     complete_instances = []
 
     # Wait for all instances to complete
+    time_waited = 0
     until all_complete do
-      while self.queue.empty? do
-        dlog("Queue empty, waiting 10 secs...", :debug)
+      while DEPLOYMENT_QUEUES[self.id].empty? do
+        time_waited += 10
+        dlog("Queue empty, waiting 10 secs. Waited #{time_waited.to_s} seconds so far.", :debug)
         sleep 10
       end
-      work = self.queue.pop
+      work = DEPLOYMENT_QUEUES[self.id].pop
       instance = Instance.find(work[:instance_id])
       message = work[:message]
       case message
       when "success"
         complete_instances << instance
-        instance.update_attributes(:deployment_completed => true, :deployment_started => false, :reachable => true)
+        instance.update_attributes(:deployment_completed => true, :deployment_started => false, :reachable => true, :last_checked_reachable => DateTime.now)
         dlog("Instance #{instance.fqdn} completed successfully.")
-      when "failed"
+      when "failure"
         dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
         instance.stop
         sleep 5
         instance.start 
+        instance.update_attributes(:deployment_started => true)
       else
         dlog("Received unprocessable message for project #{@project.name} and instance #{instance.fqdn}: \"#{message}\"",:error)
       end
@@ -261,8 +271,8 @@ private
   end
 
   def define_instance_vars
-    self.thread = nil
-    self.queue = Queue.new
+    DEPLOYMENT_THREADS[self.id] = nil
+    DEPLOYMENT_QUEUES[self.id] = Queue.new
     @project = Project.find(self.project_id)
   end
 

@@ -28,7 +28,7 @@ class Instance < ActiveRecord::Base
   end
 
   def start
-    # Get the connection and isntance
+    # Get the connection and instance
     p = Project.find(self.project_id)
     c = p.get_connection
     q = p.get_connection("neutron")
@@ -151,21 +151,21 @@ runcmd:
 - mkdir -p /etc/pki/product
 - curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
 - curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
-- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} &> /root/.rhsm_output
-- subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &> /root/.rhsm_output
-- subscription-manager repos --disable=* &> /root/.rhsm_output
+- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} &>> /root/.rhsm_output
+- subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
+- subscription-manager repos --disable=* &>> /root/.rhsm_output
 EOF
   
     # Enable repositories and install oo-admin-yum-validator
     if self.types.include?("broker") || self.types.include?("named") || self.types.include?("activemq") || self.types.include?("mongodb")
       cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms &> /root/.rhsm_output
+- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms &>> /root/.rhsm_output
 EOF
     end
     
     if self.types.include?("node")
       cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms &> /root/.rhsm_output
+- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms &>> /root/.rhsm_output
 EOF
     end
 

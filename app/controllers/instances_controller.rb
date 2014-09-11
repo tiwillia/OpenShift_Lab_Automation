@@ -84,6 +84,20 @@ class InstancesController < ApplicationController
     render :layout => false
   end
 
+  def reachable
+    @instance = Instance.find(params[:id])
+    reachable, err = @instance.reachable?
+    if reachable
+      respond_to do |format|
+        format.json { render :json => {:reachable => "true"} }
+      end
+    else
+      respond_to do |format|
+        format.json { render :json => {:reachable => "false", :error => err} }
+      end
+    end
+  end
+
 private
 
   def new_instance_params

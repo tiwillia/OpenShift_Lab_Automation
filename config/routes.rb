@@ -11,6 +11,7 @@ RailsApp::Application.routes.draw do
   match 'instances/:id/stop' => 'instances#stop'
   match 'instances/:id/restart' => 'instances#restart'
   match 'instances/:id/callback_script' => 'instances#callback_script'
+  match 'instances/:id/reachable' => 'instances#reachable'
   match 'deployments/:id/instance_message' => 'deployments#instance_message'
   resources :labs
   root :to => 'projects#index'
