@@ -47,6 +47,26 @@ class Project < ActiveRecord::Base
       false
     end
   end
+
+  def all_deployed?
+    all_deployed = true
+    self.instances.each do |i|
+      next if i.deployment_completed && !i.deployment_started
+      all_deployed = false
+      break
+    end
+    all_deployed
+  end
+
+  def none_deployed?
+    none_deployed = true
+    self.instances.each do |i|
+      next if !i.deployment_completed && !i.deployment_started
+      none_deployed = false
+      break
+    end
+    none_deployed 
+  end
  
   def check_out(user_id)
     if User.where(:id => user_id) 
@@ -165,6 +185,10 @@ class Project < ActiveRecord::Base
     if duplicates.include?("datastore") && duplicates.count("datastore") < 3
       return false, "There are 2 mongodb hosts, there must be either one or more than two."
     end
+    limits = self.limits
+    if limits[:max_instances] < self.instances.count
+      return false, "There are more #{self.instances.count - limits[:max_instances]} more instances than the project limit of \"#{limits[:max_instances]}\" allows."
+    end
     types.uniq!
     if types.sort == ["named", "broker", "datastore", "activemq", "node"].sort
       true
@@ -192,6 +216,29 @@ class Project < ActiveRecord::Base
     ip_a = Array.new
     c.floating_ips.each {|i| ip_a << i.ip}
     ip_a
+  end
+
+  # Returns a hash with the following keys:
+  # :max_isntances
+  # :max_cpus
+  # :max_ram
+  # :used_instances
+  # :used_cpus
+  # :used_ram
+  def limits
+    c = get_connection
+    result = c.limits[:absolute]
+    {:max_instances => result[:maxTotalInstances],
+     :max_cpus => result[:maxTotalCores],
+     :max_ram => result[:maxTotalRAMSize],
+     :used_instances => result[:totalInstancesUsed],
+     :used_cpus => result[:totalCoresUsed],
+     :used_ram => result[:totalRAMUsed]}
+  end
+
+  def usage
+    c = get_connection
+    result = c.limits[:absolute]
   end
 
   def get_connection(type = "compute")

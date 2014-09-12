@@ -144,9 +144,13 @@
   <% if @project.user_can_edit?(current_user) %>
   <div class="col-md-6">
     <div class="btn-group">
-    <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Deploy All</a>
-    <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
-    <a href="/projects/<%= @project.id %>/restart" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
+      <% if not @project.all_deployed? %>
+        <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Deploy All</a>
+      <% end %>
+      <% if not @project.none_deployed? %>
+        <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
+        <a href="/projects/<%= @project.id %>/restart" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
+      <% end %>
     </div>
   </div>
   <div class="col-md-4"></div>
@@ -164,16 +168,34 @@
         <h3 class="panel-title text-center">OpenStack Config</h3>
       </div>
       <div class="panel-body">
-        <dl class="dl-horizontal">
-          <dt>Tenant Name:</dt>
-          <dd><%= @project.name %></dd>
-          <dt>Domain:</dt>
-          <dd><%= @project.domain %></dd>
-          <dt>Network Name:</dt>
-          <dd><%= @project.network %></dd>
-          <dt>Security Group:</dt>
-          <dd><%= @project.security_group %></dd>
-        </dl>
+        <div class="col-md-6">
+          <dl class="dl-horizontal">
+            <dt>Tenant Name:</dt>
+            <dd><%= @project.name %></dd>
+            <dt>Domain:</dt>
+            <dd><%= @project.domain %></dd>
+            <dt>Network Name:</dt>
+            <dd><%= @project.network %></dd>
+            <dt>Security Group:</dt>
+            <dd><%= @project.security_group %></dd>
+          </dl>
+        </div>
+        <div class="col-md-6">
+          <dl class="dl-horizontal">
+            <dt>Max Instances:</dt>
+            <dd><%= @limits[:max_instances] %></dd>
+            <dt>Used Instances:</dt>
+            <dd><%= @limits[:used_instances] %></dd>
+            <dt>Max CPUs:</dt>
+            <dd><%= @limits[:max_cpus] %></dd>
+            <dt>Used CPUs:</dt>
+            <dd><%= @limits[:used_cpus] %></dd>
+            <dt>Max RAM:</dt>
+            <dd><%= @limits[:max_ram] %></dd>
+            <dt>Used RAM:</dt>
+            <dd><%= @limits[:used_ram] %></dd>
+          </dl>
+        </div>
       </div>
     </div>
   </div>
