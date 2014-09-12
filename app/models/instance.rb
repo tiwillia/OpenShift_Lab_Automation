@@ -221,6 +221,11 @@ EOF
 - sed -i "s/PUBLIC_IP=[0-9\.]*/PUBLIC_IP=#{self.floating_ip}/" /etc/openshift/node.conf
 - sed -i "s/PUBLIC_HOSTNAME=.*/PUBLIC_HOSTNAME=#{self.fqdn}/" /etc/openshift/node.conf
 EOF
+      if self.ose_version == "2.0" && self.gear_size != "small" && self.gear_size != ""
+        cinit = cinit + <<EOF
+- sed -i "s/node_profile=small/node_profile=#{self.gear_size}/" /etc/openshift/resource_limits.conf
+EOF
+      end
     end
 
   # Download extra tools to the broker only
