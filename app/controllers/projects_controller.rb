@@ -42,6 +42,7 @@ class ProjectsController < ApplicationController
     @floating_ips = @project.floating_ips
     @flavors = @project.flavors
     @limits = @project.limits
+    @instance_id_list = @project.instances.map {|i| i.id}
     most_recent_deployment = @project.deployments.last
     if most_recent_deployment and most_recent_deployment.in_progress?
       @deployment = most_recent_deployment

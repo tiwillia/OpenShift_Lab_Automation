@@ -142,7 +142,7 @@
       </tbody>
     </table>
   <% if @project.user_can_edit?(current_user) %>
-  <div class="col-md-6">
+  <div class="col-md-5">
     <div class="btn-group">
       <% if not @project.all_deployed? %>
         <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Deploy All</a>
@@ -153,7 +153,12 @@
       <% end %>
     </div>
   </div>
-  <div class="col-md-4"></div>
+  <div class="col-md-2">
+    <a class="btn btn-default reachable_button_all" instance_ids="<%= @instance_id_list.join(',') %>" >Check all for reachability</a>
+  </div>
+  <div class="col-md-2">
+  </div>
+  <div class="col-md-1"></div>
   <div class="col-md-2">
     <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newInstance">Add New Instance</a>
   </div>

@@ -16,6 +16,7 @@ class Instance < ActiveRecord::Base
   # If false, also returns error message
   def reachable?
     self.update_attributes(:last_checked_reachable => DateTime.now)
+    Rails.logger.debug "Checking reachability for instance #{self.fqdn}"
     begin
       Timeout::timeout(10) {
         ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false, :timeout => 5)
@@ -30,6 +31,7 @@ class Instance < ActiveRecord::Base
       return false, message
     end
     self.update_attributes(:reachable => true)
+    Rails.logger.debug "Successfully reached instance #{self.fqdn}"
     true
   end
 
