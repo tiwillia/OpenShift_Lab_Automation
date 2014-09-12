@@ -17,13 +17,17 @@ class Instance < ActiveRecord::Base
   def reachable?
     self.update_attributes(:last_checked_reachable => DateTime.now)
     begin
-      ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false)
-      ssh.exec!("hostname")
+      Timeout::timeout(10) {
+        ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false, :timeout => 5)
+        ssh.exec!("hostname")
+      }
     rescue => e
       Rails.logger.error "Could not reach instance #{self.fqdn} due to: #{e.message}"
       Rails.logger.error e.backtrace
       self.update_attributes(:reachable => false)
-      return false, e.message
+      message = e.message
+      message = "Timeout - SSH operation took longer than 10 seconds" if e.message == "execution expired"
+      return false, message
     end
     self.update_attributes(:reachable => true)
     true

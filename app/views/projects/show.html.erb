@@ -101,11 +101,25 @@
             </td>
             <td>
               <% if inst.reachable %>
-                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>"><span class="glyphicon glyphicon-ok" ></span> Check</a>
+                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" instance_id="<%= inst.id %>">
+                    <span class="glyphicon glyphicon-ok" ></span> 
+                    Check
+                  </div>
+                </a>
               <% elsif inst.reachable == false && !inst.last_checked_reachable.nil? %>
-                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>"><span class="glyphicon glyphicon-remove"></span> Check</a>
+                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" instance_id="<%= inst.id %>">
+                    <span class="glyphicon glyphicon-remove"></span> 
+                    Check
+                  </div>
+                </a>
               <% else %>
-                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">Check</a>
+                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" instance_id="<%= inst.id %>">
+                    Check
+                  </div>
+                </a>
               <% end %>
             </td>
             <td>
