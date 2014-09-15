@@ -43,6 +43,7 @@ class ProjectsController < ApplicationController
     @flavors = @project.flavors
     @limits = @project.limits
     @instance_id_list = @project.instances.map {|i| i.id}
+    @template = Template.new(:project_id => @project.id)
     most_recent_deployment = @project.deployments.last
     if most_recent_deployment and most_recent_deployment.in_progress?
       @deployment = most_recent_deployment

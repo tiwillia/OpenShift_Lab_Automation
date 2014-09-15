@@ -101,6 +101,26 @@ class Project < ActiveRecord::Base
       return false
     end
   end
+
+  def apply_template(content, assign_floating_ips=true)
+    begin
+      self.instances.each {|i| i.delete}
+      self.update_attributes(content[:project_details])
+      floating_ip_list = self.floating_ips if assign_floating_ips
+      content["instances"].each do |i|
+        new_inst = self.instances.build(i)
+        new_inst.project_id = self.id
+        new_inst.floating_ip = floating_ip_list.pop 
+        new_inst.save
+      end
+    rescue => e
+      Rails.logger.error "Failed to apply template to project #{self.name} with id #{self.id}."
+      Rails.logger.error e.message
+      Rails.logger.error e.backtrace
+      return false
+    end
+    true
+  end
  
   def details
     return nil if not self.ready?

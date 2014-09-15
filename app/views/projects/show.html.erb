@@ -142,7 +142,7 @@
       </tbody>
     </table>
   <% if @project.user_can_edit?(current_user) %>
-  <div class="col-md-5">
+  <div class="col-md-4">
     <div class="btn-group">
       <% if not @project.all_deployed? %>
         <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Deploy All</a>
@@ -153,10 +153,14 @@
       <% end %>
     </div>
   </div>
+  <div class="col-md-1"></div>
   <div class="col-md-2">
     <a class="btn btn-default reachable_button_all" instance_ids="<%= @instance_id_list.join(',') %>" >Check all for reachability</a>
   </div>
   <div class="col-md-2">
+    <a class="btn btn-default" data-toggle="modal" data-target="#newTemplate" id="new_template_button">
+      <div id="new_template_button_content">Save to template</div>
+    </a>
   </div>
   <div class="col-md-1"></div>
   <div class="col-md-2">
@@ -238,6 +242,7 @@
 </div>
 
 <%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
+<%= render :template => "templates/new", :locals => {:project_id => @project.id, :template => @template} %>
 <% @project.instances.each do |inst| %>
   <% next if inst.id.nil? %>
   <%= render :template => "instances/edit", :locals => {:project_id => @project.id, :inst => inst} %>

@@ -1,8 +1,3 @@
-sqlite: &sqlite
-  adapter: sqlite3
-  database: db/<%= Rails.env %>.sqlite3
-  timeout: 10000
-
 mysql: &mysql
   adapter: mysql2
   database: "<%=ENV['OPENSHIFT_APP_NAME']%>"
@@ -10,6 +5,13 @@ mysql: &mysql
   password: "<%=ENV['OPENSHIFT_MYSQL_DB_PASSWORD']%>"
   host:     <%=ENV['OPENSHIFT_MYSQL_DB_HOST']%>
   port:     <%=ENV['OPENSHIFT_MYSQL_DB_PORT']%>
+  timeout: 5000
+
+mysql_devel: &mysql_devel
+  adapter: mysql2
+  database: "labs_development"
+  username: "tiwillia"
+  host: "localhost"
   timeout: 5000
 
 postgresql: &postgresql
@@ -26,7 +28,7 @@ postgresql: &postgresql
 defaults: &defaults
   pool: 5
   encoding: utf8
-  <<: *<%= ENV['RAILS_DB'] || "sqlite" %>
+  <<: *<%= ENV['RAILS_DB'] || "mysql_devel" %>
 
 development:
   <<: *defaults

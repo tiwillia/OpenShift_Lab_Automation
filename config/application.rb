@@ -20,6 +20,10 @@ CONFIG = YAML.load(File.read(File.expand_path(config_file_location, __FILE__)))
 CONFIG.merge! CONFIG.fetch(Rails.env, {})
 CONFIG.symbolize_keys! 
 
+
+if ENV['OPENSHIFT_DATA_DIR']
+  CONFIG[:data_dir] = ENV['OPENSHIFT_DATA_DIR']
+end
 if ENV['OPENSHIFT_APP_DNS']
   CONFIG[:URL] = ENV['OPENSHIFT_APP_DNS']
 end

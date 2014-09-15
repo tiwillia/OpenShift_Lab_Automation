@@ -2,6 +2,8 @@ RailsApp::Application.routes.draw do
 
   resources :instances
   resources :projects
+  resources :labs
+  resources :templates
   match 'projects/:id/check_out' => 'projects#check_out'
   match 'projects/:id/uncheck_out' => 'projects#uncheck_out'
   match 'projects/:id/start' => 'projects#start_all'
@@ -13,7 +15,7 @@ RailsApp::Application.routes.draw do
   match 'instances/:id/callback_script' => 'instances#callback_script'
   match 'instances/:id/reachable' => 'instances#reachable'
   match 'deployments/:id/instance_message' => 'deployments#instance_message'
-  resources :labs
+  match 'templates/:id/apply' => 'templates#apply'
   root :to => 'projects#index'
 
   # The priority is based upon order of creation:

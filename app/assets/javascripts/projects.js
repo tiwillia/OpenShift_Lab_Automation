@@ -29,4 +29,18 @@ $(document).ready(function() {
     }
   });
 
+  $('.new_template_form').submit(function(){
+    console.log("Submiting new template!");
+    $('#newTemplate').modal("toggle");
+    $('#new_template_button_content').replaceWith('<div id="new_template_button_content"><img src="/assets/ajax-loader.gif" title="Working..." /></div>');
+    var valuesToSubmit = $(this).serialize();
+    $.post("/templates", valuesToSubmit, function(result) {
+      if (result.created === "true") {
+      $('#new_template_button').replaceWith('<a href="/templates" class="btn btn-default"><div id="new_template_button_content"><span class="text-success">Template saved!</span></div></a>');
+      };
+    });
+    return false;
+  });
+
+
 });
