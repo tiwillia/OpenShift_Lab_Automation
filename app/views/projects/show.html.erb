@@ -7,7 +7,7 @@
       <a href="/projects/<%= @project.id %>/edit" class="btn btn-info">Edit</a>
     <% end %>
     <% if @project.checked_out? %>
-      <% if current_user.id == @project.checked_out_by %>
+      <% if current_user and current_user.id == @project.checked_out_by %>
         <a href="/projects/<%= @project.id %>/uncheck_out" class="btn btn-warning">I'm done!</a> 
       <% end %>
     <% else %>
