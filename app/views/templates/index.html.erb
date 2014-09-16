@@ -8,9 +8,9 @@
           <a data-toggle="collapse" data-parent="#accordion" href="#collapse<%= t.id %>">
             <b><%= t.name %></b>&nbsp;&nbsp;<span class="text-muted"><i>Created by: <%= User.find(t.created_by).name %></i></span>
           </a>
-          <span class="pull-right">
-            <a href="/templates/<%= t.id %>" data-method="DELETE" data-confirm="Are you sure you want to delete the template <%= t.name %>?" class="btn btn-sm btn-danger">Delete</a>
-          </span>
+            <span class="pull-right">
+              <a href="/templates/<%= t.id %>" data-method="DELETE" data-confirm="Are you sure you want to delete the template <%= t.name %>?" class="btn btn-sm btn-danger">Delete</a>
+            </span>
           </h3>
         </div>
         <div id="collapse<%= t.id %>" class="panel-collapse collapse">
@@ -48,11 +48,19 @@
             </div>
             <div class="col-md-12">
             <span class="pull-right">
-            <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
-            <%= f.hidden_field :template_id, :value => t.id %>
-            <%= f.label :project_id, "Project: ", :class => "control-label" %>
-            <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), :class => "form-control" %>
-            <%= f.submit "Apply", :data => {:confirm => "This will wipe the current environment setup, are you sure you want to apply this template?"}, :class => "btn btn-sm btn-primary", :id => "apply_template_button_#{t.id}" %>
+            <% if @user_checked_out_projects.empty? && !current_user.admin? %>
+              <span class="text-muted">Check out a project to apply this template.</span>
+            <% else %>
+              <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
+              <%= f.hidden_field :template_id, :value => t.id %>
+              <%= f.label :project_id, "Project: ", :class => "control-label" %>
+              <% if current_user.admin? %>
+                <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), :class => "form-control" %>
+              <% else %>
+                <%= f.select :project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), :class => "form-control" %>
+              <% end %>
+              <%= f.submit "Apply", :data => {:confirm => "This will wipe the current environment setup, are you sure you want to apply this template?"}, :class => "btn btn-sm btn-primary", :id => "apply_template_button_#{t.id}" %>
+              <% end %>
             <% end %>
             </span>
             </div>
@@ -64,20 +72,73 @@
   <hr />
 <% end %>
 <% if !@templates.empty? %>
-  <h1>All Saved Templates:</h1>
+  <h1>All Templates:</h1>
   <div class="panel-group" id="accordion">
     <% @templates.each do |t| %>
       <div class="panel panel-default">
         <div class="panel-heading">
-          <h3 class="panel-title"> 
+          <h3 class="panel-title" style="padding-top:0px;padding-bottom:10px"> 
           <a data-toggle="collapse" data-parent="#accordion" href="#collapse<%= t.id %>">
-            <%= t.name %>
+            <b><%= t.name %></b>&nbsp;&nbsp;<span class="text-muted"><i>Created by: <%= User.find(t.created_by).name %></i></span>
           </a>
+          <% if current_user.admin? %>
+            <span class="pull-right">
+              <a href="/templates/<%= t.id %>" data-method="DELETE" data-confirm="Are you sure you want to delete the template <%= t.name %>?" class="btn btn-sm btn-danger">Delete</a>
+            </span>
+          <% end %>
           </h3>
         </div>
         <div id="collapse<%= t.id %>" class="panel-collapse collapse">
           <div class="panel-body">
-          <%= t.description %>
+            <div class="col-md-6">
+              <%= t.description %>
+            </div>
+            <div class="col-md-3">
+              <dl class="dl-horizontal">
+                <dt>OpenShift Username:</dt>
+                <dd><%= t.content["project_details"]["openshift_username"] %></dd>
+                <dt>OpenShfit Password:</dt>
+                <dd><%= t.content["project_details"]["openshift_password"] %></dd>
+                <dt>Mcollective Username:</dt>
+                <dd><%= t.content["project_details"]["mcollective_username"] %></dd>
+                <dt>Mcollective Password:</dt>
+                <dd><%= t.content["project_details"]["mcollective_password"] %></dd>
+                <dt>Activemq Admin Pass:</dt>
+                <dd><%= t.content["project_details"]["activemq_admin_password"] %></dd>
+                <dt>Activemq User Pass:</dt>
+                <dd><%= t.content["project_details"]["activemq_user_password"] %></dd>
+              </dl>
+            </div>
+            <div class="col-md-3">
+              <dl class="dl-horizontal">
+                <dt>Mongodb Username:</dt>
+                <dd><%= t.content["project_details"]["mongodb_username"] %></dd>
+                <dt>Mongodb Password:</dt>
+                <dd><%= t.content["project_details"]["mongodb_password"] %></dd>
+                <dt>Mongodb Admin User:</dt>
+                <dd><%= t.content["project_details"]["mongodb_admin_username"] %></dd>
+                <dt>Mongodb Admin Pass:</dt>
+                <dd><%= t.content["project_details"]["mongodb_admin_password"] %></dd>
+              </dl>
+            </div>
+            <div class="col-md-12">
+            <span class="pull-right">
+            <% if @user_checked_out_projects.empty? && !current_user.admin? %>
+              <span class="text-muted">Check out a project to apply this template.</span>
+            <% else %>
+              <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
+              <%= f.hidden_field :template_id, :value => t.id %>
+              <%= f.label :project_id, "Project: ", :class => "control-label" %>
+              <% if current_user.admin? %>
+                <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), :class => "form-control" %>
+              <% else %>
+                <%= f.select :project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), :class => "form-control" %>
+              <% end %>
+              <%= f.submit "Apply", :data => {:confirm => "This will wipe the current environment setup, are you sure you want to apply this template?"}, :class => "btn btn-sm btn-primary", :id => "apply_template_button_#{t.id}" %>
+              <% end %>
+            <% end %>
+            </span>
+            </div>
           </div>
         </div>
       </div>

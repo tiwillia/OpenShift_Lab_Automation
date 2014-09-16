@@ -1,5 +1,9 @@
 class ProjectsController < ApplicationController
 
+before_filter :can_edit?, :only => [:uncheck_out, :update, :edit, :start_all, :restart_all, :stop_all]
+before_filter :is_admin?, :only => [:new, :create, :destroy]
+
+
   def index
     @projects = Project.all
   end
@@ -108,7 +112,6 @@ class ProjectsController < ApplicationController
   end
 
   def uncheck_out
-    user_id = current_user.id
     @project = Project.find(params[:id])
     if @project.checked_out?
       if @project.uncheck_out
@@ -119,7 +122,7 @@ class ProjectsController < ApplicationController
         redirect_to project_path(@project)
       end
     else
-      flash[:error] = "Project is not checked out, cannot turn the project in."
+      flash[:error] = "Project is not checked out, cannot free project that is already free."
       redirect_to project_path(@project)
     end
   end
@@ -132,6 +135,26 @@ private
 
   def edit_project_params
     params.require(:project).permit!
+  end
+
+  def can_edit?
+    @project = Project.find(params[:id])
+    if @project.checked_out?
+      if @project.checked_out_by != current_user.id && !current_user.admin?
+        flash[:error] = "You do not have permissions to make changes to this project."
+        redirect_to project_path(@project)  
+      end
+    elsif !current_user.admin?
+      flash[:error] = "Check out this project to be able to make changes to it."
+      redirect_to project_path(@project)
+    end
+  end
+
+  def is_admin?
+    if !current_user.admin?
+      flash[:error] = "You must be an administrator to perform this action"
+      redirect_to :back
+    end
   end
 
 end

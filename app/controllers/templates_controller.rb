@@ -1,5 +1,7 @@
 class TemplatesController < ApplicationController
 
+before_filter :can_edit?, :only => [:destroy]
+
   def create
     @template = Template.new(template_params)
     if @template.save
@@ -15,6 +17,7 @@ class TemplatesController < ApplicationController
 
   def index
     @users_templates = Template.where(:created_by => current_user.id) unless not logged_in?
+    @user_checked_out_projects = Project.where(:checked_out_by => current_user.id)
     @templates = Template.all
     @templates = @templates - @users_templates if defined? @users_templates
   end
@@ -52,6 +55,14 @@ private
 
   def template_params
     params.require(:template).permit(:name, :description, :project_id, :created_by)
+  end
+
+  def can_edit?
+    @template = Template.find(params[:id])
+    if @template.created_by != current_user.id && !current_user.admin?
+      flash[:error] = "You do not have permissions to do this."
+      redirect_to "/templates/"
+    end
   end
 
 end
