@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140912214645) do
+ActiveRecord::Schema.define(:version => 20140916223743) do
 
   create_table "deployments", :force => true do |t|
     t.integer  "project_id"
@@ -43,6 +43,7 @@ ActiveRecord::Schema.define(:version => 20140912214645) do
     t.boolean  "deployment_completed",   :default => false
     t.boolean  "reachable",              :default => false
     t.datetime "last_checked_reachable"
+    t.boolean  "no_openshift",           :default => false
   end
 
   create_table "labs", :force => true do |t|

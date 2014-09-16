@@ -68,12 +68,18 @@ class Instance < ActiveRecord::Base
     # Get the security group
     sec_grp = p.security_group
 
+    if not self.no_openshift
     # Encode the cloud_init data
     cloud_init = Base64.encode64(self.cloud_init)
+    end
 
     tries = 3
     begin
-      server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
+      if not self.no_openshift
+        server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
+      else
+        server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :networks => [{:uuid => network_id}])
+      end
     rescue => e
       tries -= 1
       if tries > 0
