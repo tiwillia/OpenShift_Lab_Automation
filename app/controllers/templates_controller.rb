@@ -16,6 +16,7 @@ before_filter :can_edit?, :only => [:destroy]
   end
 
   def index
+    current_user(true)
     @users_templates = Template.where(:created_by => current_user.id) unless not logged_in?
     @user_checked_out_projects = Project.where(:checked_out_by => current_user.id)
     @templates = Template.all
@@ -59,7 +60,7 @@ private
 
   def can_edit?
     @template = Template.find(params[:id])
-    if @template.created_by != current_user.id && !current_user.admin?
+    if @template.created_by != current_user(true).id && !current_user(true).admin?
       flash[:error] = "You do not have permissions to do this."
       redirect_to "/templates/"
     end

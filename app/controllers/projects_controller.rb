@@ -2,7 +2,7 @@ class ProjectsController < ApplicationController
 
 before_filter :can_edit?, :only => [:uncheck_out, :update, :edit, :start_all, :restart_all, :stop_all]
 before_filter :is_admin?, :only => [:new, :create, :destroy]
-
+before_filter :is_logged_in?, :only => :check_out
 
   def index
     @projects = Project.all
@@ -94,7 +94,8 @@ before_filter :is_admin?, :only => [:new, :create, :destroy]
   end
 
   def check_out
-    user_id = current_user(true).id
+    logged_in?(true)
+    user_id = current_user.id
     @project = Project.find(params[:id])
     if @project.checked_out?
       user = User.find(@project.checked_out_by)
@@ -140,20 +141,26 @@ private
   def can_edit?
     @project = Project.find(params[:id])
     if @project.checked_out?
-      if @project.checked_out_by != current_user.id && !current_user.admin?
+      if @project.checked_out_by != current_user(true).id && !current_user(true).admin?
         flash[:error] = "You do not have permissions to make changes to this project."
         redirect_to project_path(@project)  
       end
-    elsif !current_user.admin?
+    elsif !current_user(true).admin?
       flash[:error] = "Check out this project to be able to make changes to it."
       redirect_to project_path(@project)
     end
   end
 
   def is_admin?
-    if !current_user.admin?
+    if !current_user(true).admin?
       flash[:error] = "You must be an administrator to perform this action"
       redirect_to :back
+    end
+  end
+
+  def is_logged_in?
+    if !logged_in?
+      redirect_to "https://redhat.com/wapps/sso/login.html?redirect=#{CONFIG[:URL]}"
     end
   end
 

@@ -35,7 +35,9 @@
               <li><%= link_to "OpenStack Hosts", "/labs"  %></li>
             <% end %>
             <li><%= link_to "OpenShift Labs", "/projects"  %></li>
-            <li><%= link_to "Environment Templates", "/templates" %></li>
+            <% if logged_in? %>
+              <li><%= link_to "Environment Templates", "/templates" %></li>
+            <% end %>
           </ul>
           <% if logged_in? %>
             <ul class="nav navbar-nav navbar-right">

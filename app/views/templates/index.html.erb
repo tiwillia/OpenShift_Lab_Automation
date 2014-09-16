@@ -48,13 +48,13 @@
             </div>
             <div class="col-md-12">
             <span class="pull-right">
-            <% if @user_checked_out_projects.empty? && !current_user.admin? %>
+            <% if current_user and (@user_checked_out_projects.empty? && !current_user.admin?) %>
               <span class="text-muted">Check out a project to apply this template.</span>
             <% else %>
               <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
               <%= f.hidden_field :template_id, :value => t.id %>
               <%= f.label :project_id, "Project: ", :class => "control-label" %>
-              <% if current_user.admin? %>
+              <% if current_user and current_user.admin? %>
                 <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), :class => "form-control" %>
               <% else %>
                 <%= f.select :project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), :class => "form-control" %>
@@ -81,7 +81,7 @@
           <a data-toggle="collapse" data-parent="#accordion" href="#collapse<%= t.id %>">
             <b><%= t.name %></b>&nbsp;&nbsp;<span class="text-muted"><i>Created by: <%= User.find(t.created_by).name %></i></span>
           </a>
-          <% if current_user.admin? %>
+          <% if current_user and current_user.admin? %>
             <span class="pull-right">
               <a href="/templates/<%= t.id %>" data-method="DELETE" data-confirm="Are you sure you want to delete the template <%= t.name %>?" class="btn btn-sm btn-danger">Delete</a>
             </span>
@@ -123,13 +123,13 @@
             </div>
             <div class="col-md-12">
             <span class="pull-right">
-            <% if @user_checked_out_projects.empty? && !current_user.admin? %>
+            <% if current_user and (@user_checked_out_projects.empty? && !current_user.admin?) %>
               <span class="text-muted">Check out a project to apply this template.</span>
             <% else %>
               <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
               <%= f.hidden_field :template_id, :value => t.id %>
               <%= f.label :project_id, "Project: ", :class => "control-label" %>
-              <% if current_user.admin? %>
+              <% if current_user and current_user.admin? %>
                 <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), :class => "form-control" %>
               <% else %>
                 <%= f.select :project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), :class => "form-control" %>

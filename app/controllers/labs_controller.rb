@@ -65,7 +65,7 @@ private
   end
 
   def is_admin?
-    if not current_user.admin?
+    if current_user.nil? || !current_user.admin?
       flash[:error] = "You must be an administrator to perform this action."
       redirect_to :back
     end

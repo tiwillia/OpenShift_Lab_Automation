@@ -112,7 +112,7 @@ private
 
   def can_edit?
     @instance.find(params[:id])
-    if Project.find(@instance.project_id).checked_out_by != current_user.id && !current_user.admin
+    if current_user and (Project.find(@instance.project_id).checked_out_by != current_user.id && !current_user.admin)
       flash[:error] = "You do not have permissions to make changes to this instance"
       redirect_to "/projects"
     end

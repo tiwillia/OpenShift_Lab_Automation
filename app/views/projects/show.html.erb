@@ -123,7 +123,7 @@
               <% end %>
             </td>
             <td>
-              <% if @project.user_can_edit?(verified_user) %>
+              <% if verified_user and @project.user_can_edit?(verified_user) %>
               <div class="dropdown">
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
@@ -241,8 +241,10 @@
   </div>
 </div>
 
-<%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
-<%= render :template => "templates/new", :locals => {:project_id => @project.id, :template => @template} %>
+<% if current_user and (@project.checked_out_by == current_user.id || current_user.admin?) %>
+  <%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
+  <%= render :template => "templates/new", :locals => {:project_id => @project.id, :template => @template} %>
+<% end %>
 <% @project.instances.each do |inst| %>
   <% next if inst.id.nil? %>
   <%= render :template => "instances/edit", :locals => {:project_id => @project.id, :inst => inst} %>
