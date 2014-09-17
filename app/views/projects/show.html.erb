@@ -84,12 +84,16 @@
         <% instances.each do |inst| %>
           <tr>
             <td><%= inst.name %></td>
-            <td><%= inst.types.join(", ") %></td>
+            <% if inst.no_openshift %>
+              <td><span class="text-muted">Blank host</span></td>
+            <% else %>
+              <td><%= inst.types.join(", ") %></td>
+            <% end %>
             <td><%= inst.floating_ip %></td>
             <td><%= inst.root_password %></td>
             <td><%= inst.image %></td>
             <td><%= inst.flavor %></td>
-            <td><%= inst.gear_size if inst.types.include?("node") %></td>
+            <td><%= inst.gear_size if !inst.no_openshift and inst.types.include?("node") %></td>
             <td>
               <% if inst.deployment_completed %>
                 <span class="glyphicon glyphicon-ok"></span>

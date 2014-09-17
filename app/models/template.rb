@@ -29,6 +29,8 @@ class Template < ActiveRecord::Base
     dns_count = dns_instances.count
     node_instances = self.content["instances"].map {|i| i if i["types"].include? "node"}.compact
     node_count = node_instances.count
+    blank_instances = self.content["instances"].map {|i| i if i["no_openshift"] }.compact
+    blank_count = blank_instances.count
     node_gear_sizes = self.content["instances"].map{|i| i["gear_size"] if i["types"].include? "node"}.compact.uniq
     content_description = <<EOF
 This template contains #{instance_count} instances. There are #{broker_count} brokers, #{datastore_count} datastores, #{activemq_count} activemq servers, #{node_count} nodes, and #{dns_count} named servers. The node gear sizes used are: #{node_gear_sizes.join(',')}.
@@ -36,6 +38,7 @@ EOF
     content_description.chomp!
     content_description += " This deployment contains highly available datastores.".chomp if datastore_count >= 3
     content_description += " This deployment contains highly available activemq instances.".chomp if activemq_count >= 2
+    content_description += " There are also #{blank_count} instances without an OpenShift type.".chomp if blank_count >= 1
     content_description
   end
 
@@ -68,7 +71,8 @@ private
         "root_password" => inst.root_password,
         "gear_size" => inst.gear_size,
         "flavor" => inst.flavor,
-        "image" => inst.image
+        "image" => inst.image,
+        "no_openshift" => inst.no_openshift
       }
     end
     self.content = content

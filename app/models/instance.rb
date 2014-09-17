@@ -7,10 +7,10 @@ class Instance < ActiveRecord::Base
   serialize :install_variables
 
   before_save :determine_fqdn
+  before_save :ensure_types_exists
 
   validates :name, :floating_ip, :root_password, :flavor, :image, :project, presence: true
   validates :root_password, length: { minimum: 3 }
-  validate :types_check
 
   # Returns true or false
   # If false, also returns error message
@@ -68,18 +68,16 @@ class Instance < ActiveRecord::Base
     # Get the security group
     sec_grp = p.security_group
 
-    if not self.no_openshift
     # Encode the cloud_init data
-    cloud_init = Base64.encode64(self.cloud_init)
+    if self.no_openshift
+      cloud_init = Base64.encode64(self.cloud_init_blank)
+    else
+      cloud_init = Base64.encode64(self.cloud_init)
     end
 
     tries = 3
     begin
-      if not self.no_openshift
         server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
-      else
-        server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :networks => [{:uuid => network_id}])
-      end
     rescue => e
       tries -= 1
       if tries > 0
@@ -126,6 +124,45 @@ class Instance < ActiveRecord::Base
     end
   end
 
+  def cloud_init_blank
+    cinit=<<EOF
+#cloud-config               
+# vim:syntax=yaml
+hostname: #{self.name}
+fqdn: #{self.fqdn}
+manage_etc_hosts: true
+debug: True
+ssh_pwauth: True
+disable_root: false
+chpasswd:
+  list: |
+    root:#{self.root_password}
+    cloud-user:test
+  expire: false
+runcmd:
+#The MTU is necessary
+- echo "MTU=1450" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+- service network restart
+- sed -i'.orig' -e's/without-password/yes/' /etc/ssh/sshd_config
+- echo $'StrictHostKeyChecking no\\nUserKnownHostsFile /dev/null' >> /etc/ssh/ssh_config
+- service sshd restart
+- curl mameshiba.usersys.redhat.com/bashrc > /root/.bashrc
+- curl mameshiba.usersys.redhat.com/bash_profile > /root/.bash_profile
+- curl mameshiba.usersys.redhat.com/vimrc > /root/.vimrc
+- curl mameshiba.usersys.redhat.com/voyager/authorized_keys > /root/.ssh/authorized_keys
+- curl mameshiba.usersys.redhat.com/voyager/voyager.pub > /root/.ssh/id_rsa.pub
+- curl mameshiba.usersys.redhat.com/voyager/voyager.pri > /root/.ssh/id_rsa
+- chmod 0600 /root/.ssh/id_rsa
+- chmod 0600 /root/.ssh/id_rsa.pub
+- mkdir -p /etc/pki/product
+- curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
+- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.name.gsub(/\W/, "")} &>> /root/.rhsm_output
+- subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
+- subscription-manager repos --disable=* &>> /root/.rhsm_output
+- subscription-manager repos --enable=rhel-6-server-rpms &>> /root/.rhsm_output
+EOF
+  end
+
   # Generate cloudinit details 
   def cloud_init
 
@@ -165,7 +202,7 @@ runcmd:
 - mkdir -p /etc/pki/product
 - curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
 - curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
-- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} &>> /root/.rhsm_output
+- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.name.gsub(/\W/, "")} &>> /root/.rhsm_output
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 EOF
@@ -269,13 +306,6 @@ private
     self.fqdn = fqdn
   end
 
-  def types_check
-    self.types = types.map {|t| t.downcase}
-    self.types.each do |t|
-      errors.add(:types, "#{t} is not a valid type") unless CONFIG[:types].include? t
-    end
-  end 
-
   # Generate Installation script variables
   def generate_variables
     # Possible (2.1) variables:
@@ -371,6 +401,12 @@ private
 
     return variables
 
+  end
+
+  def ensure_types_exists
+    if self.types.nil?
+      self.types = []
+    end
   end
 
 end

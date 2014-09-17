@@ -210,6 +210,7 @@ class Project < ActiveRecord::Base
       return false, "There are more #{self.instances.count - limits[:max_instances]} more instances than the project limit of \"#{limits[:max_instances]}\" allows."
     end
     types.uniq!
+    types.compact!
     if types.sort == ["named", "broker", "datastore", "activemq", "node"].sort
       true
     else

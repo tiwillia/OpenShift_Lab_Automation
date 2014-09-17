@@ -144,6 +144,7 @@ private
     last_node = phase3.last
     all_complete = false 
     complete_instances = []
+    complete_instances << @project.instances.where(:no_openshift => true)
 
     # Wait for all instances to complete
     time_waited = 0

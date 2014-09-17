@@ -8,7 +8,6 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
 
   def create
     pars = new_instance_params
-    pars[:types] = pars[:types].split(",")
     @instance = Instance.new(pars)
     if @instance.save
       flash[:success] = "Instance Successfully created."
@@ -111,7 +110,7 @@ private
   end
 
   def can_edit?
-    @instance.find(params[:id])
+    @instance = Instance.find(params[:id])
     if current_user and (Project.find(@instance.project_id).checked_out_by != current_user.id && !current_user.admin)
       flash[:error] = "You do not have permissions to make changes to this instance"
       redirect_to "/projects"
