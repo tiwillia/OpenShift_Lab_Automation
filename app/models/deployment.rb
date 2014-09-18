@@ -67,9 +67,7 @@ class Deployment < ActiveRecord::Base
 
   def instance_message(instance_id, message)
     dlog "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
-    dlog "OLD deployment queue: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     DEPLOYMENT_QUEUES[self.id].push({:instance_id => instance_id, :message => message})
-    dlog "NEW deployment queue: #{DEPLOYMENT_QUEUES[self.id].inspect}"
   end
 
   def in_progress?
