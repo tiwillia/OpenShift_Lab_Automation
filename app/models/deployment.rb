@@ -134,17 +134,17 @@ private
     dlog "Phase2: #{phase2}" 
     dlog "Phase3: #{phase3}" 
     dlog "Phase4: #{phase4}" 
-    phase1.each {|i| i.start; i.update_attributes(:deployment_started => true)}   
+    phase1.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}   
     dlog "Phase one started, waiting 2 minutes..." 
     sleep 120 
     dlog "Phase 2 + 3 begin..." 
-    phase2.each {|i| i.start; i.update_attributes(:deployment_started => true)}    
-    phase3.each {|i| i.start; i.update_attributes(:deployment_started => true)}    
+    phase2.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
+    phase3.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
     dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
     dlog "Deployment queue before phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 begin..." 
-    phase4.each {|i| i.start; i.update_attributes(:deployment_started => true)}    
+    phase4.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
     dlog "Deployment queue after phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 complete, waiting for completion..." 
 
@@ -255,9 +255,6 @@ private
 
   def rebuild_deployment
     destroy_deployment
-    @project.instances.each do |inst|
-      inst.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false) unless inst.deployment_completed == false
-    end
     sleep 20 # Wait for slow openstack servers
     begin_deployment
   end
