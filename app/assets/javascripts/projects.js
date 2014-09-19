@@ -42,5 +42,44 @@ $(document).ready(function() {
     return false;
   });
 
+  $('#new_instance_check_box_no_openshift').change(function(){
+    if (this.checked) {
+      $('.new_instance_check_boxes').prop('checked', false); 
+      $('.new_instance_check_boxes').prop('disabled', true); 
+      $('.new_instance_gear_size').prop('disabled', true); 
+    } else if (this.checked === false) {
+      $('.new_instance_check_boxes').prop('disabled', false); 
+    };
+  });
+
+  $('.edit_instance_check_box_no_openshift').change(function(){
+    var inst_id = $(this).attr("instance_id");
+    console.log(inst_id);
+    if (this.checked) {
+      $('.edit_instance_check_boxes[instance_id=' + inst_id  + ']').prop('checked', false); 
+      $('.edit_instance_check_boxes[instance_id=' + inst_id  + ']').prop('disabled', true); 
+      $('.edit_instance_gear_size[instance_id=' + inst_id  + ']').prop('disabled', true); 
+    } else if (this.checked === false) {
+      $('.edit_instance_check_boxes[instance_id=' + inst_id  + ']').prop('disabled', false); 
+    };
+  });
+
+  $('.edit_instance_check_box_node').change(function(){
+    var inst_id = $(this).attr("instance_id");
+    if (this.checked) {
+      $('.edit_instance_gear_size[instance_id=' + inst_id  + ']').prop('disabled', false); 
+    } else if (this.checked === false) {
+      $('.edit_instance_gear_size[instance_id=' + inst_id  + ']').prop('disabled', true); 
+    };
+  });
+
+  $('#new_instance_check_box_node').change(function(){
+    if (this.checked) {
+      $('.new_instance_gear_size').prop('disabled', false); 
+    } else if (this.checked === false) {
+      $('.new_instance_gear_size').prop('disabled', true); 
+    };
+  
+  });
 
 });

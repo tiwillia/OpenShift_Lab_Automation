@@ -271,5 +271,5 @@
 <% end %>
 <% @project.instances.each do |inst| %>
   <% next if inst.id.nil? %>
-  <%= render :template => "instances/edit", :locals => {:project_id => @project.id, :inst => inst} %>
+  <%= render :template => "instances/edit", :locals => {:project_id => @project.id, :@instance => inst} %>
 <% end %>

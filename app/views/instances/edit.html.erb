@@ -1,47 +1,53 @@
-<div class="modal fade" id="editInstance<%= inst.id %>" role="dialog">
+<div class="modal fade" id="editInstance<%= @instance.id %>" role="dialog">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title">New OpenShift Instance</h4>
+        <h4 class="modal-title">Edit OpenShift Instance</h4>
       </div>
       <div class="modal-body">
         <p>Each instance within an OpenShift environment will be of one or more of the following types: broker,node,activemq,mongodb,datastore,named. For a complete environment, at least one instance must contain each of these types.</p>
-        <%= form_for inst, :html => {:role => "form"} do |f| %>
+        <%= form_for @instance, :html => {:role => "form"} do |f| %>
           <div class="well">
             <div class="form-group">
               <%= f.label "Hostname", :class => "control-label" %>
                 <%= f.text_field :name, :class => "form-control" %>
             </div>
             <div class="form-group">
-              <%= f.label "Types", :class => "control-label" %>
-                <%= f.text_field :types, :class => "form-control", :value => inst.types.join(",") %>
-                <p class="help-block">Comma-separated list (no spaces) of one or more of: broker,node,activemq,datastore,named.</p>
+              <%= f.label "Types", :class => "control-label" %><br>
+              <% ["broker","named","datastore", "activemq", "node"].each do |inst_type| %>
+              <label class="checkbox-inline" for="instance">
+                <% if inst_type == "node" %>
+                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes edit_instance_check_box_node", :instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
+                <% else %> 
+                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes", :instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
+                <% end %>
+              </label>
+              <% end %><br>
+              <label class="checkbox-inline" for="instance"> 
+                <%= f.check_box :no_openshift, {:class => "edit_instance_check_box_no_openshift", :instance_id => @instance.id}, true, false %>Blank host (no OpenShift)
+              </label> 
             </div>
             <div class="form-group">
               <%= f.label "Flavor", :class => "control-label" %>
-                <%= f.select :flavor, options_for_select(@flavors, inst.flavor), {}, {:class => "form-control"} %>
+                <%= f.select :flavor, options_for_select(@flavors, @flavors.first), {}, {:class => "form-control"} %>
             </div>
             <div class="form-group">
               <%= f.label "Floating IP", :class => "control-label" %>
-                <%= f.select :floating_ip, options_for_select(@floating_ips, inst.floating_ip), {}, {:class => "form-control"} %>
+                <%= f.select :floating_ip, options_for_select(@floating_ips, @floating_ips.first), {}, {:class => "form-control"} %>
                 <p class="help-block">Externally accessible IP for this instance. Must be allocated to the openstack tenant.</p>
             </div>
             <div class="form-group">
               <%= f.label "Image", :class => "control-label" %>
-                <%= f.select :image, options_for_select(@images, inst.image), {}, {:class => "form-control"} %>
+                <%= f.select :image, options_for_select(@images, @images.first), {}, {:class => "form-control"} %>
             </div>
             <div class="form-group">
               <%= f.label "Root Password", :class => "control-label" %>
-                <%= f.text_field :root_password, :class => "form-control" %>
+                <%= f.text_field :root_password, :class => "form-control", :value => "redhat" %>
             </div>
             <div class="form-group">
               <%= f.label "Gear Size (Node only)", :class => "control-label" %>
-                <%= f.text_field :gear_size, :class => "form-control", :value => "small" %>
-            </div>
-            <div class="form-group">
-              <%= f.label "Blank host (no OpenShift)", :class => "control-label" %>
-                <%= f.check_box :no_openshift, :class => "form-control", :style => "width:20px" %>
+                <%= f.text_field :gear_size, :class => "form-control edit_instance_gear_size", :disabled => true, :instance_id => @instance.id %>
             </div>
           </div>
       </div>
