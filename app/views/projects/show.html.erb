@@ -209,7 +209,9 @@
             <dd><%= @limits[:used_ram] %></dd>
           </dl>
         </div>
-        <a data-toggle="modal" data-target="#destroy_all_warning_modal" class="btn btn-danger">Destroy all instances on backend</a>
+        <% if current_user and (@project.checked_out_by == current_user.id || current_user.admin?) %>
+          <a data-toggle="modal" data-target="#destroy_all_warning_modal" class="btn btn-danger">Destroy all instances on backend</a>
+        <% end %>
       </div>
     </div>
   </div>
@@ -245,25 +247,25 @@
     </div>
   </div>
 </div>
-<div class="modal fade" id="destroy_all_warning_modal" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Are you sure you want to remove all instances on the backend?</h3>
-      </div>
-      <div class="modal-body">
-        This will remove any instances in this tenant that were created on the openstack backend inside and outside of this application. All instances in this project will be un-depoyed.<br>
-        There are <b><%= @project.instances.count %></b> instances in this application.<br>
-        There are <b><%= @limits[:used_instances] %></b> instances on the openstack backend.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <a href="/projects/<%= @project.id %>/destroy_on_backend" class="btn btn-danger">Destroy all</a>
+<% if current_user and (@project.checked_out_by == current_user.id || current_user.admin?) %>
+  <div class="modal fade" id="destroy_all_warning_modal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Are you sure you want to remove all instances on the backend?</h3>
+        </div>
+        <div class="modal-body">
+          This will remove any instances in this tenant that were created on the openstack backend inside and outside of this application. All instances in this project will be un-depoyed.<br>
+          There are <b><%= @project.instances.count %></b> instances in this application.<br>
+          There are <b><%= @limits[:used_instances] %></b> instances on the openstack backend.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <a href="/projects/<%= @project.id %>/destroy_on_backend" class="btn btn-danger">Destroy all</a>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<% if current_user and (@project.checked_out_by == current_user.id || current_user.admin?) %>
   <%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
   <%= render :template => "templates/new", :locals => {:project_id => @project.id, :template => @template} %>
 <% end %>
