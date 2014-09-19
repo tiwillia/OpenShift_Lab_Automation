@@ -9,6 +9,7 @@ RailsApp::Application.routes.draw do
   match 'projects/:id/start' => 'projects#start_all'
   match 'projects/:id/stop' => 'projects#stop_all'
   match 'projects/:id/restart' => 'projects#restart_all'
+  match 'projects/:id/destroy_on_backend' => 'projects#destroy_on_backend'
   match 'instances/:id/start' => 'instances#start'
   match 'instances/:id/stop' => 'instances#stop'
   match 'instances/:id/restart' => 'instances#restart'

@@ -29,6 +29,26 @@ class Project < ActiveRecord::Base
     end
   end
 
+  # This will remove all instances in a project, whether they were created by
+  #   the project or not.
+  def destroy_all
+    c = self.get_connection
+    c.servers.each do |s|
+      server = c.get_server(s[:id])
+      if !server.delete!
+        Rails.logger.error "Unable to delete server on backend: #{server.inspect}"
+        return false
+      end
+    end
+    self.instances.each do |i|
+      if not i.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
+        Rails.logger.error "Unable to update instance after destroying on backend: #{i.inspect}"
+        return false
+      end
+    end
+    return true
+  end
+
   def restart_all
     deployment = self.deployments.new(:action => "redploy")
     if deployment.save
@@ -104,6 +124,7 @@ class Project < ActiveRecord::Base
 
   def apply_template(content, assign_floating_ips=true)
     begin
+      raise "Could not destroy all backend instances" unless self.destroy_all
       self.instances.each {|i| i.delete}
       self.update_attributes(content[:project_details])
       floating_ip_list = self.floating_ips if assign_floating_ips

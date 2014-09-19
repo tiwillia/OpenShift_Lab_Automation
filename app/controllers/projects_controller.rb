@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
 
-before_filter :can_edit?, :only => [:uncheck_out, :update, :edit, :start_all, :restart_all, :stop_all]
+before_filter :can_edit?, :only => [:uncheck_out, :update, :edit, :start_all, :restart_all, :stop_all, :destroy_on_backend]
 before_filter :is_admin?, :only => [:new, :create, :destroy]
 before_filter :is_logged_in?, :only => :check_out
 
@@ -63,6 +63,17 @@ before_filter :is_logged_in?, :only => :check_out
       redirect_to project_path(@project)
     else
       flash[:error] = "Project could not be removed."
+      redirect_to :back
+    end
+  end
+
+  def destroy_on_backend
+    @project = Project.find(params[:id])
+    if @project.destroy_all
+      flash[:success] = "All backend servers successfully removed."
+      redirect_to project_path(@project)
+    else
+      flash[:error] = "All backend server could not be removed. Contact an administrator now."
       redirect_to :back
     end
   end

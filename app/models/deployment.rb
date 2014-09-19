@@ -37,6 +37,16 @@ class Deployment < ActiveRecord::Base
           dlog("#{e.backtrace}", :error)
         end
 
+      when "tear_down"
+        dlog "Destroying all instances on the backend for project #{@project.name}"
+        begin
+          destroy_on_backend
+          dlog "Destroyed all isntances on the backend for project #{@project.name}"
+        rescue => e
+          dlog("ERROR could not destroy all instances on the backend #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
+        end
+
       when "redeploy"
         dlog "Restarting deployment #{@project.name}"
         begin
@@ -237,6 +247,10 @@ private
     @project.instances.each do |inst|
       inst.stop
     end
+  end
+
+  def destroy_on_backend
+    @project.destroy_all 
   end
 
   def rebuild_deployment
