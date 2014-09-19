@@ -255,6 +255,9 @@ private
 
   def rebuild_deployment
     destroy_deployment
+    @project.instances.each do |inst|
+      inst.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false) unless inst.deployment_completed == false
+    end
     sleep 20 # Wait for slow openstack servers
     begin_deployment
   end
