@@ -1,0 +1,46 @@
+<h1>About</h1>
+<p>
+  This labs application is to be used globally by Red Hat employees (primarily GSS) in need of an easy way to deploy an OpenShift environment for testing purposes. The environments are designed to be created and torn down quickly. The deployment process can handle any type of OpenShift deployment, included HA mongo databases and HA activemq instances.<br><br>
+
+  Users can check out an OpenShift lab to gain access to modify the environment. Templates of environments can be saved for easy creation of simple or complex configurations.
+</p>
+<br>
+<h1>Frequently Asked Questions</h1>
+<div class="panel-group" id="accordian">
+<% @questions.each do |title, partial_name| %>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title" style="font-size:18px">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse<%= partial_name %>">
+          <%= title %>
+        </a>
+      </h3>
+    </div>
+    <div id="collapse<%= partial_name %>" class="panel-collapse collapse">
+      <div class="panel-body">
+        <p style="font-size:16px">
+        <%= render "welcome/faq/#{partial_name}" %>
+        </p>
+      </div>
+    </div>
+  </div>
+<% end %>
+<br>
+<h1>Contacts</h1>
+<dl class="dl-horizontal">
+  <dt>Administrator:</dt>
+  <dd><%= CONFIG[:admin_name] %></dd>
+  <dt>Email:</dt>
+  <dd><%= CONFIG[:admin_email] %></dd>
+  <dt>IRC nick:</dt>
+  <dd><%= CONFIG[:admin_irc_nick] %></dd>
+  <dt>IRC channel:</dt>
+  <dd><%= CONFIG[:irc_channel] %></dd>
+</dl>
+<hr />
+<h3>Where can I submit issues? How can I contribute?</h3>
+<p>
+  All issues can be submitted on the github repository:<br>
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="<%= CONFIG[:github_repo] %>"><%= CONFIG[:github_repo] %></a><br>
+  Any contributions can be submitted via forking the repository and submitting a pull request. All contributions are welcome (even typo fixes!).
+</p>

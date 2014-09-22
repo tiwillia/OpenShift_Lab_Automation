@@ -39,11 +39,12 @@
               <li><%= link_to "Environment Templates", "/templates" %></li>
             <% end %>
           </ul>
-          <% if logged_in? %>
             <ul class="nav navbar-nav navbar-right">
-              <li><p class="navbar-text"><%= current_user.name %></p></li>
+              <li><%= link_to "Help", "/help" %></li>
+              <% if logged_in? %>
+                <li><p class="navbar-text"><%= current_user.name %></p></li>
+              <% end %>
             </ul>
-          <% end %>
         </div>
       </div>
     </div>

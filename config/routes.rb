@@ -17,6 +17,7 @@ RailsApp::Application.routes.draw do
   match 'instances/:id/reachable' => 'instances#reachable'
   match 'deployments/:id/instance_message' => 'deployments#instance_message'
   match 'templates/:id/apply' => 'templates#apply'
+  match 'help' => 'welcome#help'
   root :to => 'projects#index'
 
   # The priority is based upon order of creation:

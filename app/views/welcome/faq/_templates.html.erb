@@ -1,0 +1,11 @@
+Environment templates are a way of saving an openshift lab configuration.<br><br>
+
+Even though adding each instance and its details individually and hitting deploy is much easier than deploying a large OpenShift Environment yourself, it can still be time consuming. This is why you can save and apply templates. <br><br>
+
+To create a template, go to the OpenShift lab page of the project with your desired configuration. Click the 'Save to template' button at the end of the instance list. Give the template a name and optionally a description, although a description will be generated for you from the configuration.<br><br>
+
+After saving the template, you can click the 'Environment Templates' tab and view your template.<br><br>
+
+To apply a template, simply go to the 'Environment Templates' tab and find the template you would like to apply. Ensure that you have permissions to edit the OpenShift lab by checking the lab out. Click the template you would like to apply, select the OpenShift lab in the drop-down, and click 'Apply'.<br><br>
+
+Note that applying a template to an OpenShift lab will undeploy the lab and wipe its current configuration. The lab itself will go down and be erased. The configuration from the template will overwrite the OpenShift lab.

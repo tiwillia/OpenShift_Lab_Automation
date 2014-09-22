@@ -1,7 +1,11 @@
 # Configuration goes here in YAML
 # These can be called in code with CONFIG[:key]
 URL: "lab-namespace.rhcloud.com" # Only required if NOT running on openshift
+admin_name: "Timothy Williams"
 admin_email: "tiwillia@redhat.com"
+admin_irc_nick: "tim"
+irc_channel: "#sbr-cloud-pe"
+github_repo: "https://github.com/tiwillia/OpenShift_Lab_Automation"
 rhsm_username: "rhn_username"
 rhsm_password: "password"
 rhsm_pool_id: "8a85f983de1434a1013b3ccdf9f302e6"
@@ -11,3 +15,4 @@ types:
   - "activemq"
   - "datastore"
   - "named"
+data_dir: "/home/USER/Projects/labs/tmp" # Not used when running on OpenShift

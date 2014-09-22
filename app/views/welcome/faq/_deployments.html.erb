@@ -1,0 +1,11 @@
+Automatic deployments work by utilizing OpenStack's cloud-init feature.<br><br>
+
+Cloud-init allows us to configure an instance extensively after it is created on the OpenStack host. We use this to not only configure access to the box, but also to configure and deploy OpenShift.<br><br>
+
+When an OpenShift lab is deployed, each instance generates a cloud-init script that is sent to the OpenStack backend when the instance is created. The instances also create a file containing installation variables to be used in the OpenShift installation script. The cloud-init script sets up access to the box, downloads the OpenShift installation script and the installation variables from the application. The cloud-init script then runs the OpenShift installation script using the generated variables.<br><br>
+
+The deployments are staged appropriately to ensure certain actions are performed at the right time. For example, a named instance will always be deployed first. This is to ensure that when the nodes are installed, they can resolve the broker, datastore, and activemq hostnames properly.<br><br>
+
+Additionally, brokers will always be deployed last. This is to allow all other instances to complete first. When instances complete, they make a call back to the application. The application waits until all instances are complete, then runs through any post-configuration steps needed to ensure highly-available OpenShift environments are configured properly.<br><br>
+
+The code on the <a href="<%= CONFIG[:github_repo] %>">github</a> will explain this in much further detail.
