@@ -90,7 +90,7 @@
               <td><%= inst.types.join(", ") %></td>
             <% end %>
             <td><%= inst.floating_ip %></td>
-            <td><%= inst.root_password %></td>
+            <td><%= logged_in? ? inst.root_password : "********" %></td>
             <td><%= inst.image %></td>
             <td><%= inst.flavor %></td>
             <td><%= inst.gear_size if !inst.no_openshift and inst.types.include?("node") %></td>
