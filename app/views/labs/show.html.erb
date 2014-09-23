@@ -63,4 +63,4 @@
     </div>
   <% end %>
 </div>
-<%= render :template => "projects/new", :locals => {:lab_id => @lab.id} %>
+<%= render :template => "projects/new", :locals => {:@project => Project.new, :lab_id => @lab.id} %>

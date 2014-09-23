@@ -3,7 +3,7 @@
 </div>
 <div class="col-md-2">
   <% if logged_in? && current_user.admin? && !Lab.all.empty? %>
-    <a href="/projects/new" class="btn btn-primary">New Environment</a>
+    <a class="btn btn-primary" data-toggle="modal" data-target="#newProject" >New Environment</a>
   <% end %>
 </div>
 <table class="table table-striped">
@@ -32,4 +32,4 @@
   <% end %>
   </tbody>
 </table>
-
+<%= render :template => 'projects/new', :locals => {:@project => Project.new, :lab_id => Lab.all.first.id}  %>

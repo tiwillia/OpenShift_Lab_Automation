@@ -8,12 +8,17 @@
       </div>
       <div class="modal-body">
         <p>Adding a project assumes that there is a tenant (aka project) on the associated openstack lab system already created. You will need to have access to this tenatn/project so that you can enter all of the details about networking, ip addresses, etc below.</p>
-        <%= form_for @lab.projects.new, :html => {:role => "form"} do |f| %>
+        <%= form_for @project, :html => {:role => "form"} do |f| %>
           <div class="well">
             <div class="form-group">
               <%= f.label "Name", :class => "control-label" %>
                 <%= f.text_field :name, :class => "form-control" %>
                 <p class="help-block">This should be the case-sensitive name of the tenant/project on the OpenStack lab.</p>
+            </div>
+            <div class="form-group">
+              <%= f.label "Backend Lab", :class => "control-label" %><br>
+                <%= f.select :lab_id, options_from_collection_for_select(Lab.all, :id, :name), {}, {:class => "form-control", :selected => lab_id} %>
+                <p class="help-block">The backend OpenStack environment this lab will be hosted upon.</p>
             </div>
             <div class="form-group">
               <%= f.label "Domain", :class => "control-label" %>
@@ -89,7 +94,6 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <%= f.hidden_field :lab_id, :value => lab_id %>
           <%= f.submit 'Submit', :class => "btn btn-primary" %>
         <% end %>
       </div>

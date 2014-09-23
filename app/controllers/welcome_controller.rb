@@ -7,6 +7,7 @@ class WelcomeController < ApplicationController
     @questions = {"What is the purpose of this application?" => "purpose",
                   "None of the existing configurations work for my reproducer. Can I create my own environment?" => "my_own",
                   "How long does a deployment take?" => "deployment_time",
+                  "After applying a template, all the IPs are different! Why?" => "different_ips",
                   "How can I change the OpenShift version of a project?" => "ose_version",
                   "Where are the OpenShift instances hosted?" => "hosted",
                   "How do the automatic deployments work?" => "deployments",
