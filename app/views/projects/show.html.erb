@@ -28,7 +28,7 @@
     </h3>
   </div>
 </div>
-      <% else %>
+      <% elsif current_user and (current_user.id == @project.checked_out_by || current_user.admin?) %>
         <% ready, reason = @project.ready? %>
         <% if ready %>
         <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Ready for Deployment!</span>
@@ -44,6 +44,11 @@
   </div>
 </div>
         <% end %>
+      <% else %>
+        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Deployed.</span>
+    </h3>
+  </div>
+</div>
       <% end %>
 <hr />
 <div class="panel panel-default">
