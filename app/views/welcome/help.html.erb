@@ -4,7 +4,12 @@
 
   Users can check out an OpenShift lab to gain access to modify the environment. Templates of environments can be saved for easy creation of simple or complex configurations.
 </p>
-<br>
+<h1>How do I use this?</h1>
+<p>
+  If you just need an environment to quickly reproduce an issue, there is likely already an OpenShift lab with suitable configuration. Simply hit the 'Check out' button at the top right of the lab environment page to check out a lab. Once you have it checked out, ssh to the systems individually and make any necessary changes.<br><br>
+  If none of the current configurations suit your needs, feel free to make modifications to the lab after you check it out. You can add, remove, or modify instances in the environment. You can also change the OpenShift version and all the default username/password combinations.<br><br>
+<b>NOTE</b>: Changes made to the labs do not take affect immediately. Be sure to use the 'Re-Deploy' button to redeploy the lab environment with your new changes in place.
+</p>
 <h1>Frequently Asked Questions</h1>
 <div class="panel-group" id="accordian">
 <% @questions.each do |title, partial_name| %>
