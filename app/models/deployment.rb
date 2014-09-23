@@ -247,6 +247,7 @@ private
     @project.instances.each do |inst|
       inst.stop
     end
+    destroy_on_backend
   end
 
   def destroy_on_backend
@@ -254,7 +255,7 @@ private
   end
 
   def rebuild_deployment
-    destroy_deployment
+    destroy_on_backend
     sleep 20 # Wait for slow openstack servers
     begin_deployment
   end
