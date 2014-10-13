@@ -160,6 +160,8 @@ runcmd:
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 - subscription-manager repos --enable=rhel-6-server-rpms &>> /root/.rhsm_output
+- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
+- sh /root/.install_handler.sh
 EOF
   end
 

@@ -26,7 +26,6 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
 
   def update
     pars = edit_instance_params
-    pars[:types] = pars[:types].split(",")
     @instance = Instance.find(params[:id])
     if @instance.update_attributes(pars)
       flash[:success] = "Instance Successfully updated."
