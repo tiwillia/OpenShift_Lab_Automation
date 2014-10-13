@@ -43,7 +43,7 @@ before_filter :is_logged_in?, :only => :check_out
   def show
     @project = Project.find(params[:id])
     @images = @project.images
-    @floating_ips = @project.floating_ips
+    @floating_ips = @project.available_floating_ips
     @flavors = @project.flavors
     @limits = @project.limits
     @instance_id_list = @project.instances.map {|i| i.id}

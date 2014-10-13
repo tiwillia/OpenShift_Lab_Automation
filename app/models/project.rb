@@ -205,6 +205,10 @@ class Project < ActiveRecord::Base
            }
   end
 
+  def available_floating_ips
+    self.floating_ips - self.instances.map {|i| i.floatin_ip }
+  end
+
   # This method will ensure the project has all necessary components
   def ready?
     q = get_connection("neutron")
