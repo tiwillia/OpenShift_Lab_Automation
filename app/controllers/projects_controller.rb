@@ -44,6 +44,7 @@ before_filter :is_logged_in?, :only => :check_out
     @project = Project.find(params[:id])
     @images = @project.images
     @floating_ips = @project.available_floating_ips
+    @floating_ips = ["NONE AVAILABLE"] if @floating_ips.empty?
     @flavors = @project.flavors
     @limits = @project.limits
     @instance_id_list = @project.instances.map {|i| i.id}

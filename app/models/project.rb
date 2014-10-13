@@ -146,7 +146,6 @@ class Project < ActiveRecord::Base
   def details
     return nil if not self.ready?
     
-    gear_sizes = Array.new
     datastore_replicants = Array.new
     activemq_replicants = Array.new    
     named_entries = Array.new
@@ -162,10 +161,6 @@ class Project < ActiveRecord::Base
         named_ip = named_instance.floating_ip
         named_hostname = named_instance.fqdn
       end
-      if inst.types.include?("node")
-        gear_sizes << inst.gear_size
-        node_hostname = inst.fqdn
-      end
       if inst.types.include?("datastore")
         datastore_replicants << inst.fqdn
       end
@@ -179,8 +174,6 @@ class Project < ActiveRecord::Base
       named_entry = inst.name + ":" + inst.floating_ip
       named_entries << named_entry
     end
-
-    valid_gear_sizes = gear_sizes.uniq
 
     return {:named_ip => named_ip, 
             :named_hostname => named_hostname,
@@ -206,7 +199,17 @@ class Project < ActiveRecord::Base
   end
 
   def available_floating_ips
-    self.floating_ips - self.instances.map {|i| i.floatin_ip }
+    self.floating_ips - self.instances.map {|i| i.floating_ip }
+  end
+
+  def valid_gear_sizes
+    gear_sizes = []
+    self.instances.each do |i|
+      if i.types.include? "node"
+        gear_sizes << i.gear_size
+      end
+    end
+    gear_sizes.uniq
   end
 
   # This method will ensure the project has all necessary components
@@ -229,6 +232,9 @@ class Project < ActiveRecord::Base
     end
     if duplicates.include?("datastore") && duplicates.count("datastore") < 3
       return false, "There are 2 mongodb hosts, there must be either one or more than two."
+    end
+    if self.valid_gear_sizes == []
+      return false, "No gear sizes are defined"
     end
     limits = self.limits
     if limits[:max_instances] < self.instances.count
