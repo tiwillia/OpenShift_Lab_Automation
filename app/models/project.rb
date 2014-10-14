@@ -99,10 +99,6 @@ class Project < ActiveRecord::Base
     none_deployed 
   end
 
-  def update_instances_deploy_status
-    self.instances.each {|i| i.deployed?}
-  end
-
   def check_out(user_id)
     if User.where(:id => user_id) 
       if self.update_attributes(:checked_out_by => user_id, :checked_out_at => DateTime.now)
