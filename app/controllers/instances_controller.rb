@@ -102,10 +102,6 @@ private
     params.require(:instance).permit!
   end
 
-  def callback_params
-    params..permit!
-  end
-
   def can_edit?
     @instance = Instance.find(params[:id])
     if current_user and (Project.find(@instance.project_id).checked_out_by != current_user.id && !current_user.admin)
