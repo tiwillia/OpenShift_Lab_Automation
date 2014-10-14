@@ -35,7 +35,16 @@ class Instance < ActiveRecord::Base
     true
   end
 
-  def start
+  def deployed?
+    p = Project.find(self.project_id)
+    c = p.get_connection
+
+    servers = c.servers.map {|s| s[:name]} 
+    deployed = (servers.include? self.name)
+    deployed
+  end
+
+  def start(deployment_id)
     # Get the connection and instance
     p = Project.find(self.project_id)
     c = p.get_connection
@@ -70,9 +79,9 @@ class Instance < ActiveRecord::Base
 
     # Encode the cloud_init data
     if self.no_openshift
-      cloud_init = Base64.encode64(self.cloud_init_blank)
+      cloud_init = Base64.encode64(self.cloud_init_blank(deployment_id))
     else
-      cloud_init = Base64.encode64(self.cloud_init)
+      cloud_init = Base64.encode64(self.cloud_init(deployment_id))
     end
 
     tries = 3
@@ -103,7 +112,7 @@ class Instance < ActiveRecord::Base
   
   end
 
-  def stop
+  def undeploy
     p = Project.find(self.project_id)
     c = p.get_connection
     s = c.servers.select {|s| s[:name] == self.name}.first
@@ -116,19 +125,11 @@ class Instance < ActiveRecord::Base
     end
   end
 
-  def restart
-    if stop
-      start
-    else
-      false
-    end
-  end
-
-  def cloud_init_blank
+  def cloud_init_blank(deployment_id)
     cinit=<<EOF
 #cloud-config               
 # vim:syntax=yaml
-hostname: #{self.name}
+hostname: #{self.safe_name}
 fqdn: #{self.fqdn}
 manage_etc_hosts: true
 debug: True
@@ -156,17 +157,17 @@ runcmd:
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
 - curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
-- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.name.gsub(/\W/, "")} &>> /root/.rhsm_output
+- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 - subscription-manager repos --enable=rhel-6-server-rpms &>> /root/.rhsm_output
-- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
+- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
 - sh /root/.install_handler.sh
 EOF
   end
 
   # Generate cloudinit details 
-  def cloud_init
+  def cloud_init(deployment_id)
 
     ose_version = Project.find(self.project_id).ose_version
 
@@ -174,7 +175,7 @@ EOF
     cinit=<<EOF
 #cloud-config               
 # vim:syntax=yaml
-hostname: #{self.name}
+hostname: #{self.safe_name}
 fqdn: #{self.fqdn}
 manage_etc_hosts: true
 debug: True
@@ -203,8 +204,8 @@ runcmd:
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
 - curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
-- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script > /root/.install_handler.sh
-- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.name.gsub(/\W/, "")} &>> /root/.rhsm_output
+- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
+- subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 EOF
@@ -299,12 +300,15 @@ EOF
     cinit
   end 
  
-private
+  def safe_name
+    self.name.gsub(/[\s\W]/, "_")
+  end
 
+private
 
   # Create FQDN
   def determine_fqdn
-    fqdn = self.name + "." + Project.find(self.project_id).domain
+    fqdn = self.safe_name + "." + Project.find(self.project_id).domain
     self.fqdn = fqdn
   end
 

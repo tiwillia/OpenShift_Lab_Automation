@@ -9,7 +9,7 @@ class Project < ActiveRecord::Base
 
   validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
 
-  def start_all
+  def deploy_all
     deployment = self.deployments.new(:action => "build")
     if deployment.save
       deployment.begin
@@ -18,8 +18,19 @@ class Project < ActiveRecord::Base
       return false
     end
   end
-  
-  def stop_all
+ 
+  def deploy_one(instance_id)
+    deployment = self.deployments.new(:action => "single_deployment", :instance_id => instance_id)
+    if deployment.save
+      Instance.find(instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
+      deployment.begin
+      return true
+    else
+      return false
+    end
+  end
+
+  def undeploy_all
     deployment = self.deployments.new(:action => "tear_down")
     if deployment.save
       deployment.begin
@@ -49,7 +60,7 @@ class Project < ActiveRecord::Base
     return true
   end
 
-  def restart_all
+  def redeploy_all
     deployment = self.deployments.new(:action => "redploy")
     if deployment.save
       deployment.begin
@@ -87,7 +98,11 @@ class Project < ActiveRecord::Base
     end
     none_deployed 
   end
- 
+
+  def update_instances_deploy_status
+    self.instances.each {|i| i.deployed?}
+  end
+
   def check_out(user_id)
     if User.where(:id => user_id) 
       if self.update_attributes(:checked_out_by => user_id, :checked_out_at => DateTime.now)

@@ -34,7 +34,7 @@
             </div>
             <div class="form-group">
               <%= f.label "Floating IP", :class => "control-label" %>
-                <%= f.select :floating_ip, options_for_select(@floating_ips, @instance.floating_ip), {}, {:class => "form-control"} %>
+                <%= f.select :floating_ip, options_for_select(@floating_ips + [@instance.floating_ip], @instance.floating_ip), {}, {:class => "form-control"} %>
                 <p class="help-block">Externally accessible IP for this instance. Must be allocated to the openstack tenant.</p>
             </div>
             <div class="form-group">

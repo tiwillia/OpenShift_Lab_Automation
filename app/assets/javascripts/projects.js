@@ -4,6 +4,33 @@
 
 $(document).ready(function() {
 
+  // This will be run right after the page is loaded
+  var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
+  for (i = 0; i < inst_id_list.length; i++) {
+    console.log("Checking deployed inst " + inst_id_list[i]);
+    deployed_check(inst_id_list[i]); 
+  };
+
+  function deployed_check(inst_id) {
+    $('#deployed_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_' + inst_id + '" />');
+    $.getJSON("/instances/" + inst_id + "/check_deployed", function(result){
+      console.log("Got result for instance " + inst_id + ": " + result.deployed + " " + result.in_progress);
+      if (result.in_progress === "true") {
+        $('#deployed_glyph_' + inst_id).replaceWith('<span class="text-warning" id="deployed_glyph_' + inst_id + '">In Progress</span>');
+        $('.instance_row[instance_id="' + inst_id + '"]').addClass("bg-info");
+      } else {
+        if (result.deployed === "true") {
+          $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-ok" id="deployed_glyph_' + inst_id + '"></span>');
+          $('.instance_row[instance_id="' + inst_id + '"]').addClass("bg-success");
+        } else {
+          $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="deployed_glyph_' + inst_id + '"></span>');
+          $('.instance_row[instance_id="' + inst_id + '"]').addClass("bg-danger");
+        };
+      };
+
+    });
+  };
+
   function reachable_check(inst_id) {
     $('.reachable_button_content[instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" instance_id="' + inst_id + '"><img src="/assets/ajax-loader.gif" title="Working..." /></div>')
     console.log("Checking reachability for instance id:" + inst_id);
@@ -18,12 +45,12 @@ $(document).ready(function() {
   }
 
   $('.reachable_button').click(function() {
+    var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
     var inst_id = $(this).attr("instance_id");
     reachable_check(inst_id);
   });
 
   $('.reachable_button_all').click(function(){
-    var inst_id_list = $(this).attr("instance_ids").split(",");
     for (i = 0; i < inst_id_list.length; i++) {
       reachable_check(inst_id_list[i]);
     }

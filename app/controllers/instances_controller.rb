@@ -1,6 +1,6 @@
 class InstancesController < ApplicationController
 
-before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :create]
+before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :create, :check_deployed]
 
   def new
     @instance = Instance.new
@@ -48,39 +48,19 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
     end 
   end
 
-  def start
+  def undeploy
     @instance = Instance.find(params[:id])
-    if @instance.start
-      flash[:success] = "Instance started!"
+    if @instance.undeploy
+      flash[:success] = "Instance undeployed!"
     else
-      flash[:error] = "Instance did not start."
-    end
-    redirect_to :back
-  end
-
-  def stop
-    @instance = Instance.find(params[:id])
-    if @instance.stop
-      flash[:success] = "Instance stopped!"
-    else
-      flash[:error] = "Instance did not stop."
-    end
-    redirect_to :back
-  end
-
-  def restart
-    @instance = Instance.find(params[:id])
-    if @instance.restart
-      flash[:success] = "Instance restarted!"
-    else
-      flash[:error] = "Instance did not restart."
+      flash[:error] = "Instance could not be undeployed."
     end
     redirect_to :back
   end
 
   def callback_script
     @instance = Instance.find(params[:id])
-    @deployment = Deployment.where(:project_id => Project.find(@instance.project_id).id).last
+    @deployment = Deployment.find(params[:deployment_id])
     render :layout => false
   end
 
@@ -98,6 +78,20 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
     end
   end
 
+  def check_deployed
+    @instance = Instance.find(params[:id])
+    in_progress = @instance.deployment_started.to_s
+    if @instance.deployed?
+      respond_to do |format|
+        format.json { render :json => {:deployed => "true", :in_progress => in_progress} }
+      end
+    else
+      respond_to do |format|
+        format.json { render :json => {:deployed => "false", :in_progress => in_progress} }
+      end
+    end
+  end
+
 private
 
   def new_instance_params
@@ -106,6 +100,10 @@ private
 
   def edit_instance_params
     params.require(:instance).permit!
+  end
+
+  def callback_params
+    params..permit!
   end
 
   def can_edit?

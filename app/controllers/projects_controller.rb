@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
 
-before_filter :can_edit?, :only => [:uncheck_out, :update, :edit, :start_all, :restart_all, :stop_all, :destroy_on_backend]
+before_filter :can_edit?, :only => [:deploy_one, :uncheck_out, :update, :edit, :deploy_all, :redeploy_all, :deploy_all, :destroy_on_backend]
 before_filter :is_admin?, :only => [:new, :create, :destroy]
 before_filter :is_logged_in?, :only => :check_out
 
@@ -79,24 +79,35 @@ before_filter :is_logged_in?, :only => :check_out
     end
   end
 
-  def start_all
+  def deploy_all
     @project = Project.find(params[:id])
-    @project.start_all
-    flash[:success] = "Project queued to start."
+    @project.deploy_all
+    flash[:success] = "Project deployment begun."
     redirect_to project_path(@project)
   end
 
-  def stop_all
+  def deploy_one
     @project = Project.find(params[:id])
-    @project.stop_all
-    flash[:success] = "Project stopped."
+    instance = Instance.find(params[:instance_id])
+    if @project.deploy_one(instance.id)
+      flash[:success] = "#{instance.fqdn} queued for deployment."
+    else
+      flash[:success] = "#{instance.fqdn} could not be queued for deployment."
+    end
+    redirect_to project_path(@project)
+  end
+
+  def undeploy_all
+    @project = Project.find(params[:id])
+    @project.undeploy_all
+    flash[:success] = "Project undeployed."
     redirect_to project_path(@project)
   end
   
-  def restart_all
+  def redeploy_all
     @project = Project.find(params[:id])
-    if @project.stop_all
-      @project.start_all
+    if @project.undeploy_all
+      @project.deploy_all
       flash[:success] = "Project destroyed and queued to start."
       redirect_to project_path(@project)
     else

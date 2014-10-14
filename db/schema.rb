@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140916223743) do
+ActiveRecord::Schema.define(:version => 20141014185111) do
 
   create_table "deployments", :force => true do |t|
     t.integer  "project_id"
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(:version => 20140916223743) do
     t.datetime "completed_time"
     t.datetime "created_at",                        :null => false
     t.datetime "updated_at",                        :null => false
+    t.integer  "instance_id"
   end
 
   create_table "instances", :force => true do |t|

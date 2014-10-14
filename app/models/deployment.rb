@@ -2,11 +2,6 @@ class Deployment < ActiveRecord::Base
 
   belongs_to :project
 
-  # Essentially, I need to move everything in the deployment handler to here. In begin, I need to
-  # start a new thread to do the deployment. But then I need to be able to watch a queue for 
-  # when the instances come back. That shouldn't be too hard, just use the instance_message method to 
-  # send it to a queue, which would be... an instance variable? Or perhaps a database entry?
-
   after_create :define_instance_vars
 
   def begin
@@ -27,6 +22,16 @@ class Deployment < ActiveRecord::Base
           dlog("#{e.backtrace}", :error)
         end
 
+      when "single_deployment"
+        dlog "Starting single deployment for #{@project.name}"
+        begin
+          dlog "Started deployment #{@project.name}"
+          single_deployment
+        rescue => e
+          dlog("ERROR could not start deployment #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
+        end
+
       when "tear_down"
         dlog "Stopping deployment #{@project.name}"
         begin
@@ -37,7 +42,8 @@ class Deployment < ActiveRecord::Base
           dlog("#{e.backtrace}", :error)
         end
 
-      when "tear_down"
+      # NOT USED YET
+      when "destroy_all"
         dlog "Destroying all instances on the backend for project #{@project.name}"
         begin
           destroy_on_backend
@@ -94,12 +100,54 @@ class Deployment < ActiveRecord::Base
 
 private
   
+  def single_deployment
+    raise "No instance id providied" if self.instance_id.nil?
+    instance = Instance.find(self.instance_id)
+
+    if instance.start(self.id)
+      instance.update_attributes(:deployment_started => true, :deployment_completed => false) unless instance.deployment_started && !instance.deployment_completed
+      dlog "Started instance #{instance.fqdn} with id #{instance.id} for deployment id #{self.id}"
+    else
+      dlog("Could not start instance #{instance.fqdn} with id #{instance.id} for deployment id #{self.id}", :error)
+      return false
+    end
+
+    complete = false
+    time_waited = 0
+    until complete do
+      while DEPLOYMENT_QUEUES[self.id].empty? do
+        sleep 10
+        time_waited += 10
+      end
+      work = DEPLOYMENT_QUEUES[self.id].pop
+      instance = Instance.find(work[:instance_id])
+      message = work[:message]
+      case message
+      when "success"
+        instance.update_attributes(:deployment_completed => true, :deployment_started => false, :reachable => true, :last_checked_reachable => DateTime.now)
+        dlog("Instance #{instance.fqdn} completed successfully.")
+        complete = true
+
+      when "failure"
+        dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
+        instance.stop
+        sleep 5
+        instance.start(self.id)
+        instance.update_attributes(:deployment_started => true, :deployment_completed => false)
+        
+      else
+        dlog("Received unprocessable message for project #{@project.name} and instance #{instance.fqdn}: \"#{message}\"",:error)
+      end
+    end
+    dlog "Deployment complete!"
+  end
+
   def build_deployment
     # Order is:
     #   phase1, wait 2 mins, phase 2 + 3, wait 2 mins, phase4
     
     phase1 = []  # named server
-    phase2 = []  # All activemq and all but on mongodb
+    phase2 = []  # All activemq and all but one mongodb
     phase3 = []  # All nodes
     phase4 = []  # The final mongodb and the brokers
  
@@ -134,17 +182,17 @@ private
     dlog "Phase2: #{phase2}" 
     dlog "Phase3: #{phase3}" 
     dlog "Phase4: #{phase4}" 
-    phase1.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}   
+    phase1.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}   
     dlog "Phase one started, waiting 2 minutes..." 
     sleep 120 
     dlog "Phase 2 + 3 begin..." 
-    phase2.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
-    phase3.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
+    phase2.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
+    phase3.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
     dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
     dlog "Deployment queue before phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 begin..." 
-    phase4.each {|i| i.start; i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
+    phase4.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
     dlog "Deployment queue after phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 complete, waiting for completion..." 
 
@@ -158,9 +206,8 @@ private
     time_waited = 0
     until all_complete do
       while DEPLOYMENT_QUEUES[self.id].empty? do
-        time_waited += 10
-        dlog("Queue empty, waiting 10 secs. Waited #{time_waited.to_s} seconds so far.", :debug)
         sleep 10
+        time_waited += 10
       end
       work = DEPLOYMENT_QUEUES[self.id].pop
       instance = Instance.find(work[:instance_id])
@@ -174,7 +221,7 @@ private
         dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
         instance.stop
         sleep 5
-        instance.start 
+        instance.start(self.id) 
         instance.update_attributes(:deployment_started => true)
       else
         dlog("Received unprocessable message for project #{@project.name} and instance #{instance.fqdn}: \"#{message}\"",:error)

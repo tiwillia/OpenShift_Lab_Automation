@@ -68,9 +68,10 @@
     <h3 class="panel-title text-center">Instances</h3>
   </div>
   <div class="panel-body">
-    <table class="table table-striped">
+    <table class="table">
       <thead>
         <tr>
+          <td class="text-center">Deployed</td>
           <td>Hostname</td>
           <td>Type(s)</td>
           <td>Floating IP</td>
@@ -78,7 +79,6 @@
           <td>Image</td>
           <td>Flavor</td>
           <td>Gear Size</td>
-          <td>Deployed</td>
           <td>Reachable</td>
           <td></td>
         </tr>
@@ -86,8 +86,12 @@
       <tbody>
         <% verified_user = current_user %>
         <% instances = @project.instances.sort_by{|i| i.name } %>
+        <span class="instance_id_list" instance_ids="<%= instances.map {|i| i.id}.join(",") %>"></span>
         <% instances.each do |inst| %>
-          <tr>
+          <tr class="instance_row" instance_id="<%= inst.id %>">
+            <td class="text-center">
+              <img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_<%= inst.id %>" />
+            </td>
             <td><%= inst.name %></td>
             <% if inst.no_openshift %>
               <td><span class="text-muted">Blank host</span></td>
@@ -99,15 +103,6 @@
             <td><%= inst.image %></td>
             <td><%= inst.flavor %></td>
             <td><%= inst.gear_size if !inst.no_openshift and inst.types.include?("node") %></td>
-            <td>
-              <% if inst.deployment_completed %>
-                <span class="glyphicon glyphicon-ok"></span>
-              <% elsif inst.deployment_started %>
-                <span class="text-warning">In progress<span>
-              <% else %>
-                <span class="glyphicon glyphicon-remove"></span>
-              <% end %>
-            </td>
             <td>
               <% if inst.reachable %>
                 <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
@@ -136,9 +131,8 @@
               <div class="dropdown">
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                <li><a href="/instances/<%= inst.id %>/start">Deploy</a></li>
-                <li><a href="/instances/<%= inst.id %>/stop" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
-                <li><a href="/instances/<%= inst.id %>/restart" data-confirm="Are you sure you want to redeploy <%= inst.fqdn %>?">Redeploy</a></li>
+                  <li><a href='/projects/<%= @project.id %>/deploy_one?instance_id=<%= inst.id %>'>Deploy</a></li>
+                <li><a href="/instances/<%= inst.id %>/undeploy" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
                 <hr />
                 <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
                 <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove from project</a></li>
@@ -154,11 +148,11 @@
   <div class="col-md-4">
     <div class="btn-group">
       <% if not @project.all_deployed? %>
-        <a href="/projects/<%= @project.id %>/start" class="btn btn-success">Deploy All</a>
+        <a href="/projects/<%= @project.id %>/deploy" class="btn btn-success">Deploy All</a>
       <% end %>
       <% if not @project.none_deployed? %>
-        <a href="/projects/<%= @project.id %>/stop" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
-        <a href="/projects/<%= @project.id %>/restart" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
+        <a href="/projects/<%= @project.id %>/undeploy" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
+        <a href="/projects/<%= @project.id %>/redeploy" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
       <% end %>
     </div>
   </div>
