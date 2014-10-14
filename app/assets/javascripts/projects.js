@@ -45,12 +45,12 @@ $(document).ready(function() {
   }
 
   $('.reachable_button').click(function() {
-    var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
     var inst_id = $(this).attr("instance_id");
     reachable_check(inst_id);
   });
 
   $('.reachable_button_all').click(function(){
+    var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
     for (i = 0; i < inst_id_list.length; i++) {
       reachable_check(inst_id_list[i]);
     }
