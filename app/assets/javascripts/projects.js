@@ -28,14 +28,33 @@ $(document).ready(function() {
       console.log("Got result for instance " + inst_id + ": " + result.deployed + " " + result.in_progress);
       if (result.in_progress === "true") {
         $('#deployed_glyph_' + inst_id).replaceWith('<span class="text-warning" id="deployed_glyph_' + inst_id + '">In Progress</span>');
-        $('.instance_row[instance_id="' + inst_id + '"]').addClass("bg-info");
+        var row=$('.instance_row[instance_id="' + inst_id + '"]');
+        if (row.hasClass("bg-success") || row.hasClass("bg-danger")) {
+          row.removeClass("bg-success bg-danger");
+          row.addClass("bg-info");
+        } else {
+          row.addClass("bg-info");
+        };
       } else {
         if (result.deployed === "true") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-ok" id="deployed_glyph_' + inst_id + '"></span>');
-          $('.instance_row[instance_id="' + inst_id + '"]').addClass("bg-success");
+          var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          if (row.hasClass("bg-info") || row.hasClass("bg-danger")) {
+            console.log("row is:" + row);
+            row.removeClass("bg-info bg-danger");
+            row.addClass("bg-success");
+          } else {
+            row.addClass("bg-success");
+          };
         } else {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="deployed_glyph_' + inst_id + '"></span>');
-          $('.instance_row[instance_id="' + inst_id + '"]').addClass("bg-danger");
+          var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          if (row.hasClass("bg-success") || row.hasClass("bg-info")) {
+            row.removeClass("bg-success bg-info");
+            row.addClass("bg-danger");
+          } else {
+            row.addClass("bg-danger");
+          };
         };
       };
 
