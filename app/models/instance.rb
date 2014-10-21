@@ -241,7 +241,7 @@ runcmd:
 - echo "$(date) - Called to labs application to generate and download the installation handler script." >> /root/.install_log
 - subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output
 - echo "$(date) - Registered via RHSM with username #{CONFIG[:rhsm_username]} and server name #{self.safe_name}." >> /root/.install_log
-- subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
+- false; while [ $? != 0 ]; do subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output; done
 - echo "$(date) - Attached pool id #{CONFIG[:rhsm_pool_id]}" >> /root/.install_log
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 EOF
