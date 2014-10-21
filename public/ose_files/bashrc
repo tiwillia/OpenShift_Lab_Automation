@@ -5,7 +5,7 @@
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
-alias ls='ls -a --color=auto'
+alias ls='ls --color=auto'
 alias c='clear'
 alias vi='vim'
 alias rsync='rsync -v'

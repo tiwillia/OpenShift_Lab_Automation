@@ -33,12 +33,12 @@ class Deployment < ActiveRecord::Base
         end
 
       when "tear_down"
-        dlog "Stopping deployment #{@project.name}"
+        dlog "Undeploying deployment #{@project.name}"
         begin
           destroy_deployment
-          dlog "Stopped deployment #{@project.name}"
+          dlog "Undeploying deployment #{@project.name}"
         rescue => e
-          dlog("ERROR could not stop deployment #{e.message}", :error)
+          dlog("ERROR could not undeploy deployment #{e.message}", :error)
           dlog("#{e.backtrace}", :error)
         end
 
@@ -104,7 +104,7 @@ private
     raise "No instance id providied" if self.instance_id.nil?
     instance = Instance.find(self.instance_id)
 
-    if instance.start(self.id)
+    if instance.deploy(self.id)
       instance.update_attributes(:deployment_started => true, :deployment_completed => false) unless instance.deployment_started && !instance.deployment_completed
       dlog "Started instance #{instance.fqdn} with id #{instance.id} for deployment id #{self.id}"
     else
@@ -130,9 +130,9 @@ private
 
       when "failure"
         dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
-        instance.stop
+        instance.undeploy
         sleep 5
-        instance.start(self.id)
+        instance.deploy(self.id)
         instance.update_attributes(:deployment_started => true, :deployment_completed => false)
         
       else
@@ -182,17 +182,17 @@ private
     dlog "Phase2: #{phase2}" 
     dlog "Phase3: #{phase3}" 
     dlog "Phase4: #{phase4}" 
-    phase1.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}   
+    phase1.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
     dlog "Phase one started, waiting 2 minutes..." 
     sleep 120 
     dlog "Phase 2 + 3 begin..." 
-    phase2.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
-    phase3.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
+    phase2.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
+    phase3.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
     dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
     dlog "Deployment queue before phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 begin..." 
-    phase4.each {|i| i.start(self.id); i.update_attributes(:deployment_started => true, :deployment_completed => false)}    
+    phase4.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
     dlog "Deployment queue after phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
     dlog "Phase 4 complete, waiting for completion..." 
 
@@ -219,9 +219,9 @@ private
         dlog("Instance #{instance.fqdn} completed successfully.")
       when "failure"
         dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
-        instance.stop
+        instance.undeploy
         sleep 5
-        instance.start(self.id) 
+        instance.deploy(self.id) 
         instance.update_attributes(:deployment_started => true)
       else
         dlog("Received unprocessable message for project #{@project.name} and instance #{instance.fqdn}: \"#{message}\"",:error)
@@ -292,7 +292,7 @@ private
   
   def destroy_deployment
     @project.instances.each do |inst|
-      inst.stop
+      inst.undeploy
     end
     destroy_on_backend
   end

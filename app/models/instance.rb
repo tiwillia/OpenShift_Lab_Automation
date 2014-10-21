@@ -44,7 +44,25 @@ class Instance < ActiveRecord::Base
     deployed
   end
 
-  def start(deployment_id)
+  def install_log
+    if self.reachable?
+      begin 
+        Timeout::timeout(10) {
+          ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false, :timeout => 5)
+          log_text = ssh.exec!("cat /root/.install_log")
+          return log_text
+        }
+      rescue => e
+        Rails.logger.error "Could not get installation log for instance #{self.fqdn} due to: #{e.message}"
+        Rails.logger.error e.backtrace
+        return false, "Could not get installation log for instance #{self.fqdn} due to: #{e.message}"
+      end
+    else
+      return false, "Unable to connect to #{self.fqdn} via ssh."
+    end
+  end
+
+  def deploy(deployment_id)
     # Get the connection and instance
     p = Project.find(self.project_id)
     c = p.get_connection
@@ -141,28 +159,38 @@ chpasswd:
     cloud-user:test
   expire: false
 runcmd:
+- echo "$(date) - Instance initialized and deployed, starting setup through cloud-init." >> /root/.install_log
 #The MTU is necessary
 - echo "MTU=1450" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 - service network restart
+- echo "$(date) - MTU for eth0 set to 1450 to behave well with the OpenStack neutron backend." >> /root/.install_log
 - sed -i'.orig' -e's/without-password/yes/' /etc/ssh/sshd_config
 - echo $'StrictHostKeyChecking no\\nUserKnownHostsFile /dev/null' >> /etc/ssh/ssh_config
 - service sshd restart
-- curl mameshiba.usersys.redhat.com/bashrc > /root/.bashrc
-- curl mameshiba.usersys.redhat.com/bash_profile > /root/.bash_profile
-- curl mameshiba.usersys.redhat.com/vimrc > /root/.vimrc
-- curl mameshiba.usersys.redhat.com/voyager/authorized_keys > /root/.ssh/authorized_keys
-- curl mameshiba.usersys.redhat.com/voyager/voyager.pub > /root/.ssh/id_rsa.pub
-- curl mameshiba.usersys.redhat.com/voyager/voyager.pri > /root/.ssh/id_rsa
+- echo "$(date) - SSH server configuration changed to allow root to login with a password." >> /root/.install_log
+- curl #{CONFIG[:URL]}/ose_files/bashrc > /root/.bashrc
+- curl #{CONFIG[:URL]}/ose_files/bash_profile > /root/.bash_profile
+- curl #{CONFIG[:URL]}/ose_files/vimrc > /root/.vimrc
+- curl #{CONFIG[:URL]}/ose_files/voyager/authorized_keys > /root/.ssh/authorized_keys
+- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pub > /root/.ssh/id_rsa.pub
+- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pri > /root/.ssh/id_rsa
+- echo "$(date) - Downloaded bashrc, authorized_keys, vimrc, openshift.sh script, and other necessary items." >> /root/.install_log
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
-- curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
+- curl #{CONFIG[:URL]}/ose_files/69.pem > /etc/pki/product/69.pem
+- echo "$(date) - Downloaded and installed Red Hat Enterprise Linux Server (6.5) product key." >> /root/.install_log
 - subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output
+- echo "$(date) - Registered via RHSM with username #{CONFIG[:rhsm_username]} and server name #{self.safe_name}." >> /root/.install_log
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
+- echo "$(date) - Attached pool id #{CONFIG[:rhsm_pool_id]}" >> /root/.install_log
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 - subscription-manager repos --enable=rhel-6-server-rpms &>> /root/.rhsm_output
+- echo "$(date) - Enabled repositories = rhel-6-server-rpms" >> /root/.install_log
 - curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
+- echo "$(date) - Called to labs application to generate and download the installation handler script." >> /root/.install_log
 - sh /root/.install_handler.sh
+- echo "$(date) - Deployment completed." >> /root/.install_log
 EOF
   end
 
@@ -187,26 +215,34 @@ chpasswd:
     cloud-user:test
   expire: false
 runcmd:
+- echo "$(date) - Instance initialized and deployed, starting setup through cloud-init." >> /root/.install_log
 #The MTU is necessary
 - echo "MTU=1450" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 - service network restart
+- echo "$(date) - MTU for eth0 set to 1450 to behave well with the OpenStack neutron backend." >> /root/.install_log
 - sed -i'.orig' -e's/without-password/yes/' /etc/ssh/sshd_config
 - echo $'StrictHostKeyChecking no\\nUserKnownHostsFile /dev/null' >> /etc/ssh/ssh_config
 - service sshd restart
+- echo "$(date) - SSH server configuration changed to allow root to login with a password." >> /root/.install_log
 - curl https://raw.githubusercontent.com/openshift/openshift-extras/enterprise-#{ose_version}/enterprise/install-scripts/generic/openshift.sh > /root/openshift.sh
-- curl mameshiba.usersys.redhat.com/bashrc > /root/.bashrc
-- curl mameshiba.usersys.redhat.com/bash_profile > /root/.bash_profile
-- curl mameshiba.usersys.redhat.com/vimrc > /root/.vimrc
-- curl mameshiba.usersys.redhat.com/voyager/authorized_keys > /root/.ssh/authorized_keys
-- curl mameshiba.usersys.redhat.com/voyager/voyager.pub > /root/.ssh/id_rsa.pub
-- curl mameshiba.usersys.redhat.com/voyager/voyager.pri > /root/.ssh/id_rsa
+- curl #{CONFIG[:URL]}/ose_files/bashrc > /root/.bashrc
+- curl #{CONFIG[:URL]}/ose_files/bash_profile > /root/.bash_profile
+- curl #{CONFIG[:URL]}/ose_files/vimrc > /root/.vimrc
+- curl #{CONFIG[:URL]}/ose_files/voyager/authorized_keys > /root/.ssh/authorized_keys
+- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pub > /root/.ssh/id_rsa.pub
+- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pri > /root/.ssh/id_rsa
+- echo "$(date) - Downloaded bashrc, authorized_keys, vimrc, openshift.sh script, and other necessary items." >> /root/.install_log
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
-- curl mameshiba.usersys.redhat.com/69.pem > /etc/pki/product/69.pem
+- curl #{CONFIG[:URL]}/ose_files/69.pem > /etc/pki/product/69.pem
+- echo "$(date) - Downloaded and installed Red Hat Enterprise Linux Server (6.5) product key." >> /root/.install_log
 - curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
+- echo "$(date) - Called to labs application to generate and download the installation handler script." >> /root/.install_log
 - subscription-manager register --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output
+- echo "$(date) - Registered via RHSM with username #{CONFIG[:rhsm_username]} and server name #{self.safe_name}." >> /root/.install_log
 - subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output
+- echo "$(date) - Attached pool id #{CONFIG[:rhsm_pool_id]}" >> /root/.install_log
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 EOF
   
@@ -214,41 +250,58 @@ EOF
     if self.types.include?("broker") || self.types.include?("named") || self.types.include?("activemq") || self.types.include?("mongodb")
       cinit = cinit + <<EOF
 - subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms &>> /root/.rhsm_output
+- echo "$(date) - Enabled repositories = rhel-6-server-rpms rhel-6-server-ose-#{ose_version}-infra-rpms rhel-6-server-ose-#{ose_version}-rhc-rpms" >> /root/.install_log
 EOF
     end
     
     if self.types.include?("node")
       cinit = cinit + <<EOF
 - subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms &>> /root/.rhsm_output
+- echo "$(date) - Enabled repositories = rhel-6-server-rpms rhel-6-server-ose-#{ose_version}-node-rpms jb-ews-2-for-rhel-6-server-rpms rhel-6-server-ose-#{ose_version}-jbosseap-rpms rhel-server-rhscl-6-rpms jb-eap-6-for-rhel-6-server-rpms" >> /root/.install_log
 EOF
     end
 
     cinit = cinit + <<EOF
+- echo "$(date) - Installing openshift-enterprise-release..." >> /root/.install_log
 - yum install openshift-enterprise-release -y
+- echo "$(date) - Installation of openshift-enterprise-release succeeded." >> /root/.install_log
 EOF
 
     # Validate and fix repository priorities as needed
     if self.types.include?("node")
       if self.types == ["node"]
         cinit = cinit + <<EOF
+- echo "$(date) - Running oo-admin-yum-validator for OSE version #{ose_version}." >> /root/.install_log
 - oo-admin-yum-validator --oo-version #{ose_version} -r node -r node-eap --fix-all
 EOF
       else
         cinit = cinit + <<EOF
+- echo "$(date) - Running oo-admin-yum-validator for OSE version #{ose_version}." >> /root/.install_log
 - oo-admin-yum-validator --oo-version #{ose_version} -r node -r node-eap -r broker -r client --fix-all
 EOF
       end
     else
       cinit = cinit + <<EOF
+- echo "$(date) - Running oo-admin-yum-validator for OSE version #{ose_version}." >> /root/.install_log
 - oo-admin-yum-validator --oo-version #{ose_version} -r broker -r client --fix-all
 EOF
     end
 
     # Update, install extra rpms
     cinit = cinit + <<EOF
+- echo "$(date) - Completely updating system and installing extra packages..." >> /root/.install_log
 - yum update -y
 - yum install sysstat lsof wget vim-enhanced mlocate nmap -y
+- echo "$(date) - System update completed." >> /root/.install_log
+- echo "$(date) - Generating installation variables into file /root/.install_variables." >> /root/.install_log
 EOF
+
+    if ose_version == "2.0"
+      # BUGFIX for http://post-office.corp.redhat.com/archives/openshift-sme/2014-October/msg00209.html
+      cinit = cinit + <<EOF
+- echo "protected_multilib=false" >> /etc/yum.conf
+EOF
+    end
 
     # Add all variables generated for install script
     vars = generate_variables
@@ -258,41 +311,51 @@ EOF
 EOF
     end
     cinit = cinit + <<EOF
+- echo "$(date) - Sourcing environment variables...." >> /root/.install_log
 - source /root/.install_variables
+- echo "$(date) - Sourcing environment variables completed, as a test | CONF_DOMAIN = $CONF_DOMAIN" >> /root/.install_log
 EOF
 
     # Run the script! Woo!
     cinit = cinit + <<EOF
+- echo "$(date) - Running openshift installation handler..." >> /root/.install_log
 - echo "STARTED" > /root/.install_tracker
 - sh /root/.install_handler.sh
+- echo "$(date) - Installation procedure finished." >> /root/.install_log
 EOF
 
     # Do some extra jazz requried for nodes
     if self.types.include?("node")
       cinit = cinit + <<EOF
+- echo "$(date) - Setting PUBLIC_IP and PUBLIC_HOSTNAME in /etc/openshift/node.conf" >> /root/.install_log
 - sed -i "s/PUBLIC_IP=[0-9\.]*/PUBLIC_IP=#{self.floating_ip}/" /etc/openshift/node.conf
 - sed -i "s/PUBLIC_HOSTNAME=.*/PUBLIC_HOSTNAME=#{self.fqdn}/" /etc/openshift/node.conf
+- echo "$(date) - PUBLIC_IP=#{self.floating_ip} and PUBLIC_HOSTNAME=#{self.fqdn}" >> /root/.install_log
 EOF
-      if ose_version == "2.0" && self.gear_size != "small" && self.gear_size != ""
-        cinit = cinit + <<EOF
-- sed -i "s/node_profile=small/node_profile=#{self.gear_size}/" /etc/openshift/resource_limits.conf
+      if ose_version == "2.0"
+        if self.gear_size != "small" && self.gear_size != ""
+          cinit = cinit + <<EOF
+  - sed -i "s/node_profile=small/node_profile=#{self.gear_size}/" /etc/openshift/resource_limits.conf
 EOF
+        end
       end
     end
 
   # Download extra tools to the broker only
     if self.types.include?("broker")
       cinit = cinit + <<EOF
+- echo "$(date) - Downloading several extra tools to the /root/TOOLS directory." >> /root/.install_log
 - mkdir /root/TOOLS
-- curl mameshiba.usersys.redhat.com/stress_test.rb > /root/TOOLS/stress_test.rb
-- curl mameshiba.usersys.redhat.com/find_master.sh > /root/TOOLS/find_master.sh
-- curl mameshiba.usersys.redhat.com/node_gear_count.sh > /root/TOOLS/node_gear_count.sh
+- curl #{CONFIG[:URL]}/ose_files/stress_test.rb > /root/TOOLS/stress_test.rb
+- curl #{CONFIG[:URL]}/ose_files/find_master.sh > /root/TOOLS/find_master.sh
+- curl #{CONFIG[:URL]}/ose_files/node_gear_count.sh > /root/TOOLS/node_gear_count.sh
 - curl -k https://raw.githubusercontent.com/openshift/openshift-extras/enterprise-#{ose_version}/admin/reset_deployment.rb > /root/TOOLS/reset_deployment.sh
 EOF
     end
     
     # Reboot all systems after install
     cinit = cinit + <<EOF
+- echo "$(date) - Deployment completed, rebooting..." >> /root/.install_log
 - echo "DONE" > /root/.install_tracker
 - reboot
 EOF

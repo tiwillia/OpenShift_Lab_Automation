@@ -5,12 +5,15 @@
 $(document).ready(function() {
 
   // This will be run right after the page is loaded
+  $('#instanceLogTextArea').toggle();
   var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
   for (i = 0; i < inst_id_list.length; i++) {
     console.log("Checking deployed inst " + inst_id_list[i]);
     deployed_check(inst_id_list[i]); 
   };
 
+
+  // Check to see if an instance is deployed, replace 'deployed' entry in instance table
   function deployed_check(inst_id) {
     $('#deployed_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_' + inst_id + '" />');
     $.getJSON("/instances/" + inst_id + "/check_deployed", function(result){
@@ -31,6 +34,7 @@ $(document).ready(function() {
     });
   };
 
+  // Check to see if an instance is reachable via ssh, replace 'Reachable' entry in instance table
   function reachable_check(inst_id) {
     $('.reachable_button_content[instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" instance_id="' + inst_id + '"><img src="/assets/ajax-loader.gif" title="Working..." /></div>')
     console.log("Checking reachability for instance id:" + inst_id);
@@ -44,11 +48,13 @@ $(document).ready(function() {
     }); 
   }
 
+  // Check one for reachability
   $('.reachable_button').click(function() {
     var inst_id = $(this).attr("instance_id");
     reachable_check(inst_id);
   });
 
+  // Check all for reachability
   $('.reachable_button_all').click(function(){
     var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
     for (i = 0; i < inst_id_list.length; i++) {
@@ -56,6 +62,7 @@ $(document).ready(function() {
     }
   });
 
+  // Handle saving current configuration to a template
   $('.new_template_form').submit(function(){
     console.log("Submiting new template!");
     $('#newTemplate').modal("toggle");
@@ -69,6 +76,7 @@ $(document).ready(function() {
     return false;
   });
 
+  // Handle javascript for textboxes in the new instance form
   $('#new_instance_check_box_no_openshift').change(function(){
     if (this.checked) {
       $('.new_instance_check_boxes').prop('checked', false); 
@@ -79,6 +87,7 @@ $(document).ready(function() {
     };
   });
 
+  // Same as above, just for the edit instance form
   $('.edit_instance_check_box_no_openshift').change(function(){
     var inst_id = $(this).attr("instance_id");
     console.log(inst_id);
@@ -107,6 +116,26 @@ $(document).ready(function() {
       $('.new_instance_gear_size').prop('disabled', true); 
     };
   
+  });
+
+  // Generate log for a specific instance in the instance log modal
+  $('.instanceLogButton').click(function(){
+      $('#instanceLogTextArea').val("");
+      $('#instanceLogTextArea').hide();
+      $('#instanceLogLoading').show();
+    var inst_id = $(this).attr("instance_id");
+    console.log("Instance log button pressed for instance " + inst_id);
+    $.getJSON("/instances/" + inst_id + "/install_log", function(result){
+      var textarea = $('#instanceLogTextArea')
+      if (result.result == "success") {
+        textarea.val(result.log_text);
+      } else {
+        textarea.val(result.message);
+      };
+      $('#instanceLogLoading').hide();
+      textarea.show();
+      textarea.scrollTop(textarea[0].scrollHeight - textarea.height());
+    });
   });
 
 });

@@ -92,6 +92,20 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
     end
   end
 
+  def install_log
+    @instance = Instance.find(params[:id])
+    log_text, error = @instance.install_log
+    if log_text
+      respond_to do |format|
+        format.json { render :json => {:result => "success", :log_text => log_text, :message => ""} }
+      end
+    else
+      respond_to do |format|
+        format.json { render :json => {:result => "error", :log_text => "", :message => error } }
+      end
+    end
+  end
+
 private
 
   def new_instance_params

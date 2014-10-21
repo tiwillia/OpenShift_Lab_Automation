@@ -15,6 +15,7 @@ RailsApp::Application.routes.draw do
   match 'instances/:id/callback_script' => 'instances#callback_script'
   match 'instances/:id/check_deployed' => 'instances#check_deployed'
   match 'instances/:id/reachable' => 'instances#reachable'
+  match 'instances/:id/install_log' => 'instances#install_log'
   match 'deployments/:id/instance_message' => 'deployments#instance_message'
   match 'templates/:id/apply' => 'templates#apply'
   match 'help' => 'welcome#help'

@@ -132,7 +132,8 @@
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
                   <li><a href='/projects/<%= @project.id %>/deploy_one?instance_id=<%= inst.id %>'>Deploy</a></li>
-                <li><a href="/instances/<%= inst.id %>/undeploy" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
+                  <li><a href="/instances/<%= inst.id %>/undeploy" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
+                  <li><a href="" data-toggle="modal" data-target="#instanceLog" class="instanceLogButton" instance_id="<%= inst.id %>">Install log</a></li>
                 <hr />
                 <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
                 <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove from project</a></li>
@@ -267,6 +268,7 @@
   </div>
   <%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
   <%= render :template => "templates/new", :locals => {:project_id => @project.id, :template => @template} %>
+  <%= render :template => "instances/install_log" %>
 <% end %>
 <% @project.instances.each do |inst| %>
   <% next if inst.id.nil? %>
