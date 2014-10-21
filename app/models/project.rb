@@ -181,6 +181,9 @@ class Project < ActiveRecord::Base
       if inst.types.include?("broker")
         broker_hostname = inst.fqdn
       end      
+      if inst.types.include?("node")
+        node_hostname = inst.fqdn
+      end
 
       named_entry = inst.name + ":" + inst.floating_ip
       named_entries << named_entry

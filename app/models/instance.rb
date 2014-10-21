@@ -468,6 +468,15 @@ private
       variables[:CONF_ACTIVEMQ_REPLICANTS] = project_details[:activemq_replicants].join(",")
     end
 
+    # Blank variables will break an installation.
+    variables.each do |key, value|
+      if value.nil? || value == ""
+        Rails.logger.error "Instance with id #{self.id} and fqdn #{self.fqdn} includes a blank variable: #{key.to_s}"
+        Rails.logger.error "Removing key #{key.to_s}"
+        variables.delete(key)
+      end
+    end
+
     return variables
 
   end
