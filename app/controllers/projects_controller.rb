@@ -82,7 +82,7 @@ before_filter :is_logged_in?, :only => :check_out
   def deploy_all
     @project = Project.find(params[:id])
     @project.deploy_all
-    flash[:success] = "Environment deployment has begun. Refresh to check deployment status."
+    flash[:success] = "Environment deployment has begun. Deployment status will refresh every 30 seconds."
     redirect_to project_path(@project)
   end
 
@@ -100,7 +100,7 @@ before_filter :is_logged_in?, :only => :check_out
   def undeploy_all
     @project = Project.find(params[:id])
     @project.undeploy_all
-    flash[:success] = "Project queued to undeploy. Refresh to check deployment status."
+    flash[:success] = "Project queued to undeploy. Deployed will refresh every 30 seconds."
     redirect_to project_path(@project)
   end
   

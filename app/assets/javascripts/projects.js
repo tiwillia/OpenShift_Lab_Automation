@@ -6,12 +6,20 @@ $(document).ready(function() {
 
   // This will be run right after the page is loaded
   $('#instanceLogTextArea').toggle();
-  var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
-  for (i = 0; i < inst_id_list.length; i++) {
-    console.log("Checking deployed inst " + inst_id_list[i]);
-    deployed_check(inst_id_list[i]); 
+  deployed_check_all();
+  // If a deployment is in progress, check every 30 seconds.
+  if ($('#deployment_in_progress').length) {
+    console.log("Deployment is in progress, checking deployed status every 30 seconds");
+    setInterval(deployed_check_all, 30000);
   };
 
+  function deployed_check_all() {
+    console.log("Checking all instance deployed statuses...");
+    var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
+    for (i = 0; i < inst_id_list.length; i++) {
+      deployed_check(inst_id_list[i]); 
+    };
+  };
 
   // Check to see if an instance is deployed, replace 'deployed' entry in instance table
   function deployed_check(inst_id) {

@@ -24,7 +24,7 @@
   </div>
 </div>
       <% elsif @deployment %>
-        <span class="text-info"><span class="glyphicon glyphicon-tasks"></span> <%= @deployment.action.titleize %> in progress, started at <%= parse_date(@deployment.started_time) %>.</span>
+        <span class="text-info" id="deployment_in_progress"><span class="glyphicon glyphicon-tasks"></span> <%= @deployment.action.titleize %> in progress, started at <%= parse_date(@deployment.started_time) %>.</span>
     </h3>
   </div>
 </div>

@@ -83,6 +83,10 @@ class Deployment < ActiveRecord::Base
 
   def instance_message(instance_id, message)
     dlog "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
+    if DEPLOYMENT_QUEUES[self.id].nil?
+      dlog "Deployment queue has mysteriously become nil, replacing..."
+      DEPLOYMENT_QUEUES[self.id] = Queue.new
+    end
     DEPLOYMENT_QUEUES[self.id].push({:instance_id => instance_id, :message => message})
   end
 
