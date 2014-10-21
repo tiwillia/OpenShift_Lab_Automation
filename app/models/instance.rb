@@ -171,9 +171,9 @@ runcmd:
 - curl #{CONFIG[:URL]}/ose_files/bashrc > /root/.bashrc
 - curl #{CONFIG[:URL]}/ose_files/bash_profile > /root/.bash_profile
 - curl #{CONFIG[:URL]}/ose_files/vimrc > /root/.vimrc
-- curl #{CONFIG[:URL]}/ose_files/voyager/authorized_keys > /root/.ssh/authorized_keys
-- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pub > /root/.ssh/id_rsa.pub
-- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pri > /root/.ssh/id_rsa
+- curl #{CONFIG[:URL]}/ose_files/authorized_keys > /root/.ssh/authorized_keys
+- curl #{CONFIG[:URL]}/ose_files/voyager.pub > /root/.ssh/id_rsa.pub
+- curl #{CONFIG[:URL]}/ose_files/voyager.pri > /root/.ssh/id_rsa
 - echo "$(date) - Downloaded bashrc, authorized_keys, vimrc, openshift.sh script, and other necessary items." >> /root/.install_log
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
@@ -228,9 +228,9 @@ runcmd:
 - curl #{CONFIG[:URL]}/ose_files/bashrc > /root/.bashrc
 - curl #{CONFIG[:URL]}/ose_files/bash_profile > /root/.bash_profile
 - curl #{CONFIG[:URL]}/ose_files/vimrc > /root/.vimrc
-- curl #{CONFIG[:URL]}/ose_files/voyager/authorized_keys > /root/.ssh/authorized_keys
-- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pub > /root/.ssh/id_rsa.pub
-- curl #{CONFIG[:URL]}/ose_files/voyager/voyager.pri > /root/.ssh/id_rsa
+- curl #{CONFIG[:URL]}/ose_files/authorized_keys > /root/.ssh/authorized_keys
+- curl #{CONFIG[:URL]}/ose_files/voyager.pub > /root/.ssh/id_rsa.pub
+- curl #{CONFIG[:URL]}/ose_files/voyager.pri > /root/.ssh/id_rsa
 - echo "$(date) - Downloaded bashrc, authorized_keys, vimrc, openshift.sh script, and other necessary items." >> /root/.install_log
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
