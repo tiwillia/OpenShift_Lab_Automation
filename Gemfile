@@ -70,3 +70,6 @@ gem 'net-ssh'
 
 # Crack is necessary because its crack. Who doesn't enjoy crack?
 gem 'crack'
+
+# Redis is needed for the background work
+gem 'redis-rails'
