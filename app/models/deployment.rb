@@ -4,12 +4,31 @@ class Deployment < ActiveRecord::Base
 
   after_create :define_instance_vars
 
+  def queue
+    $redis.hgetall("deployment_queue_#{self.id}")
+  end
+
+  def push(instance_id, message)
+    $redis.hset("deployment_queue_#{self.id}", instance_id, message)
+  end
+
+  def pop
+    q = self.queue
+    if q.length > 0
+      r_val = q.first
+      $redis.hdel("deployment_queue_#{self.id}", r_val[0])
+      return {:instance_id => r_val[0], :message => r_val[1]}
+    else
+      return false
+    end
+  end
+
   def begin
     if running?
       dlog("Attempted to begin deployment with id #{self.id} for project #{@project.id} while already running.",:error)
       return false
     end
-    DEPLOYMENT_THREADS[self.id] = Thread.new {
+    Thread.new {
       case self.action
 
       when "build"
@@ -69,25 +88,25 @@ class Deployment < ActiveRecord::Base
       self.finish
   
     }
-    if running?
-      self.update_attributes(:started => true, :started_time => DateTime.now)
-      return true
-    else
-      return false
-    end
+    self.update_attributes(:started => true, :started_time => DateTime.now)
+    return true
   end
 
   def finish
     self.update_attributes(:complete => true, :completed_time => DateTime.now) 
+    until self.queue.empty?
+      self.pop
+    end
   end
 
   def instance_message(instance_id, message)
     dlog "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
-    if DEPLOYMENT_QUEUES[self.id].nil?
-      dlog "Deployment queue has mysteriously become nil, replacing..."
-      DEPLOYMENT_QUEUES[self.id] = Queue.new
+    if self.queue.nil?
+      dlog "Deployment queue has mysteriously become nil, replacing..."  
+      $redis.hset("deployment_queue_1", nil, nil)
+      $redis.hdel("deployment_queue_1", nil)
     end
-    DEPLOYMENT_QUEUES[self.id].push({:instance_id => instance_id, :message => message})
+    self.push(instance_id, message)
   end
 
   def in_progress?
@@ -99,7 +118,7 @@ class Deployment < ActiveRecord::Base
   end
 
   def running?
-    DEPLOYMENT_THREADS[self.id] && DEPLOYMENT_THREADS[self.id].alive?
+    self.in_progress?
   end
 
 private
@@ -119,11 +138,11 @@ private
     complete = false
     time_waited = 0
     until complete do
-      while DEPLOYMENT_QUEUES[self.id].empty? do
+      while self.queue.empty? do
         sleep 10
         time_waited += 10
       end
-      work = DEPLOYMENT_QUEUES[self.id].pop
+      work = self.pop
       instance = Instance.find(work[:instance_id])
       message = work[:message]
       case message
@@ -194,10 +213,10 @@ private
     phase3.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
     dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
     sleep 120
-    dlog "Deployment queue before phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
+    dlog "Deployment queue before phase 4: #{self.queue}"
     dlog "Phase 4 begin..." 
     phase4.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
-    dlog "Deployment queue after phase 4: #{DEPLOYMENT_QUEUES[self.id].inspect}"
+    dlog "Deployment queue after phase 4: #{self.queue}"
     dlog "Phase 4 complete, waiting for completion..." 
 
     broker_instance = @project.instances.select {|i| i.types.include?("broker") }.first
@@ -209,11 +228,11 @@ private
     # Wait for all instances to complete
     time_waited = 0
     until all_complete do
-      while DEPLOYMENT_QUEUES[self.id].empty? do
+      while self.queue.empty? do
         sleep 10
         time_waited += 10
       end
-      work = DEPLOYMENT_QUEUES[self.id].pop
+      work = self.pop
       instance = Instance.find(work[:instance_id])
       message = work[:message]
       case message
@@ -341,8 +360,6 @@ private
   end
 
   def define_instance_vars
-    DEPLOYMENT_THREADS[self.id] = nil
-    DEPLOYMENT_QUEUES[self.id] = Queue.new
     @project = Project.find(self.project_id)
   end
 
