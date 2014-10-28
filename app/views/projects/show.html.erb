@@ -1,77 +1,46 @@
 <div class="row">
-  <div class="col-md-10">
-    <h1>OpenShift Lab: <%= @project.name %></h1>
-  </div>
-  <div class="col-md-2">
-    <% if admin? %>
-      <a href="/projects/<%= @project.id %>/edit" class="btn btn-info">Edit</a>
-    <% end %>
-    <% if @project.checked_out? %>
-      <% if current_user and (current_user.id == @project.checked_out_by || current_user.admin?)  %>
-        <a href="/projects/<%= @project.id %>/uncheck_out" class="btn btn-warning">Un-check out</a> 
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1><%= @project.name %> <small>
+          <% if @project.deployed %>
+            Deployed
+          <% elsif @deployment %>
+            <%= @deployment.action.titlesize %> in progress since <%= parse_date(@deployment.started_time) %>
+          <% elsif current_user and (current_user.id == @project.checked_out_by || current_user.admin?) %>
+            <% ready, reason = @project.ready? %>
+            <% if ready %>
+              Ready for deployment!
+            <% else %>
+              Deployment Not Ready
+            <% end %>
+          <% else %>
+            Deployed.            
+          <% end %>
+          </small>
+       <% if admin? %>
+        <a href="/projects/<%= @project.id %>/edit" class="btn btn-info pull-right">Edit</a>
       <% end %>
-    <% else %>
-      <a href="/projects/<%= @project.id %>/check_out" class="btn btn-primary">Check out</a> 
-    <% end %>
-  </div>
-</div>
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title text-center">
-      <% if @project.deployed %>
-        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Environment deployed!</span>
-    </h3>
-  </div>
-</div>
-      <% elsif @deployment %>
-        <span class="text-info" id="deployment_in_progress"><span class="glyphicon glyphicon-tasks"></span> <%= @deployment.action.titleize %> in progress, started at <%= parse_date(@deployment.started_time) %>.</span>
-    </h3>
-  </div>
-</div>
-      <% elsif current_user and (current_user.id == @project.checked_out_by || current_user.admin?) %>
-        <% ready, reason = @project.ready? %>
-        <% if ready %>
-        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Ready for Deployment!</span>
-    </h3>
-  </div>
-</div>
-        <% else %>
-        <span class="text-danger"><span class="glyphicon glyphicon-remove"></span> Deployment not ready.</span>
-    </h3>
-  </div>
-  <div class="panel-body">
-    <%= reason %>
-  </div>
-</div>
+      <% if @project.checked_out? %>
+        <% if current_user and (current_user.id == @project.checked_out_by || current_user.admin?)  %>
+          <a href="/projects/<%= @project.id %>/uncheck_out" class="btn btn-warning pull-right">Un-check out</a> 
         <% end %>
       <% else %>
-        <span class="text-success"><span class="glyphicon glyphicon-ok"></span> Deployed.</span>
-    </h3>
+        <a href="/projects/<%= @project.id %>/check_out" class="btn btn-primary pull-right">Available for check out</a> 
+      <% end %>     
+      </h1>
+    </div>  
   </div>
 </div>
-      <% end %>
-<hr />
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title text-center">
-      <% if @project.checked_out? %>
-        <span class="text-info">Checked out by <%= User.find(@project.checked_out_by).name %> since <%= parse_date(@project.checked_out_at) %></span>
-      <% else %>
-        <span class="text-success">Not checked out by anyone!</span>
-      <% end %>
-    </h3>
-  </div>
-</div>
-<hr />
+
 <div class="panel panel-default">
   <div class="panel-heading">
     <h3 class="panel-title text-center">Instances</h3>
   </div>
   <div class="panel-body">
-    <table class="table">
-      <thead>
+    <table class="table table-condensed">
+      <thead class="text-center">
         <tr>
-          <td class="text-center">Deployed</td>
+          <td>Deployed</td>
           <td>Hostname</td>
           <td>Type(s)</td>
           <td>Floating IP</td>
@@ -105,21 +74,21 @@
             <td><%= inst.gear_size if !inst.no_openshift and inst.types.include?("node") %></td>
             <td>
               <% if inst.reachable %>
-                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                <a class="btn btn-default reachable_button pull-right" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
                   <div class="reachable_button_content" instance_id="<%= inst.id %>">
                     <span class="glyphicon glyphicon-ok" ></span> 
                     Check
                   </div>
                 </a>
               <% elsif inst.reachable == false && !inst.last_checked_reachable.nil? %>
-                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                <a class="btn btn-default reachable_button pull-right" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
                   <div class="reachable_button_content" instance_id="<%= inst.id %>">
                     <span class="glyphicon glyphicon-remove"></span> 
                     Check
                   </div>
                 </a>
               <% else %>
-                <a class="btn btn-default reachable_button" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                <a class="btn btn-default reachable_button pull-right" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
                   <div class="reachable_button_content" instance_id="<%= inst.id %>">
                     Check
                   </div>
