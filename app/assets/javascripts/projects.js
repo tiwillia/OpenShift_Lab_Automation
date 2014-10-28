@@ -27,8 +27,9 @@ $(document).ready(function() {
     $.getJSON("/instances/" + inst_id + "/check_deployed", function(result){
       console.log("Got result for instance " + inst_id + ": " + result.deployed + " " + result.in_progress);
       if (result.in_progress === "true") {
-        $('#deployed_glyph_' + inst_id).replaceWith('<span class="text-warning" id="deployed_glyph_' + inst_id + '">In Progress</span>');
+        $('#deployed_glyph_' + inst_id).replaceWith('<span id="deployed_glyph_' + inst_id + '">In Progress</span>');
         var row=$('.instance_row[instance_id="' + inst_id + '"]');
+        row.css("color", "#000000");
         if (row.hasClass("bg-success") || row.hasClass("bg-danger")) {
           row.removeClass("bg-success bg-danger");
           row.addClass("bg-info");
@@ -39,6 +40,7 @@ $(document).ready(function() {
         if (result.deployed === "true") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-ok" id="deployed_glyph_' + inst_id + '"></span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          row.css("color", "#000000");
           if (row.hasClass("bg-info") || row.hasClass("bg-danger")) {
             console.log("row is:" + row);
             row.removeClass("bg-info bg-danger");
@@ -49,6 +51,7 @@ $(document).ready(function() {
         } else {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="deployed_glyph_' + inst_id + '"></span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          row.css("color", "#000000");
           if (row.hasClass("bg-success") || row.hasClass("bg-info")) {
             row.removeClass("bg-success bg-info");
             row.addClass("bg-danger");
