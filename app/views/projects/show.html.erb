@@ -5,7 +5,7 @@
           <% if @project.deployed %>
             Deployed
           <% elsif @deployment %>
-            <%= @deployment.action.titlesize %> in progress since <%= parse_date(@deployment.started_time) %>
+            <%= @deployment.action.titleize %> in progress since <%= parse_date(@deployment.started_time) %>
           <% elsif current_user and (current_user.id == @project.checked_out_by || current_user.admin?) %>
             <% ready, reason = @project.ready? %>
             <% if ready %>
