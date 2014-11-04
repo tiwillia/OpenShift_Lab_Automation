@@ -472,7 +472,7 @@ private
     end
 
     if ose_version.to_f >= 2.1
-      variables[:CONF_NO_SCRABLE] = "true"
+      variables[:CONF_NO_SCRAMBLE] = "true"
       variables[:CONF_CARTRIDGES] = "standard,jbosseap,jbossews,fuse,amq"
     end
 
