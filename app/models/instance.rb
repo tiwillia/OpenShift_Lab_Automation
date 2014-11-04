@@ -423,7 +423,9 @@ private
       # CONF_NODE_PROFILE
 
     variables = Hash.new
-    project_details = Project.find(self.project_id).details
+    project = Project.find(self.project_id)
+    project_details = project.details
+    ose_version = project.ose_version
     return nil if project_details.nil?
     variables = { :CONF_DOMAIN => project_details[:domain],
                   :CONF_NAMED_IP_ADDR => project_details[:named_ip],
@@ -455,6 +457,7 @@ private
  
     if self.types.include?("node")
       variables[:CONF_NODE_PROFILE] = self.gear_size
+      variables[:CONF_NODE_PROFILE_NAME] = self.gear_size if ose_version.to_f >= 2.2
     end
 
 
@@ -466,6 +469,11 @@ private
 
     if project_details[:activemq_replicants].count > 1
       variables[:CONF_ACTIVEMQ_REPLICANTS] = project_details[:activemq_replicants].join(",")
+    end
+
+    if ose_version.to_f >= 2.1
+      variables[:CONF_NO_SCRABLE] = "true"
+      variables[:CONF_CARTRIDGES] = "standard,jbosseap,jbossews,fuse,amq"
     end
 
     # Blank variables will break an installation.
