@@ -47,6 +47,7 @@ before_filter :is_logged_in?, :only => :check_out
     @floating_ips = ["NONE AVAILABLE"] if @floating_ips.empty?
     @flavors = @project.flavors
     @limits = @project.limits
+    @gear_sizes = CONFIG[:gear_sizes]
     @instance_id_list = @project.instances.map {|i| i.id}
     @template = Template.new(:project_id => @project.id)
     most_recent_deployment = @project.deployments.last

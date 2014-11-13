@@ -12,7 +12,7 @@ $(document).ready(function() {
       if (result.applied === "true") {
         $('#apply_template_button_' + template_id).replaceWith('<a href="/projects/' + result.project_id  + '" class="btn btn-sm btn-success">Template applied!</a>');
       } else {
-      $('#apply_template_button_' + template_id).replaceWith('<a href="/projects/' + result.project_id + '" class="btn btn-sm btn-danger">Failure - Contact admin</a>');
+        $('#apply_template_button_' + template_id).replaceWith('<a href="/projects/' + result.project_id + '" class="btn btn-sm btn-danger">Failure - Contact admin</a>');
       };
     });
     return false;

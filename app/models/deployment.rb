@@ -305,7 +305,7 @@ private
     end
    
     @project.instances.each do |i|
-      if i.deployment_complete == false || i.deployment_started == true
+      if i.deployment_completed == false || i.deployment_started == true
         i.update_attributes(:deployment_completed => true, :deployment_started => false)
       end
     end 
