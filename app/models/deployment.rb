@@ -28,66 +28,71 @@ class Deployment < ActiveRecord::Base
       dlog("Attempted to begin deployment with id #{self.id} for project #{@project.id} while already running.",:error)
       return false
     end
-    Thread.new {
-      case self.action
+    begin
+      Thread.new {
+        case self.action
 
-      when "build"
-        dlog "Starting deployment #{@project.name}"
-        begin
-          dlog "Started deployment #{@project.name}"
-          build_deployment
-        rescue => e
-          dlog("ERROR could not start deployment #{e.message}", :error)
-          dlog("#{e.backtrace}", :error)
-        end
+        when "build"
+          dlog "Starting deployment #{@project.name}"
+          begin
+            dlog "Started deployment #{@project.name}"
+            build_deployment
+          rescue => e
+            dlog("ERROR could not start deployment #{e.message}", :error)
+            dlog("#{e.backtrace}", :error)
+          end
 
-      when "single_deployment"
-        dlog "Starting single deployment for #{@project.name}"
-        begin
-          dlog "Started deployment #{@project.name}"
-          single_deployment
-        rescue => e
-          dlog("ERROR could not start deployment #{e.message}", :error)
-          dlog("#{e.backtrace}", :error)
-        end
+        when "single_deployment"
+          dlog "Starting single deployment for #{@project.name}"
+          begin
+            dlog "Started deployment #{@project.name}"
+            single_deployment
+          rescue => e
+            dlog("ERROR could not start deployment #{e.message}", :error)
+            dlog("#{e.backtrace}", :error)
+          end
 
-      when "tear_down"
-        dlog "Undeploying deployment #{@project.name}"
-        begin
-          destroy_deployment
+        when "tear_down"
           dlog "Undeploying deployment #{@project.name}"
-        rescue => e
-          dlog("ERROR could not undeploy deployment #{e.message}", :error)
-          dlog("#{e.backtrace}", :error)
-        end
+          begin
+            destroy_deployment
+            dlog "Undeploying deployment #{@project.name}"
+          rescue => e
+            dlog("ERROR could not undeploy deployment #{e.message}", :error)
+            dlog("#{e.backtrace}", :error)
+          end
 
-      # NOT USED YET
-      when "destroy_all"
-        dlog "Destroying all instances on the backend for project #{@project.name}"
-        begin
-          destroy_on_backend
-          dlog "Destroyed all isntances on the backend for project #{@project.name}"
-        rescue => e
-          dlog("ERROR could not destroy all instances on the backend #{e.message}", :error)
-          dlog("#{e.backtrace}", :error)
-        end
+        # NOT USED YET
+        when "destroy_all"
+          dlog "Destroying all instances on the backend for project #{@project.name}"
+          begin
+            destroy_on_backend
+            dlog "Destroyed all isntances on the backend for project #{@project.name}"
+          rescue => e
+            dlog("ERROR could not destroy all instances on the backend #{e.message}", :error)
+            dlog("#{e.backtrace}", :error)
+          end
 
-      when "redeploy"
-        dlog "Restarting deployment #{@project.name}"
-        begin
-          rebuild_deployment
-          dlog "Restarted deployment #{@project.name}"
-        rescue => e
-          dlog("ERROR could not restart deployment #{e.message}", :error)
-          dlog("#{e.backtrace}", :error)
-        end
+        when "redeploy"
+          dlog "Restarting deployment #{@project.name}"
+          begin
+            rebuild_deployment
+            dlog "Restarted deployment #{@project.name}"
+          rescue => e
+            dlog("ERROR could not restart deployment #{e.message}", :error)
+            dlog("#{e.backtrace}", :error)
+          end
 
-      else
-        dlog("Action not recognized", :error)
-      end
-      self.finish
-  
-    }
+        else
+          dlog("Action not recognized", :error)
+        end
+        self.finish
+    
+      }
+    rescue => e
+      dlog("CRITICAL ERROR | Thread failed with: #{e.message}", :error)
+      dlog("#{e.backtrace}", :error)
+    end
     self.update_attributes(:started => true, :started_time => DateTime.now)
     return true
   end
