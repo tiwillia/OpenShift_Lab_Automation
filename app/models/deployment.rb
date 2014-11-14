@@ -231,6 +231,7 @@ private
       while self.queue.empty? do
         sleep 10
         time_waited += 10
+        dlog("Waiting for instance callbacks. Time waited: #{time_waited}")
       end
       work = self.pop
       instance = Instance.find(work[:instance_id])
@@ -253,6 +254,7 @@ private
         all_complete = true
       end
     end 
+    dlog("All instances completed. Completed instances: #{complete_instances.map {|i| i.name}}")
 
     # Datastore replicant configuration
     if datastore_instance.class == Instance
