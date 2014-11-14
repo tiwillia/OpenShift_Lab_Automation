@@ -492,7 +492,9 @@ private
   def ensure_types_exists
     if self.types.nil?
       self.types = []
-    end
+    else
+      self.types = self.types.flatten.uniq
+    end 
   end
 
 end
