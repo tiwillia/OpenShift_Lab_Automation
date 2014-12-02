@@ -80,14 +80,14 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
 
   def check_deployed
     @instance = Instance.find(params[:id])
-    in_progress = @instance.deployment_started.to_s
-    if @instance.deployed?
+    in_progress = @instance.deployment_started
+    if in_progress or !@instance.deployed?
       respond_to do |format|
-        format.json { render :json => {:deployed => "true", :in_progress => in_progress} }
+        format.json { render :json => {:deployed => "false", :in_progress => in_progress.to_s} }
       end
     else
       respond_to do |format|
-        format.json { render :json => {:deployed => "false", :in_progress => in_progress} }
+        format.json { render :json => {:deployed => "true", :in_progress => in_progress.to_s} }
       end
     end
   end
