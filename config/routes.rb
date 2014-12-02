@@ -19,6 +19,7 @@ RailsApp::Application.routes.draw do
   match 'deployments/:id/instance_message' => 'deployments#instance_message'
   match 'templates/:id/apply' => 'templates#apply'
   match 'help' => 'welcome#help'
+  match "/delayed_job" => DelayedJobWeb, :anchor => false, via: [:get, :post]
   root :to => 'projects#index'
 
   # The priority is based upon order of creation:
