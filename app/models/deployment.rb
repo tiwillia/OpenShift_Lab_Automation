@@ -28,73 +28,72 @@ class Deployment < ActiveRecord::Base
       dlog("Attempted to begin deployment with id #{self.id} for project #{@project.id} while already running.",:error)
       return false
     end
+    self.update_attributes(:started => true, :started_time => DateTime.now)
     begin
-      Thread.new {
-        case self.action
+      case self.action
 
-        when "build"
-          dlog "Starting deployment #{@project.name}"
-          begin
-            dlog "Started deployment #{@project.name}"
-            build_deployment
-          rescue => e
-            dlog("ERROR could not start deployment #{e.message}", :error)
-            dlog("#{e.backtrace}", :error)
-          end
-
-        when "single_deployment"
-          dlog "Starting single deployment for #{@project.name}"
-          begin
-            dlog "Started deployment #{@project.name}"
-            single_deployment
-          rescue => e
-            dlog("ERROR could not start deployment #{e.message}", :error)
-            dlog("#{e.backtrace}", :error)
-          end
-
-        when "tear_down"
-          dlog "Undeploying deployment #{@project.name}"
-          begin
-            destroy_deployment
-            dlog "Undeploying deployment #{@project.name}"
-          rescue => e
-            dlog("ERROR could not undeploy deployment #{e.message}", :error)
-            dlog("#{e.backtrace}", :error)
-          end
-
-        # NOT USED YET
-        when "destroy_all"
-          dlog "Destroying all instances on the backend for project #{@project.name}"
-          begin
-            destroy_on_backend
-            dlog "Destroyed all isntances on the backend for project #{@project.name}"
-          rescue => e
-            dlog("ERROR could not destroy all instances on the backend #{e.message}", :error)
-            dlog("#{e.backtrace}", :error)
-          end
-
-        when "redeploy"
-          dlog "Restarting deployment #{@project.name}"
-          begin
-            rebuild_deployment
-            dlog "Restarted deployment #{@project.name}"
-          rescue => e
-            dlog("ERROR could not restart deployment #{e.message}", :error)
-            dlog("#{e.backtrace}", :error)
-          end
-
-        else
-          dlog("Action not recognized", :error)
+      when "build"
+        dlog "Starting deployment #{@project.name}"
+        begin
+          dlog "Started deployment #{@project.name}"
+          build_deployment
+        rescue => e
+          dlog("ERROR could not start deployment #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
         end
-        self.finish
-    
-      }
+
+      when "single_deployment"
+        dlog "Starting single deployment for #{@project.name}"
+        begin
+          dlog "Started deployment #{@project.name}"
+          single_deployment
+        rescue => e
+          dlog("ERROR could not start deployment #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
+        end
+
+      when "tear_down"
+        dlog "Undeploying deployment #{@project.name}"
+        begin
+          destroy_deployment
+          dlog "Undeploying deployment #{@project.name}"
+        rescue => e
+          dlog("ERROR could not undeploy deployment #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
+        end
+
+      # NOT USED YET
+      when "destroy_all"
+        dlog "Destroying all instances on the backend for project #{@project.name}"
+        begin
+          destroy_on_backend
+          dlog "Destroyed all isntances on the backend for project #{@project.name}"
+        rescue => e
+          dlog("ERROR could not destroy all instances on the backend #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
+        end
+
+      when "redeploy"
+        dlog "Restarting deployment #{@project.name}"
+        begin
+          rebuild_deployment
+          dlog "Restarted deployment #{@project.name}"
+        rescue => e
+          dlog("ERROR could not restart deployment #{e.message}", :error)
+          dlog("#{e.backtrace}", :error)
+        end
+
+      else
+        dlog("Action not recognized", :error)
+      end
+      self.finish
     rescue => e
       dlog("CRITICAL ERROR | Thread failed with: #{e.message}", :error)
       dlog("#{e.backtrace}", :error)
+      self.update_attributes(:started => false)
+      return false
     end
-    self.update_attributes(:started => true, :started_time => DateTime.now)
-    return true
+    true
   end
 
   def finish
@@ -108,8 +107,8 @@ class Deployment < ActiveRecord::Base
     dlog "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
     if self.queue.nil?
       dlog "Deployment queue has mysteriously become nil, replacing..."  
-      $redis.hset("deployment_queue_1", nil, nil)
-      $redis.hdel("deployment_queue_1", nil)
+      $redis.hset("deployment_queue_#{self.id}", nil, nil)
+      $redis.hdel("deployment_queue_#{self.id}", nil)
     end
     self.push(instance_id, message)
   end
@@ -129,6 +128,7 @@ class Deployment < ActiveRecord::Base
 private
   
   def single_deployment
+    @project = Project.find(self.project_id)
     raise "No instance id providied" if self.instance_id.nil?
     instance = Instance.find(self.instance_id)
 
@@ -169,8 +169,11 @@ private
     end
     dlog "Deployment complete!"
   end
+  handle_asynchronously :single_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
   def build_deployment
+    @project = Project.find(self.project_id)
+
     # Order is:
     #   phase1, wait 2 mins, phase 2 + 3, wait 2 mins, phase4
     
@@ -319,23 +322,28 @@ private
     dlog "Deployment complete!"
     
   end
+  handle_asynchronously :build_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
   
   def destroy_deployment
+    @project = Project.find(self.project_id)
     @project.instances.each do |inst|
       inst.undeploy
     end
     destroy_on_backend
   end
+  handle_asynchronously :destroy_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
   def destroy_on_backend
+    @project = Project.find(self.project_id)
     @project.destroy_all 
   end
 
   def rebuild_deployment
     destroy_on_backend
     sleep 20 # Wait for slow openstack servers
-    begin_deployment
+    build_deployment
   end
+  handle_asynchronously :rebuild_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
   def ssh_session(instance)
     ip = instance.floating_ip

@@ -73,3 +73,8 @@ gem 'crack'
 
 # Redis is needed for the background work
 gem 'redis-rails'
+
+# Delayed job actually does the background work
+gem 'delayed_job_active_record'
+gem 'daemons'
+gem 'delayed_job_web'
