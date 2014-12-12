@@ -370,7 +370,7 @@ private
   # Easy way to log from deployments
   def dlog(message, level = :info)
     date_time = DateTime.now.to_s
-    full_message = "[" + date_time + "] (DEPLOYMENT) " + message
+    full_message = "[" + date_time + "] (DEPLOYMENT #{self.id}) " + message
     Rails.logger.send level, full_message
   end
 
