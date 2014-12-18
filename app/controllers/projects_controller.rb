@@ -40,7 +40,10 @@ before_filter :is_logged_in?, :only => :check_out
     end
   end
 
+  # The project's show page is the main page users will view.
+  # We intend to do quite a bit in the controller, so we do as little logic in the view as possible.
   def show
+    # Set variables
     @project = Project.find(params[:id])
     @images = @project.images
     @floating_ips = @project.available_floating_ips
@@ -50,11 +53,32 @@ before_filter :is_logged_in?, :only => :check_out
     @gear_sizes = CONFIG[:gear_sizes]
     @instance_id_list = @project.instances.map {|i| i.id}
     @template = Template.new(:project_id => @project.id)
-    most_recent_deployment = @project.deployments.last
-    if most_recent_deployment and most_recent_deployment.in_progress?
-      @deployment = most_recent_deployment
-    else
-      @deployment = nil
+
+    @most_recent_deployment = @project.deployments.last
+    @deployment_status = "unknown"
+    case
+    when @most_recent_deployment.nil?
+      @deployment_status = "never deployed"
+
+    when @most_recent_deployment.in_progress?
+      case @most_recent_deployment.action
+      when "build" || "single_deployment" || "redeploy"
+        @deployment_status = "build in progress"
+      when "tear_down"
+        @deployment_status = "tear_down in progress"
+      else
+        @deployment_status = "unknown"
+      end
+
+    when @most_recent_deployment.complete?
+      case @most_recent_deployment.action
+      when "build" || "single_deployment" || "redeploy"
+        @deployment_status = "complete"
+      when "tear_down"
+        @deployment_status = "undeployed"
+      else
+        @deployment_status = "unknown"
+      end
     end
   end
 

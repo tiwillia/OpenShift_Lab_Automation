@@ -1,0 +1,33 @@
+<div class="page-header">
+  <h1>
+    <%= @project.name %> 
+    <small>
+      <% case deployment_status %>
+      <% when "complete" %>
+        Deployed at <%= parse_date(deployment.completed_time) %>
+      <% when "undeployed" %>
+        Un-Deployed at <%= parse_date(deployment.completed_time) %>
+      <% when "never deployed" %>
+        Never deployed           
+      <% when "build in progress" %>
+        Deployment in progress. Started: <%= parse_date(deployment.started_time) %>
+      <% when "tear_down in progress" %>
+        Un-Deployment in progress. Started: <%= parse_date(deployment.started_time) %>    
+      <% when "unknown" %>
+        Status unknown
+      <% end %>
+    </small>
+
+   <% if admin? %>
+    <a href="/projects/<%= @project.id %>/edit" class="btn btn-info pull-right">Edit</a>
+  <% end %>
+  <% if @project.checked_out? %>
+    <% if current_user and (current_user.id == @project.checked_out_by || current_user.admin?)  %>
+      <a href="/projects/<%= @project.id %>/uncheck_out" class="btn btn-warning pull-right">Un-check out</a> 
+    <% end %> 
+  <% else %>
+    <a href="/projects/<%= @project.id %>/check_out" class="btn btn-primary pull-right">Available for check out</a> 
+  <% end %>     
+  </h1>
+</div>  
+
