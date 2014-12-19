@@ -86,7 +86,7 @@ before_filter :is_logged_in?, :only => :check_out
     @project = Project.find(params[:id])
     if @project.destroy
       flash[:success] = "Project successfully removed."
-      redirect_to project_path(@project)
+      redirect_to "/projects"
     else
       flash[:error] = "Project could not be removed."
       redirect_to :back
