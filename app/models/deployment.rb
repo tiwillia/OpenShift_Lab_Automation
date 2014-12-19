@@ -121,6 +121,10 @@ class Deployment < ActiveRecord::Base
     end
   end
 
+  def complete?
+    self.complete
+  end
+
   def running?
     self.in_progress?
   end

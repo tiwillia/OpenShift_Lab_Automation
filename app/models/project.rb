@@ -10,7 +10,7 @@ class Project < ActiveRecord::Base
   validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
 
   def deploy_all
-    deployment = self.deployments.new(:action => "build")
+    deployment = self.deployments.new(:action => "build", :complete => false)
     if deployment.save
       deployment.begin
       return true
@@ -20,7 +20,7 @@ class Project < ActiveRecord::Base
   end
  
   def deploy_one(instance_id)
-    deployment = self.deployments.new(:action => "single_deployment", :instance_id => instance_id)
+    deployment = self.deployments.new(:action => "single_deployment", :instance_id => instance_id, :complete => false)
     if deployment.save
       Instance.find(instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
       deployment.begin
@@ -31,7 +31,7 @@ class Project < ActiveRecord::Base
   end
 
   def undeploy_all
-    deployment = self.deployments.new(:action => "tear_down")
+    deployment = self.deployments.new(:action => "tear_down", :complete => false)
     if deployment.save
       deployment.begin
       return true
