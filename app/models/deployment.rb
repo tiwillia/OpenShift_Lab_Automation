@@ -86,7 +86,6 @@ class Deployment < ActiveRecord::Base
       else
         dlog("Action not recognized", :error)
       end
-      self.finish
     rescue => e
       dlog("CRITICAL ERROR | Thread failed with: #{e.message}", :error)
       dlog("#{e.backtrace}", :error)
@@ -172,6 +171,7 @@ private
       end
     end
     dlog "Deployment complete!"
+    self.finish
   end
   handle_asynchronously :single_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
@@ -324,7 +324,7 @@ private
       end
     end 
     dlog "Deployment complete!"
-    
+    self.finish
   end
   handle_asynchronously :build_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
   
@@ -334,6 +334,7 @@ private
       inst.undeploy
     end
     destroy_on_backend
+    self.finish
   end
   handle_asynchronously :destroy_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
@@ -346,6 +347,7 @@ private
     destroy_on_backend
     sleep 20 # Wait for slow openstack servers
     build_deployment
+    self.finish
   end
   handle_asynchronously :rebuild_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
