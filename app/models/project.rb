@@ -9,6 +9,8 @@ class Project < ActiveRecord::Base
 
   validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
 
+  before_create :set_uuid
+
   def deploy_all
     deployment = self.deployments.new(:action => "build", :complete => false)
     if deployment.save
@@ -313,6 +315,15 @@ class Project < ActiveRecord::Base
     else 
       Lab.find(self.lab_id).get_neutron(self.name)
     end 
+  end
+
+  private
+    
+  def set_uuid
+    c = get_connection
+    path = c.instance_variable_get("@connection").instance_variable_get("@service_path")
+    id = path.split("/").last
+    self.uuid = id
   end
 
 end

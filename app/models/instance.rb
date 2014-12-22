@@ -126,6 +126,8 @@ class Instance < ActiveRecord::Base
     end
     c.attach_floating_ip({:server_id => server_id, :ip_id => floating_ip_id})
 
+    self.update_attributes(:uuid => server_id)
+
     true
   
   end
@@ -136,7 +138,7 @@ class Instance < ActiveRecord::Base
     s = c.servers.select {|s| s[:name] == self.name}.first
     server = c.get_server(s[:id])
     if server.delete!
-      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
+      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :server_id => nil)
       return true
     else
       return false
