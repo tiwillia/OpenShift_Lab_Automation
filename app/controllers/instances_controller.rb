@@ -106,6 +106,20 @@ before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :creat
     end
   end
 
+  def console
+    @instance = Instance.find(params[:id])
+    result, message = @instance.get_console
+    if result
+      respond_to do |format|
+        format.json { render :json => {:result => "success", :message => message} }
+      end
+    else
+      respond_to do |format|
+        format.json { render :json => {:result => "error", :message => message } }
+      end
+    end
+  end
+
 private
 
   def new_instance_params

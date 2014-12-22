@@ -62,6 +62,21 @@ class Instance < ActiveRecord::Base
     end
   end
 
+  def get_console
+    if self.uuid
+      p = Project.find(self.project_id)
+      c = p.get_connection
+      begin
+        console_url = c.get_console({:server_id => self.uuid})
+      rescue => e
+        return false, e.message
+      end
+      return true, console_url
+    else
+      return false, "Instance is not deployed, or does not have a uuid properly defined" 
+    end
+  end
+
   def deploy(deployment_id)
     # Get the connection and instance
     p = Project.find(self.project_id)

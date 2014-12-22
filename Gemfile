@@ -55,7 +55,8 @@ gem 'jquery-rails'
 gem 'strong_parameters'
 
 # Gotta talk to openstack somehow
-gem 'openstack'
+gem 'openstack',
+  :git => 'https://github.com/tiwillia/ruby-openstack.git'
 
 # This integrates twitter's bootstrap
 gem "therubyracer"

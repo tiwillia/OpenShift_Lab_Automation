@@ -9,6 +9,13 @@ GIT
       rails (>= 3.1)
       railties (>= 3.1)
 
+GIT
+  remote: https://github.com/tiwillia/ruby-openstack.git
+  revision: 3b884d43a5ac892da4c52da95100e12c8d5b1bbc
+  specs:
+    openstack (1.1.2)
+      json
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -88,8 +95,6 @@ GEM
     multi_json (1.8.2)
     mysql2 (0.3.14)
     net-ssh (2.8.0)
-    openstack (1.1.2)
-      json
     pg (0.17.0)
     polyglot (0.3.3)
     pry (0.10.0)
@@ -191,7 +196,7 @@ DEPENDENCIES
   minitest
   mysql2
   net-ssh
-  openstack
+  openstack!
   pg
   pry
   rack (~> 1.4.5)
