@@ -11,6 +11,7 @@ RailsApp::Application.routes.draw do
   match 'projects/:id/undeploy' => 'projects#undeploy_all'
   match 'projects/:id/redeploy' => 'projects#redeploy_all'
   match 'projects/:id/destroy_on_backend' => 'projects#destroy_on_backend'
+  match 'projects/:id/check_deployed' => 'projects#check_deployed'
   match 'instances/:id/undeploy' => 'instances#undeploy'
   match 'instances/:id/callback_script' => 'instances#callback_script'
   match 'instances/:id/check_deployed' => 'instances#check_deployed'

@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" id="project_page_header" project_id="<%= @project.id %>">
   <div class="col-md-12">
     <%# Moved page header to a seperate partial, as it continues to grow in size and complexity %>
     <%= render "page_header", :deployment_status => @deployment_status, :deployment => @most_recent_deployment, :@project => @project %>
