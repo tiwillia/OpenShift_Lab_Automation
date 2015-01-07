@@ -9,6 +9,7 @@ $(document).ready(function() {
     $('#instanceLogTextArea').toggle();
     deployed_check_all();
     // If a deployment is in progress, check every 30 seconds.
+    // TODO: This is broken
     if ($('#deployment_in_progress').length) {
       console.log("Deployment is in progress, checking deployed status every 30 seconds");
       setInterval(deployed_check_all, 30000);
@@ -18,28 +19,16 @@ $(document).ready(function() {
   function deployed_check_all() {
     console.log("Checking all instance deployed statuses...");
     var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
+    var proj_id = $('#project_page_header').attr("project_id");
     for (i = 0; i < inst_id_list.length; i++) {
-      deployed_check(inst_id_list[i]); 
+      inst_id = inst_id_list[i];
+      $('#deployed_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_' + inst_id + '" />');
     };
-  };
-
-  // Check to see if an instance is deployed, replace 'deployed' entry in instance table
-  function deployed_check(inst_id) {
-    $('#deployed_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_' + inst_id + '" />');
-    $.getJSON("/instances/" + inst_id + "/check_deployed", function(result){
-      console.log("Got result for instance " + inst_id + ": " + result.deployed + " " + result.in_progress);
-      if (result.in_progress === "true") {
-        $('#deployed_glyph_' + inst_id).replaceWith('<span id="deployed_glyph_' + inst_id + '">In Progress</span>');
-        var row=$('.instance_row[instance_id="' + inst_id + '"]');
-        row.css("color", "#000000");
-        if (row.hasClass("bg-success") || row.hasClass("bg-danger")) {
-          row.removeClass("bg-success bg-danger");
-          row.addClass("bg-info");
-        } else {
-          row.addClass("bg-info");
-        };
-      } else {
-        if (result.deployed === "true") {
+    $.getJSON("/projects/" + proj_id + "/check_deployed", function(result) {
+      console.log("Got result for project deployment check.");
+      for (i = 0; i < inst_id_list.length; i++) {
+        inst_id = inst_id_list[i];
+        if (result[inst_id] === "deployed") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-ok" id="deployed_glyph_' + inst_id + '"></span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
           row.css("color", "#000000");
@@ -49,8 +38,8 @@ $(document).ready(function() {
             row.addClass("bg-success");
           } else {
             row.addClass("bg-success");
-          };
-        } else {
+          }; 
+        } else if (result[inst_id] === "undeployed") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="deployed_glyph_' + inst_id + '"></span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
           row.css("color", "#000000");
@@ -60,9 +49,18 @@ $(document).ready(function() {
           } else {
             row.addClass("bg-danger");
           };
+        } else if (result[inst_id] === "in_progress") {
+          $('#deployed_glyph_' + inst_id).replaceWith('<span id="deployed_glyph_' + inst_id + '">In Progress</span>');
+          var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          row.css("color", "#000000");
+          if (row.hasClass("bg-success") || row.hasClass("bg-danger")) {
+            row.removeClass("bg-success bg-danger");
+            row.addClass("bg-info");
+          } else {
+            row.addClass("bg-info");
+          };
         };
       };
-
     });
   };
 
@@ -170,4 +168,59 @@ $(document).ready(function() {
     });
   });
 
+  $(".console_link").click(function(e){
+    // prevent the default shit from occuring
+    e.preventDefault();
+
+    var inst_id = $(this).data("instance");
+
+    // if the console is already expanded, hide it and clear the canvas.
+    if ($('#console_row_' + inst_id).hasClass('in')) {
+      $('#console_row_' + inst_id).collapse('hide');
+      $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-search" id="console_glyph_' + inst_id + '" ></span>');
+      // should clear the canvas out, once we figure out how we are doing that
+      return;
+    };
+
+    // replace glyphicon with loading gif
+    $('#console_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="console_glyph_' + inst_id + '" />');
+
+    $.ajax({
+      type: "GET",
+      url: "/instances/" + inst_id + "/console",
+      async: false,
+      //dataType: "json",
+      success: function(response, textStatus, jqXHR) {
+        console.log("Successfully received VNC console link from API for instance " + inst_id);
+        if (response['result'] === "success") {
+          // add function call to function that adds <canvas> tag to accordian and populates it
+          console.log(response['result'] + " : " + response['message'])
+          open_console(inst_id, response['message']);
+        } else {
+          console.log("Failed to retrieve VNC console link from API: " + response['message']);
+        };
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.log("Failed to retrieve VNC console link from API: " + errorThrown);
+      }
+    }); // end ajax
+
+    // replace loading gif
+    $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-chevron-up" id="console_glyph_' + inst_id + '" ></span>');
+  }); // end  console_link listener
+  
+
+  // take two parameters: instance_id and console_url
+  function open_console(inst_id, console_url){
+    var divID = "#console_row_" + inst_id;
+    var theRow = $(divID);
+
+    console.log("Opening iframe for console url " + console_url);
+    $('#console_td_' + inst_id).html('<iframe class="col-md-12" id="console_iframe_' + inst_id +'" frameborder="0" height="450px" src="' + console_url + '"></iframe>');
+    $('#console_iframe_' + inst_id).focus();
+    $('#console_iframe_' + inst_id).mouseover(function(){ $('#console_iframe_' + inst_id).focus(); });
+    console.log("Attempting to open the hidden row for a console to instance " + inst_id);
+    theRow.collapse('show');
+  };
 });
+

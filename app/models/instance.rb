@@ -62,6 +62,21 @@ class Instance < ActiveRecord::Base
     end
   end
 
+  def get_console
+    if self.uuid
+      p = Project.find(self.project_id)
+      c = p.get_connection
+      begin
+        console_url = c.get_console({:server_id => self.uuid})
+      rescue => e
+        return false, e.message
+      end
+      return true, console_url
+    else
+      return false, "Instance is not deployed, or does not have a uuid properly defined" 
+    end
+  end
+
   def deploy(deployment_id)
     # Get the connection and instance
     p = Project.find(self.project_id)
@@ -126,6 +141,8 @@ class Instance < ActiveRecord::Base
     end
     c.attach_floating_ip({:server_id => server_id, :ip_id => floating_ip_id})
 
+    self.update_attributes(:uuid => server_id)
+
     true
   
   end
@@ -136,7 +153,7 @@ class Instance < ActiveRecord::Base
     s = c.servers.select {|s| s[:name] == self.name}.first
     server = c.get_server(s[:id])
     if server.delete!
-      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
+      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :server_id => nil)
       return true
     else
       return false

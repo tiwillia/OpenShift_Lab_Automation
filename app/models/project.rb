@@ -9,6 +9,8 @@ class Project < ActiveRecord::Base
 
   validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
 
+  before_create :set_uuid
+
   def deploy_all
     deployment = self.deployments.new(:action => "build", :complete => false)
     if deployment.save
@@ -77,6 +79,26 @@ class Project < ActiveRecord::Base
     else
       false
     end
+  end
+
+  # This checks all instances and returns a hash in the format:
+  #   {instance_id => ["deployed"|"in_progress"|"undeployed"]}
+  def check_all_deployed
+    c = self.get_connection
+    servers = c.servers.map {|s| s[:id]}
+    deployment_hash = Hash.new
+    self.instances.each do |i|
+      if servers.include?(i.uuid) && 
+        if i.deployment_completed && !i.deployment_started
+          deployment_hash[i.id] = "deployed"
+        else
+          deployment_hash[i.id] = "in_progress"
+        end
+      else
+        deployment_hash[i.id] = "undeployed"
+      end
+    end
+    deployment_hash
   end
 
   def all_deployed?
@@ -313,6 +335,15 @@ class Project < ActiveRecord::Base
     else 
       Lab.find(self.lab_id).get_neutron(self.name)
     end 
+  end
+
+  private
+    
+  def set_uuid
+    c = get_connection
+    path = c.instance_variable_get("@connection").instance_variable_get("@service_path")
+    id = path.split("/").last
+    self.uuid = id
   end
 
 end

@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" id="project_page_header" project_id="<%= @project.id %>">
   <div class="col-md-12">
     <%# Moved page header to a seperate partial, as it continues to grow in size and complexity %>
     <%= render "page_header", :deployment_status => @deployment_status, :deployment => @most_recent_deployment, :@project => @project %>
@@ -13,6 +13,7 @@
     <table class="table table-condensed">
       <thead class="text-center">
         <tr>
+          <td>Console</td>
           <td>Deployed</td>
           <td>Hostname</td>
           <td>Type(s)</td>
@@ -31,6 +32,7 @@
         <span class="instance_id_list" instance_ids="<%= instances.map {|i| i.id}.join(",") %>"></span>
         <% instances.each do |inst| %>
           <tr class="instance_row" instance_id="<%= inst.id %>">
+            <td class="text-center"><a href="#console_row_<%= inst.id %>" class="console_link" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span></a></td>
             <td class="text-center">
               <img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_<%= inst.id %>" />
             </td>
@@ -83,6 +85,11 @@
               </div>
               <% end %>
             </td>
+          </tr>
+          <tr class="collapse" id="console_row_<%= inst.id %>">
+            <td colspan="11" id="console_td_<%= inst.id %>">
+              Unable to access console.
+            </td> 
           </tr>
         <% end %>
       </tbody>

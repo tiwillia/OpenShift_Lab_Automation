@@ -176,6 +176,15 @@ before_filter :is_logged_in?, :only => :check_out
     end
   end
 
+  # Returns the deployment hash in json
+  def check_deployed
+    @project = Project.find(params[:id])
+    deployment_hash = @project.check_all_deployed
+    respond_to do |format|
+      format.json { render :json => deployment_hash}
+    end
+  end
+
 private
 
   def new_project_params
