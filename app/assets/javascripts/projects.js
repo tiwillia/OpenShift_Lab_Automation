@@ -168,4 +168,59 @@ $(document).ready(function() {
     });
   });
 
+  $(".console_link").click(function(e){
+    // prevent the default shit from occuring
+    e.preventDefault();
+
+    var inst_id = $(this).data("instance");
+
+    // if the console is already expanded, hide it and clear the canvas.
+    if ($('#console_row_' + inst_id).hasClass('in')) {
+      $('#console_row_' + inst_id).collapse('hide');
+      $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-search" id="console_glyph_' + inst_id + '" ></span>');
+      // should clear the canvas out, once we figure out how we are doing that
+      return;
+    };
+
+    // replace glyphicon with loading gif
+    $('#console_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="console_glyph_' + inst_id + '" />');
+
+    $.ajax({
+      type: "GET",
+      url: "/instances/" + inst_id + "/console",
+      async: false,
+      //dataType: "json",
+      success: function(response, textStatus, jqXHR) {
+        console.log("Successfully received VNC console link from API for instance " + inst_id);
+        if (response['result'] === "success") {
+          // add function call to function that adds <canvas> tag to accordian and populates it
+          console.log(response['result'] + " : " + response['message'])
+          open_console(inst_id, response['message']);
+        } else {
+          console.log("Failed to retrieve VNC console link from API: " + response['message']);
+        };
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.log("Failed to retrieve VNC console link from API: " + errorThrown);
+      }
+    }); // end ajax
+
+    // replace loading gif
+    $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-chevron-up" id="console_glyph_' + inst_id + '" ></span>');
+  }); // end  console_link listener
+  
+
+  // take two parameters: instance_id and console_url
+  function open_console(inst_id, console_url){
+    var divID = "#console_row_" + inst_id;
+    var theRow = $(divID);
+
+    console.log("Opening iframe for console url " + console_url);
+    $('#console_td_' + inst_id).html('<iframe class="col-md-12" id="console_iframe_' + inst_id +'" frameborder="0" height="450px" src="' + console_url + '"></iframe>');
+    $('#console_iframe_' + inst_id).focus();
+    $('#console_iframe_' + inst_id).mouseover(function(){ $('#console_iframe_' + inst_id).focus(); });
+    console.log("Attempting to open the hidden row for a console to instance " + inst_id);
+    theRow.collapse('show');
+  };
 });
+
