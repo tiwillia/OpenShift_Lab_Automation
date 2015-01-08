@@ -49,6 +49,7 @@ $(document).ready(function() {
           } else {
             row.addClass("bg-danger");
           };
+          $('.console_link').replaceWith('<span class="glyphicon glyphicon-remove" id="console_glyph_<%= inst.id %>"></span>');
         } else if (result[inst_id] === "in_progress") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span id="deployed_glyph_' + inst_id + '">In Progress</span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
