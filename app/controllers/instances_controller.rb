@@ -1,6 +1,7 @@
 class InstancesController < ApplicationController
 
 before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :create, :check_deployed]
+before_filter :is_logged_in?, :only => :console
 
   def new
     @instance = Instance.new
@@ -135,6 +136,12 @@ private
     if current_user and (Project.find(@instance.project_id).checked_out_by != current_user.id && !current_user.admin)
       flash[:error] = "You do not have permissions to make changes to this instance"
       redirect_to "/projects"
+    end
+  end
+
+  def is_logged_in?
+    if !logged_in?
+      redirect_to "https://redhat.com/wapps/sso/login.html?redirect=#{CONFIG[:URL]}"
     end
   end
 
