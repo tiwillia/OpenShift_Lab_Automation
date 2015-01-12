@@ -9,8 +9,7 @@ $(document).ready(function() {
     $('#instanceLogTextArea').toggle();
     deployed_check_all();
     // If a deployment is in progress, check every 30 seconds.
-    // TODO: This is broken
-    if ($('#deployment_in_progress').length) {
+    if ($('#in_progress').length) {
       console.log("Deployment is in progress, checking deployed status every 30 seconds");
       setInterval(deployed_check_all, 30000);
     };

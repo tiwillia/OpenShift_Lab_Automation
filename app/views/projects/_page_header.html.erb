@@ -10,9 +10,9 @@
       <% when "never deployed" %>
         Never deployed           
       <% when "build in progress" %>
-        Deployment in progress. Started: <%= parse_date(deployment.started_time) %>
+        <span id="in_progress">Deployment in progress. Started: <%= parse_date(deployment.started_time) %></span>
       <% when "tear_down in progress" %>
-        Un-Deployment in progress. Started: <%= parse_date(deployment.started_time) %>    
+        <span id="in_progress">Un-Deployment in progress. Started: <%= parse_date(deployment.started_time) %></span> 
       <% when "unknown" %>
         Status unknown
       <% end %>

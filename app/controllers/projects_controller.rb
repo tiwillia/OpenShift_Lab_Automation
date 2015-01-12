@@ -62,7 +62,7 @@ before_filter :is_logged_in?, :only => :check_out
 
     when @most_recent_deployment.in_progress?
       case @most_recent_deployment.action
-      when "build" || "single_deployment" || "redeploy"
+      when "build", "single_deployment", "redeploy"
         @deployment_status = "build in progress"
       when "tear_down"
         @deployment_status = "tear_down in progress"
@@ -72,7 +72,7 @@ before_filter :is_logged_in?, :only => :check_out
 
     when @most_recent_deployment.complete?
       case @most_recent_deployment.action
-      when "build" || "single_deployment" || "redeploy"
+      when "build", "single_deployment", "redeploy"
         @deployment_status = "complete"
       when "tear_down"
         @deployment_status = "undeployed"
