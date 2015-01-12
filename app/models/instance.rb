@@ -199,8 +199,6 @@ runcmd:
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
-- curl #{CONFIG[:URL]}/ose_files/69.pem > /etc/pki/product/69.pem
-- echo "$(date) - Downloaded and installed Red Hat Enterprise Linux Server (6.5) product key." >> /root/.install_log
 - exit_code=255; while [ $exit_code != 0 ]; do echo "$(date) - Attempting to register with RHSM. Previous exit code  $exit_code" >> /root/.install_log; subscription-manager register --force --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output; exit_code=$?; done
 - echo "$(date) - Registered via RHSM with username #{CONFIG[:rhsm_username]} and server name #{self.safe_name}." >> /root/.install_log
 - exit_code=255; while [ $exit_code == 255 ]; do echo "$(date) - Attempting to attach subscription with pool id #{CONFIG[:rhsm_pool_id]}. Previous exit code  $exit_code" >> /root/.install_log; subscription-manager attach --pool #{CONFIG[:rhsm_pool_id]} &>> /root/.rhsm_output; exit_code=$?; done
@@ -256,8 +254,6 @@ runcmd:
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
-- curl #{CONFIG[:URL]}/ose_files/69.pem > /etc/pki/product/69.pem
-- echo "$(date) - Downloaded and installed Red Hat Enterprise Linux Server (6.5) product key." >> /root/.install_log
 - curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
 - echo "$(date) - Called to labs application to generate and download the installation handler script." >> /root/.install_log
 - exit_code=255; while [ $exit_code != 0 ]; do echo "$(date) - Attempting to register with RHSM. Previous exit code  $exit_code" >> /root/.install_log; subscription-manager register --force --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output; exit_code=$?; done
