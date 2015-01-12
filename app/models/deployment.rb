@@ -217,15 +217,18 @@ private
     dlog "Phase2: #{phase2}" 
     dlog "Phase3: #{phase3}" 
     dlog "Phase4: #{phase4}" 
-    phase1.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
-    dlog "Phase one started, waiting 2 minutes..." 
-    sleep 120 
-    dlog "Phase 2 + 3 begin..." 
-    phase2.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
-    phase3.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
-    dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
-    sleep 120
-    dlog "Deployment queue before phase 4: #{self.queue}"
+    unless phase1.empty?
+      phase1.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
+      dlog "Phase one started, waiting 2 minutes..." 
+      sleep 120 
+    end
+    unless phase2.empty? && phase3.empty?
+      dlog "Phase 2 + 3 begin..." 
+      phase2.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
+      phase3.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
+      dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
+      sleep 120
+    end
     dlog "Phase 4 begin..." 
     phase4.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
     dlog "Deployment queue after phase 4: #{self.queue}"
