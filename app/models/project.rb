@@ -88,7 +88,7 @@ class Project < ActiveRecord::Base
     servers = c.servers.map {|s| s[:id]}
     deployment_hash = Hash.new
     self.instances.each do |i|
-      if servers.include?(i.uuid) && 
+      if servers.include?(i.uuid) 
         if i.deployment_completed && !i.deployment_started
           deployment_hash[i.id] = "deployed"
         else
