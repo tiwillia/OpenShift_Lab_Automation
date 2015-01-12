@@ -36,7 +36,7 @@
           <tr class="instance_row" instance_id="<%= inst.id %>">
             <% if logged_in? %>
               <td class="text-center">
-                <a href="#console_row_<%= inst.id %>" class="console_link" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span>
+                <a href="#console_row_<%= inst.id %>" class="console_link" id="console_link_<%= inst.id %>" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span>
                 </a>
               </td>
             <% end %>

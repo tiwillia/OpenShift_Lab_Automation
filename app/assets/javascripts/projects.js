@@ -38,6 +38,8 @@ $(document).ready(function() {
           } else {
             row.addClass("bg-success");
           }; 
+          $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-search" id="console_glyph_' + inst_id + '"></span>');
+          $('#console_link_' + inst_id).css('pointer-events', 'auto');
         } else if (result[inst_id] === "undeployed") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="deployed_glyph_' + inst_id + '"></span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
@@ -48,7 +50,8 @@ $(document).ready(function() {
           } else {
             row.addClass("bg-danger");
           };
-          $('.console_link').replaceWith('<span class="glyphicon glyphicon-remove" id="console_glyph_<%= inst.id %>"></span>');
+          $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="console_glyph_' + inst_id + '"></span>');
+          $('#console_link_' + inst_id).css('pointer-events', 'none');
         } else if (result[inst_id] === "in_progress") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span id="deployed_glyph_' + inst_id + '">In Progress</span>');
           var row=$('.instance_row[instance_id="' + inst_id + '"]');
@@ -59,6 +62,8 @@ $(document).ready(function() {
           } else {
             row.addClass("bg-info");
           };
+          $('#console_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-search" id="console_glyph_' + inst_id + '"></span>');
+          $('#console_link_' + inst_id).css('pointer-events', 'auto');
         };
       };
     });
