@@ -150,7 +150,11 @@ class Instance < ActiveRecord::Base
   def undeploy
     p = Project.find(self.project_id)
     c = p.get_connection
-    s = c.servers.select {|s| s[:name] == self.name}.first
+    s = c.servers.select {|s| s[:server_id] == self.uuid}.first
+    if s.nil?
+      Rails.logger.warn "Attempted to undeploy an instance that does not exist on the backend: #{self.inspect}"
+      return true
+    end
     server = c.get_server(s[:id])
     if server.delete!
       self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :uuid => nil)
