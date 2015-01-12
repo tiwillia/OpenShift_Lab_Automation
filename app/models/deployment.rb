@@ -333,6 +333,8 @@ private
     @project.instances.each do |inst|
       inst.undeploy
     end
+    # destroy_on_backend is not necessary at all, but we do it to avoid confusion for users who don't realize that
+    #   a server not created by the project might exist on the openstack backend.
     destroy_on_backend
     self.finish
   end
