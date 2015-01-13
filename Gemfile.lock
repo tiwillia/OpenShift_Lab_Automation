@@ -11,10 +11,11 @@ GIT
 
 GIT
   remote: https://github.com/tiwillia/ruby-openstack.git
-  revision: 3b884d43a5ac892da4c52da95100e12c8d5b1bbc
+  revision: 1bbd94b4782600dd5b2fa270b5e456ee2d5f5f15
   specs:
-    openstack (1.1.2)
+    openstack (0.0.0)
       json
+      openstack
 
 GEM
   remote: https://rubygems.org/
@@ -79,7 +80,7 @@ GEM
       thor (>= 0.14, < 2.0)
     jquery-ui-rails (5.0.0)
       railties (>= 3.2.16)
-    json (1.8.1)
+    json (1.8.2)
     less (2.5.1)
       commonjs (~> 0.2.7)
     less-rails (2.5.0)
