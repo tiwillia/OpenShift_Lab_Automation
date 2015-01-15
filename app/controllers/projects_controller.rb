@@ -6,6 +6,9 @@ before_filter :is_logged_in?, :only => :check_out
 
   def index
     @projects = Project.all
+    if @projects.empty? && Lab.all.empty?
+      redirect_to '/labs/new'
+    end
   end
 
   def new
