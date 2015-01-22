@@ -7,9 +7,10 @@ class Project < ActiveRecord::Base
   has_many :instances
   has_many :deployments
 
-  validates :name,:network,:security_group,:domain,:lab,:ose_version, presence: true
+  validates :name,:domain,:lab,:ose_version, presence: true
 
-  before_create :set_uuid
+  before_create :create_on_backend
+  before_destroy :destroy_backend
 
   def deploy_all
     deployment = self.deployments.new(:action => "build", :complete => false)
@@ -250,7 +251,7 @@ class Project < ActiveRecord::Base
 
   # This method will ensure the project has all necessary components
   def ready?
-    q = get_connection("neutron")
+    q = get_connection("network")
     
     network = q.networks.select {|n| n.name == self.network}
     if network.empty?
@@ -330,20 +331,208 @@ class Project < ActiveRecord::Base
   end
 
   def get_connection(type = "compute")
-    if type == "compute"
+    case type
+    when "compute"
       Lab.find(self.lab_id).get_compute(self.name)
-    else 
+    when "identity"
+      Lab.find(self.lab_id).get_keystone
+    when "network"
       Lab.find(self.lab_id).get_neutron(self.name)
     end 
   end
 
   private
     
-  def set_uuid
-    c = get_connection
-    path = c.instance_variable_get("@connection").instance_variable_get("@service_path")
-    id = path.split("/").last
-    self.uuid = id
+  # Create the tenant and configure it properly on the OpenStack backend
+  # TODO: Ensure backend is deleted if this fails anywhere
+  # TODO: Check if the backend already exists? If so, check each requirement.
+  def create_on_backend
+    lab = Lab.find(self.lab_id)
+    Rails.logger.info "Creating tenant #{self.name} on openstack backend #{lab.name}."
+
+    # First, run through some checks to ensure we can create the whole tenant properly
+    # Check if an external network exists
+    admin_network_c = lab.get_neutron(lab.auth_tenant) 
+    ext_network = admin_network_c.list_networks.select {|n| n.external == true}
+    if ext_network.empty?
+      Rails.logger.error "There are no external networks on the OpenStack host"
+      return false
+    end
+
+    # Check if there are enough available floating ips
+    # There does not appear to be an api endpoint to check ips available for an instance to check out
+    # TODO - Take another look at this.
+
+    # Create the tenant
+    identity_c = get_connection("identity")
+    identity_c.create_tenant({:name => self.name, :description => "Created by OpenShift Labs app", :enabled => true})
+    tenant = identity_c.tenants.select {|t| t.name == self.name}.first
+    if tenant.nil?
+      Rails.logger.error "Attempted to create tenant with name #{self.name}, but tenant does not exist after creation."
+      return false
+    else
+      Rails.logger.info "Created tenant #{self.name} with tenant id #{tenant.id}."
+      self.uuid = tenant.id
+    end
+
+    # If any of the following fails, we need to be sure we delete the OpenStack backend tenant
+    begin
+
+      # Add the lab's user to the tenant
+      # TODO the below assumes an admin role exists. Need to verify that this is always the case.
+      role = identity_c.list_roles.select {|r| r[:name] == "admin"}.first
+      admin_user = identity_c.list_users.select {|u| u.name == lab.username }.first
+      Rails.logger.info "Adding user #{admin_user.name} to the #{self.name} tenant."
+      identity_c.add_user_to_tenant({:tenant_id => tenant.id, :role_id => role[:id], :user_id => admin_user.id})
+
+      # Get the compute and neutron connections
+      compute_c = get_connection("compute")
+      network_c = get_connection("network")
+
+      # Set the quotas appropriately
+      # Works needs to be done in the ruby-openstack gem to support this.
+      Rails.logger.info "Setting #{self.name} tenant quotas."
+      compute_c.set_limits(tenant.id, {:cores => lab.default_quota_cores,
+                                       :floating_ips => lab.default_quota_instances,
+                                       :instances => lab.default_quota_instances,
+                                       :ram => lab.default_quota_ram
+                                      })
+
+      # Create a network
+      network_name = self.name + "-network"
+      Rails.logger.info "Creating network with name #{network_name} for tenant #{self.name}."
+      network = network_c.create_network(network_name, {:admin_state_up => true})
+
+      # Create a subnet
+      subnet_name = self.name + "-subnet"
+      # TODO nameservers are hard-coded, but could change. Need to have them entered somewhere.
+      Rails.logger.info "Creating subnet with name #{subnet_name} for tenant #{self.name}."
+      subnet = network_c.create_subnet(network.id, "192.168.1.0/24", "4", {:name => subnet_name, :gateway_ip => "192.168.1.1", :enable_dhcp => true, :host_routes => [{"destination" => "169.254.169.254/32", "nexthop" => "10.10.73.6"}], :dns_nameservers => ['10.11.5.3', '10.11.5.4']})
+
+      # Create a router and add interface to subnet
+      router_name = self.name + "-router"
+      # TODO we grab the first external network, we should have a user specify which one to use somewhere
+      external_network = network_c.list_networks.select {|n| n.external == true }.first
+      Rails.logger.info "Creating router with name #{router_name} for tenant #{self.name}."
+      router = network_c.create_router(router_name, true, {:external_gateway_info => {:network_id => external_network.id}})
+      Rails.logger.info "Adding router interface for subnet #{subnet_name} on router #{router_name}."
+      network_c.add_router_interface(router.id, subnet.id)
+
+      # Get the default security group
+      security_group = compute_c.security_groups.select {|k,v| v[:name] == "default"}
+      security_group_id = security_group.keys.first
+
+      # Delete default security group rules
+      Rails.logger.info "Removing default Ingress security group rules for tenant #{self.name}."
+      security_group[security_group_id][:rules].each do |rule|
+        compute_c.delete_security_group_rule(rule[:id])
+      end
+
+      # Create necessary security group rules
+      Rails.logger.info "Creating all-open security groups rules for tcp, udp, and icmp on tenant #{self.name}"
+      compute_c.create_security_group_rule(security_group_id, 
+                                           {:ip_protocol => "tcp", :from_port => 1, :to_port => 65535, :cidr => "0.0.0.0/0"})
+      compute_c.create_security_group_rule(security_group_id, 
+                                           {:ip_protocol => "udp", :from_port => 1, :to_port => 65535, :cidr => "0.0.0.0/0"})
+      compute_c.create_security_group_rule(security_group_id, 
+                                           {:ip_protocol => "icmp", :from_port => -1, :to_port => -1, :cidr => "0.0.0.0/0"})
+
+      # Allocate all necessary floating ips
+      # TODO shouldn't just get the first pool, should have a dropdown and database entry in project
+      Rails.logger.info "Allocating #{lab.default_quota_instances} floating ips to tenant #{self.name}"
+      floating_ip_pool = compute_c.get_floating_ip_pools.first["name"]
+      lab.default_quota_instances.times do
+        compute_c.create_floating_ip(:pool => floating_ip_pool)
+      end
+ 
+      Rails.logger.info "Tenant #{self.name} creation completed."
+    rescue => e
+      Rails.logger.error "Could not create OpenStack backend tenant due to:"
+      Rails.logger.error e.message
+      Rails.logger.error e.backtrace
+      destroy_backend
+    end
+
+  end
+
+  # Delete the tenant on the OpenStack backend
+  def destroy_backend
+    Rails.logger.info "Removing tenant #{self.name} with tenant id #{self.uuid}."
+
+    Rails.logger.info "Undeploying all instances for tenant #{self.name}..."
+    # Delete all instances
+    if self.instances.count > 0
+      success = self.instances.each {|i| i.undeploy }
+      if success
+        Rails.logger.info "Removed all instances for tenant #{self.name}."
+      else
+        Rails.logger.error "Could not remove instance during project deletion:"
+        Rails.logger.error "Instance: #{i.name} #{i.id} #{i.uuid}"
+        return false
+      end
+    end
+
+    compute_c = get_connection("compute")
+    network_c = get_connection("network")
+    identity_c = get_connection("identity")
+
+    # Unallocate floating ips
+    floating_ips = compute_c.get_floating_ips
+    floating_ips.each do |ip|
+      Rails.logger.info "Deleting floating ip #{ip.ip} with id #{ip.id}"
+      compute_c.delete_floating_ip(ip.id)
+    end
+
+    routers = network_c.list_routers.select {|router| router.tenant_id == self.uuid}
+    subnets = network_c.list_subnets.select {|subnet| subnet.tenant_id == self.uuid}
+    networks = network_c.list_networks.select {|network| network.tenant_id == self.uuid}
+
+    # Clear all router gateways
+    routers.each do |router|
+      Rails.logger.info "Clearing router gateway for #{router.name} with id #{router.id}."
+      # Remove gateway from the router
+      network_c.update_router(router.id, {"external_gateway_info" => {}})
+    end
+
+    # loop through each network
+    # For each router, remove any subnet interfaces
+    networks.each do |network|
+      subnets.select {|subnet| subnet.network_id == network.id}.each do |subnet|
+        routers.each do |router|
+          begin
+            Rails.logger.info "Attempting to remove router interface for subnet #{subnet.name} with id #{subnet.id} from router #{router.name} with id #{router.id}."
+            network_c.remove_router_interface(router.id, subnet.id)
+            Rails.logger.info "Successfully removed router interface for subnet #{subnet.name}."
+          rescue => e
+            Rails.logger.error "Tried to remove router interface for subnet #{subnet.name} with id #{subnet.id} from router #{router.name} with id #{router.id}."
+          end
+        end
+      end
+    end
+
+    # Delete all subnets
+    subnets.each do |subnet|
+      Rails.logger.info "Deleting subnet #{subnet.name} with id #{subnet.id}"
+      network_c.delete_subnet(subnet.id)
+    end
+
+    # Delete all routers
+    routers.each do |router|
+      Rails.logger.info "Deleting router #{router.name} with id #{router.id}"
+      network_c.delete_router(router.id)
+    end
+
+    # Delete all networks
+    networks.each do |network|
+      Rails.logger.info "Deleting network #{network.name} with id #{network.id}"
+      network_c.delete_network(network.id)
+    end
+
+    # Finally, delete the tenant
+    Rails.logger.info "Deleting tenant #{self.name} with id #{self.uuid}"
+    identity_c.delete_tenant(self.uuid)
+
+    Rails.logger.info "Removal of tenant #{self.name} on the OpenStack backend succeeded."
   end
 
 end

@@ -29,6 +29,22 @@
         <%= f.label "API Auth URL", :class => "control-label" %>
           <%= f.text_field :api_url, :class => "form-control", :placeholder => "http://10.10.73.6:5000/v2.0/" %>
       </div>
+      <div class="form-group">
+        <%= f.label "Nameservers (comma seperated list)", :class => "control-label" %>
+          <%= f.text_field :nameservers, :class => "form-control", :value => "10.11.5.3,10.11.5.4" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Allowed instances for each environment", :class => "control-label" %>
+          <%= f.text_field :default_quota_instances, :class => "form-control", :value => "15" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Allowed CPU cores for each environment", :class => "control-label" %>
+        <%= f.text_field :default_quota_instances, :class => "form-control", :value => "45" %>
+      </div>
+      <div class="form-group">
+        <%= f.label "Allowed RAM for each environment (in megabytes)", :class => "control-label" %>
+          <%= f.text_field :default_quota_instances, :class => "form-control", :value => "30720" %>
+      </div>
     </div>
     <div class="col-md-4">
       <div class="well well-small">

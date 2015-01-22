@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20141222183451) do
+ActiveRecord::Schema.define(:version => 20150115160959) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0, :null => false
@@ -72,8 +72,12 @@ ActiveRecord::Schema.define(:version => 20141222183451) do
     t.text     "password"
     t.text     "api_url"
     t.text     "auth_tenant"
-    t.datetime "created_at",  :null => false
-    t.datetime "updated_at",  :null => false
+    t.datetime "created_at",                                 :null => false
+    t.datetime "updated_at",                                 :null => false
+    t.integer  "default_quota_instances", :default => 15
+    t.integer  "default_quota_cores",     :default => 45
+    t.integer  "default_quota_ram",       :default => 30720
+    t.text     "nameservers"
   end
 
   create_table "projects", :force => true do |t|

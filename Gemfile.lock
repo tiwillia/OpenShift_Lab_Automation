@@ -11,7 +11,7 @@ GIT
 
 GIT
   remote: https://github.com/tiwillia/ruby-openstack.git
-  revision: 1bbd94b4782600dd5b2fa270b5e456ee2d5f5f15
+  revision: e6da927d67ba97666440f0324ca599257937e8fa
   specs:
     openstack (0.0.0)
       json

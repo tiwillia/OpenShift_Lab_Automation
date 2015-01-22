@@ -81,7 +81,7 @@ class Instance < ActiveRecord::Base
     # Get the connection and instance
     p = Project.find(self.project_id)
     c = p.get_connection
-    q = p.get_connection("neutron")
+    q = p.get_connection("network")
 
     # Get the image id
     image_id = c.images.select {|i| i[:name] == self.image}.first[:id]

@@ -3,8 +3,10 @@ class Lab < ActiveRecord::Base
 
   has_many :projects
 
-  validates :name,:controller,:username,:password,:api_url,:auth_tenant, presence: true
+  validates :name,:controller,:username,:password,:api_url,:auth_tenant, :nameservers, presence: true
   validate :can_connect
+
+  serialize :nameservers
 
   def alive?
     ostack = get_compute
@@ -17,6 +19,10 @@ class Lab < ActiveRecord::Base
 
   def get_neutron(tenant = self.auth_tenant)
     OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => tenant, :service_type => "network"})
+  end
+
+  def get_keystone
+    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => "admin", :service_type => "identity"})
   end
 
 private
