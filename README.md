@@ -11,7 +11,7 @@ Fork this repository into your own, create a new branch (optional), edit the cod
 Any contributions are welcome!
 
 ##How can I deploy my own?
-
+ 
 This application runs on OpenShift primarily, but can be run on passenger hosts. To deploy to OpenShift, first create a Ruby 1.9 application with a Mysql-5 cartridge:
 ```
 rhc app create APP_NAME ruby-1.9 mysql-5.5
