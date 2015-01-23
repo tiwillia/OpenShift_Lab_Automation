@@ -14,7 +14,7 @@ Any contributions are welcome!
 
 This application runs on OpenShift primarily, but can be run on passenger hosts. To deploy to OpenShift, first create a Ruby 1.9 application with a Mysql-5 cartridge:
 ```
-rhc app create APP_NAME ruby-1.9 mysql-5.1
+rhc app create APP_NAME ruby-1.9 mysql-5.5
 ```
 
 After you have a rails application, git clone the application locally (done automatically with the above command), change into the cloned application directory, and run the below to merge the OpenShift lab Automation code into your application:
