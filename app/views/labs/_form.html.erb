@@ -39,11 +39,11 @@
       </div>
       <div class="form-group">
         <%= f.label "Allowed CPU cores for each environment", :class => "control-label" %>
-        <%= f.text_field :default_quota_instances, :class => "form-control", :value => "45" %>
+        <%= f.text_field :default_quota_cores, :class => "form-control", :value => "45" %>
       </div>
       <div class="form-group">
         <%= f.label "Allowed RAM for each environment (in megabytes)", :class => "control-label" %>
-          <%= f.text_field :default_quota_instances, :class => "form-control", :value => "30720" %>
+          <%= f.text_field :default_quota_ram, :class => "form-control", :value => "30720" %>
       </div>
     </div>
     <div class="col-md-4">
