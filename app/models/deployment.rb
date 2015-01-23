@@ -256,6 +256,7 @@ private
         complete_instances << instance
         instance.update_attributes(:deployment_completed => true, :deployment_started => false, :reachable => true, :last_checked_reachable => DateTime.now)
         dlog("Instance #{instance.fqdn} completed successfully.")
+        dlog("Complete instance count: #{complete_instances.count}")
       when "failure"
         dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
         instance.undeploy
