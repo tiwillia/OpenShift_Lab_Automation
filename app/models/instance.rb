@@ -84,17 +84,21 @@ class Instance < ActiveRecord::Base
     q = p.get_connection("network")
 
     # Get the image id
-    image_id = c.images.select {|i| i[:name] == self.image}.first[:id]
-    if image_id.nil?
+    image = c.images.select {|i| i[:name] == self.image}.first
+    if image.nil?
       Rails.logger.error "No image provided for instance: #{self.fqdn} in project: #{p.name}."
       return false
+    else
+      image_id = image[:id]
     end
 
     # Get the flavor id
-    flavor_id = c.flavors.select {|i| i[:name] == self.flavor}.first[:id]
-    if flavor_id.nil?
+    flavor = c.flavors.select {|i| i[:name] == self.flavor}.first[:id]
+    if flavor.nil?
       Rails.logger.error "No flavor provided for instance: #{self.fqdn} in project: #{p.name}."
       return false
+    else
+      flavor_id = flavor[:id]
     end
 
     # Get the network id
