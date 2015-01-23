@@ -98,14 +98,22 @@ class Instance < ActiveRecord::Base
     end
 
     # Get the network id
-    network_id = q.networks.select {|n| n.name == p.network}.first.id
-    if network_id.nil?
+    network = q.networks.select {|n| n.name == p.network}.first
+    if network.nil?
       Rails.logger.error "No network provided for instance: #{self.fqdn} in project: #{p.name}."
       return false
+    else
+      network_id = network.id
     end
 
     # Get the floating ip id
-    floating_ip_id = c.floating_ips.select {|f| f.ip == self.floating_ip}.first.id
+    floating_ip = c.floating_ips.select {|f| f.ip == self.floating_ip}.first
+    if floating_ip.nil?
+      Rails.logger.error "Could not get a floating ip for instance: #{self.fqdn} in project: #{p.name}."
+      return false
+    else
+      floating_ip_id = floating_ip.id
+    end
 
     # Get the security group
     sec_grp = p.security_group

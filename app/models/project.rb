@@ -402,6 +402,7 @@ class Project < ActiveRecord::Base
       network_name = self.name + "-network"
       Rails.logger.info "Creating network with name #{network_name} for tenant #{self.name}."
       network = network_c.create_network(network_name, {:admin_state_up => true})
+      self.network = network_name
 
       # Create a subnet
       subnet_name = self.name + "-subnet"
@@ -411,7 +412,7 @@ class Project < ActiveRecord::Base
 
       # Create a router and add interface to subnet
       router_name = self.name + "-router"
-      # TODO we grab the first external network, we should have a user specify which one to use somewhere
+      # TODO we grab the first external network, we should have a user specify which one to use somewhere, in case there are multiple
       external_network = network_c.list_networks.select {|n| n.external == true }.first
       Rails.logger.info "Creating router with name #{router_name} for tenant #{self.name}."
       router = network_c.create_router(router_name, true, {:external_gateway_info => {:network_id => external_network.id}})
@@ -419,7 +420,9 @@ class Project < ActiveRecord::Base
       network_c.add_router_interface(router.id, subnet.id)
 
       # Get the default security group
+      # TODO we assume there is a default security group, probably not the best way to go about this.
       security_group = compute_c.security_groups.select {|k,v| v[:name] == "default"}
+      self.security_group = "default"
       security_group_id = security_group.keys.first
 
       # Delete default security group rules
