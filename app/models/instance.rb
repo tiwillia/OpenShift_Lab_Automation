@@ -93,7 +93,7 @@ class Instance < ActiveRecord::Base
     end
 
     # Get the flavor id
-    flavor = c.flavors.select {|i| i[:name] == self.flavor}.first[:id]
+    flavor = c.flavors.select {|i| i[:name] == self.flavor}.first
     if flavor.nil?
       Rails.logger.error "No flavor provided for instance: #{self.fqdn} in project: #{p.name}."
       return false
