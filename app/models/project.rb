@@ -407,7 +407,7 @@ class Project < ActiveRecord::Base
       subnet_name = self.name + "-subnet"
       # TODO nameservers are hard-coded, but could change. Need to have them entered somewhere.
       Rails.logger.info "Creating subnet with name #{subnet_name} for tenant #{self.name}."
-      subnet = network_c.create_subnet(network.id, "192.168.1.0/24", "4", {:name => subnet_name, :gateway_ip => "192.168.1.1", :enable_dhcp => true, :host_routes => [{"destination" => "169.254.169.254/32", "nexthop" => "10.10.73.6"}], :dns_nameservers => ['10.11.5.3', '10.11.5.4']})
+      subnet = network_c.create_subnet(network.id, "192.168.1.0/24", "4", {:name => subnet_name, :gateway_ip => "192.168.1.1", :enable_dhcp => true, :dns_nameservers => ['10.11.5.3', '10.11.5.4']})
 
       # Create a router and add interface to subnet
       router_name = self.name + "-router"
