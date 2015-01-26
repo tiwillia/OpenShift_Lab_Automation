@@ -274,19 +274,41 @@ runcmd:
 - echo "$(date) - Attached pool id #{CONFIG[:rhsm_pool_id]}" >> /root/.install_log
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 EOF
-  
+
+    # Configure channel names
+    case ose_version
+    when "1.2"
+      repos = {:infra => "rhel-server-ose-1.2-infra-6-rpms",
+               :rhc => "rhel-server-ose-1.2-rhc-6-rpms",
+               :node => "rhel-server-ose-1.2-node-6-rpms",
+               :jbosseap => "rhel-server-ose-1.2-jbosseap-6-rpms"}
+    when "2.0", "2.1", "2.2"
+      repos = {:infra => "rhel-6-server-ose-#{ose_version}-infra-rpms",
+               :rhc => "rhel-6-server-ose-#{ose_version}-rhc-rpms",
+               :node => "rhel-6-server-ose-#{ose_version}-node-rpms",
+               :jbosseap => "rhel-6-server-ose-#{ose_version}-jbosseap-rpms"}
+    else
+      Rails.logger.error "OSE version not recognized, could not determine subscription manager repository names."
+      Rails.logger.error "Instance id: #{self.id}"
+      return false
+    end
+    repos[:server] => "rhel-6-server-rpms"
+    repos[:jbossews] => "jb-ews-2-for-rhel-6-server-rpms"
+    repos[:jbosseap_base] => "jb-eap-6-for-rhel-6-server-rpms"
+    repos[:rhscl] => "rhel-server-rhscl-6-rpms"
+
     # Enable repositories and install oo-admin-yum-validator
     if self.types.include?("broker") || self.types.include?("named") || self.types.include?("activemq") || self.types.include?("mongodb")
       cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-infra-rpms --enable rhel-6-server-ose-#{ose_version}-rhc-rpms &>> /root/.rhsm_output
-- echo "$(date) - Enabled repositories = rhel-6-server-rpms rhel-6-server-ose-#{ose_version}-infra-rpms rhel-6-server-ose-#{ose_version}-rhc-rpms" >> /root/.install_log
+- subscription-manager repos --enable=#{repos[:server]} --enable=#{repos[:infra]} --enable #{repos[:rhc]} &>> /root/.rhsm_output
+- echo "$(date) - Enabled repositories = #{repos[:server]} #{repos[:infra]} #{repos[:rhc]}" >> /root/.install_log
 EOF
     end
     
     if self.types.include?("node")
       cinit = cinit + <<EOF
-- subscription-manager repos --enable=rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-node-rpms --enable=jb-ews-2-for-rhel-6-server-rpms --enable=rhel-6-server-ose-#{ose_version}-jbosseap-rpms --enable=rhel-server-rhscl-6-rpms --enable=jb-eap-6-for-rhel-6-server-rpms &>> /root/.rhsm_output
-- echo "$(date) - Enabled repositories = rhel-6-server-rpms rhel-6-server-ose-#{ose_version}-node-rpms jb-ews-2-for-rhel-6-server-rpms rhel-6-server-ose-#{ose_version}-jbosseap-rpms rhel-server-rhscl-6-rpms jb-eap-6-for-rhel-6-server-rpms" >> /root/.install_log
+- subscription-manager repos --enable=#{repos[:server]} --enable=#{repos[:node]} --enable=#{repos[:jbossews]} --enable=#{repos[:jbosseap]} --enable=#{repos[:rhscl]} --enable=#{repos[:jbosseap_base]} &>> /root/.rhsm_output
+- echo "$(date) - Enabled repositories = #{repos[:server]} #{repos[:node]} #{repos[:jbossews]} #{repos[:jbosseap]} #{repos[:rhscl]} #{repos[:jbosseap_base]}" >> /root/.install_log
 EOF
     end
 
