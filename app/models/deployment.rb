@@ -297,6 +297,17 @@ private
       end
     end
 
+    # Restart mcollective on nodes to ensure availablity
+    phase3.each do |node|
+      dlog("Restarting mcollective on node #{node.fqdn} with id #{node.id}")
+      begin
+        ssh_session(node)
+        ssh.exec!("service ruby193-mcollective restart")
+      rescue
+        dlog("Unable to ssh to node #{node.fqdn} and restart mcollective, continuing anyway...", :error)
+      end
+    end
+
     # Post deployment script
     if @project.ose_version =~ /2\.[1,2,3]/
       dlog "Running post deploy..."
