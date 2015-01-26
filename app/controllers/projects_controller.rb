@@ -5,7 +5,7 @@ before_filter :is_admin?, :only => [:new, :create, :destroy]
 before_filter :is_logged_in?, :only => :check_out
 
   def index
-    @projects = Project.all
+    @projects = Project.all.sort_by {|p| p.lab_id}
     if @projects.empty? && Lab.all.empty?
       redirect_to '/labs/new'
     end
