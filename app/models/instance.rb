@@ -347,8 +347,9 @@ EOF
 - echo "$(date) - Generating installation variables into file /root/.install_variables." >> /root/.install_log
 EOF
 
-    if ose_version == "2.0"
+    if ose_version == "2.0" || ose_version == "1.2"
       # BUGFIX for http://post-office.corp.redhat.com/archives/openshift-sme/2014-October/msg00209.html
+      # Also appears to affect 1.2
       cinit = cinit + <<EOF
 - echo "protected_multilib=false" >> /etc/yum.conf
 EOF
