@@ -292,10 +292,10 @@ EOF
       Rails.logger.error "Instance id: #{self.id}"
       return false
     end
-    repos[:server] => "rhel-6-server-rpms"
-    repos[:jbossews] => "jb-ews-2-for-rhel-6-server-rpms"
-    repos[:jbosseap_base] => "jb-eap-6-for-rhel-6-server-rpms"
-    repos[:rhscl] => "rhel-server-rhscl-6-rpms"
+    repos[:server] = "rhel-6-server-rpms"
+    repos[:jbossews] = "jb-ews-2-for-rhel-6-server-rpms"
+    repos[:jbosseap_base] = "jb-eap-6-for-rhel-6-server-rpms"
+    repos[:rhscl] = "rhel-server-rhscl-6-rpms"
 
     # Enable repositories and install oo-admin-yum-validator
     if self.types.include?("broker") || self.types.include?("named") || self.types.include?("activemq") || self.types.include?("mongodb")
