@@ -16,7 +16,6 @@ end
 
 group :development, :test do
   gem 'sqlite3'
-  gem 'minitest' # Necessary to bring up the rails console from inside a gear
   gem 'pry'      # Way helpful in development
   gem 'thor', '= 0.14.6'
 end
@@ -35,6 +34,9 @@ end
 
 # Beautify that app
 gem 'jquery-rails'
+
+# Necessary to bring up the rails console from inside a gear
+gem 'minitest' 
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
