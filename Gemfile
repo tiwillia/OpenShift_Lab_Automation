@@ -36,7 +36,7 @@ end
 gem 'jquery-rails'
 
 # Necessary to bring up the rails console from inside a gear
-gem 'minitest' 
+gem 'minitest', '4.7.5' 
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
