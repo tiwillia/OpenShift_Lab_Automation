@@ -1,0 +1,192 @@
+<h1>Administration</h1>
+<h4>
+<ul class="nav nav-tabs nav-justified">
+  <li class="active"><a href="#deployments_tab" data-toggle="tab">Deployments</a></li>
+  <li><a href="#projects_tab" data-toggle="tab">Projects</a></li>
+  <li><a href="#users_tab" data-toggle="tab">Users</a></li>
+</ul>
+</h4>
+<div class="tab-content">
+  <div class="tab-pane active" id="deployments_tab">
+    <!-- Deployment tab -->
+    <h3>Active Deployments:</h3>
+    <% @deployments_active.each do |deployment| %>
+      <% project = Project.find(deployment.project_id) %>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <%= deployment.action.titleize + " for project " + project.name.titleize %>
+          </h4>
+        </div>
+        <div class="panel-body">
+          <div class="col-md-4">
+            <dl>
+              <dt>Started at:</dt>
+              <dd>&nbsp;&nbsp;<%= deployment.started_time %></dd>
+              <dt>Started by:</dt>
+              <dd>&nbsp;&nbsp;<%= User.find(deployment.started_by).name %></dd>
+              <dt>Action:</dt>
+              <dd>&nbsp;&nbsp;<%= deployment.action.titleize %></dd>
+              <dt>Project:</dt>
+              <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
+              <dt>Instances:</dt>
+              <% if deployment.instance_id %>
+                <% instance = Instance.find(deployment.instance_id) %>
+                <% if instance %>
+                  <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
+                <% else %>
+                  <dd>&nbsp;&nbsp;Id #<% deployment.instance_id %> (No longer exists)</dd>
+                <% end %>
+              <% else %>
+                <dd>&nbsp;&nbsp;All</dd>
+              <% end %>
+            </dl>
+          </div>
+          <div class="col-md-8">
+            UNDER CONSTRUCTION
+            Include buttons for the deployment here
+            Maybe include one button that extracts all of the deployment's logs from the production.log
+              Create a new deployment log?
+          </div>
+        </div>
+      </div>
+    <% end %>
+    </hr>
+    <h3>Inactive Deployments:</h3>
+    <% @deployments_inactive.each do |deployment| %>
+      <% project = Project.find(deployment.project_id) %>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <%= deployment.action.titleize + " for project " + project.name.titleize %>
+          </h4>
+        </div>
+        <div class="panel-body">
+          <div class="col-md-4">
+            <dl>
+              <dt>Started at:</dt>
+              <dd>&nbsp;&nbsp;<%= deployment.started_time %></dd>
+              <dt>Started by:</dt>
+              <dd>&nbsp;&nbsp;<%= User.find(deployment.started_by).name %></dd>
+              <dt>Completed at:</dt>
+              <dd>&nbsp;&nbsp;<%= deployment.completed_time %></dd>
+              <dt>Action:</dt>
+              <dd>&nbsp;&nbsp;<%= deployment.action.titleize %></dd>
+              <dt>Project:</dt>
+              <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
+              <dt>Instances:</dt>
+              <% if deployment.instance_id %>
+                <% instance = Instance.find(deployment.instance_id) %>
+                <% if instance %>
+                  <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
+                <% else %>
+                  <dd>&nbsp;&nbsp;Id #<% deployment.instance_id %> (No longer exists)</dd>
+                <% end %>
+              <% else %>
+                <dd>&nbsp;&nbsp;All</dd>
+              <% end %>
+            </dl>
+          </div>
+          <div class="col-md-8">
+            UNDER CONTRUCTION
+            Include buttons for the deployment here
+            Maybe include one button that extracts all of the deployment's logs from the production.log
+              Create a new deployment log?
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <!-- END Deployment tab -->
+  </div>
+  <div class="tab-pane" id="projects_tab">
+    <!-- Project tab -->
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <td>Id</td>
+          <td>Name</td>
+          <td>Lab</td>
+          <td>Region</td>
+          <td>Checked Out By</td>
+          <td>Checked Out Since</td>
+          <td></td>
+        </tr>
+      </thead>
+      <tbody>
+      <% @projects.each do |project| %>
+          <% lab = Lab.find(project.lab_id) %>
+          <tr>
+            <td><%= project.id %></td>
+            <td><%= link_to project.name.titleize, "/projects/#{project.id}" %></td>
+            <td><%= link_to lab.name.titleize, "/labs/#{lab.id}" %></td>
+            <td><%= lab.geo %></td>
+            <td id="checked_out_by_<%= project.id %>">
+              <% if project.checked_out? %>
+                <%= User.find(project.checked_out_by).name %>
+              <% else %>
+                <span class="text-muted">Nobody</span>
+              <% end %>
+            </td>
+            <td id="checked_out_since_<%= project.id %>"><%= project.checked_out_at %></td>
+            <td>
+              <% if project.checked_out? %>
+                <a class="btn btn-warning uncheck_out_button" project_id="<%= project.id %>">Uncheck-out</a>
+                <a class="btn btn-success check_out_button" project_id="<%= project.id %>" style="display:none">Check out</a>
+              <% else %>
+                <a class="btn btn-warning uncheck_out_button" project_id="<%= project.id %>" style="display:none">Uncheck-out</a>
+                <a class="btn btn-success check_out_button" project_id="<%= project.id %>">Check out</a>
+              <% end %>
+              <a class="btn btn-danger" data-method="delete" data-confirm="Are you sure you want to delete <%= project.name.titleize %>?">Delete</a>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <!-- END Project tab -->
+  </div>
+  <div class="tab-pane" id="users_tab">
+    <!-- User tab -->
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <td>Id</td>
+          <td>Name</td>
+          <td>Email</td>
+          <td>Username</td>
+          <td>Admin</td>
+          <td></td>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= user.id %></td>
+            <td><%= user.name %></td>
+            <td><%= user.email %></td>
+            <td><%= user.username %></td>
+            <td id="admin_bool_<%= user.id %>">
+              <% if user.admin %>
+                <span class="glyphicon glyphicon-ok"></span>
+              <% else %>
+                <span class="glyphicon glyphicon-remove"></span>
+              <% end %>
+            </td>
+            <td>
+              <% if user.email != CONFIG[:admin_email] %> 
+                <!-- <a class="btn btn-primary" data-method="delete" data-confirm="Are you sure you want to delete <%= user.name %>?">Delete</a>  We don't want to delete users, bad idea probably. -->
+                <% if user.admin %>
+                  <a class="btn btn-danger remove_admin_button" user_id="<%= user.id %>">Remove Admin</a>
+                  <a class="btn btn-info make_admin_button" user_id="<%= user.id %>" style="display:none">Make Admin</a>
+                <% else %>
+                  <a class="btn btn-danger remove_admin_button" user_id="<%= user.id %>" style="display:none">Remove Admin</a>
+                  <a class="btn btn-info make_admin_button" user_id="<%= user.id %>">Make Admin</a>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <!-- END User tab -->
+  </div>
+</div>

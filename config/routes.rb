@@ -4,6 +4,7 @@ RailsApp::Application.routes.draw do
   resources :projects
   resources :labs
   resources :templates
+  match 'admin' => 'admin#index'
   match 'projects/:id/check_out' => 'projects#check_out'
   match 'projects/:id/uncheck_out' => 'projects#uncheck_out'
   match 'projects/:id/deploy' => 'projects#deploy_all'
@@ -20,6 +21,8 @@ RailsApp::Application.routes.draw do
   match 'instances/:id/console' => 'instances#console'
   match 'deployments/:id/instance_message' => 'deployments#instance_message'
   match 'templates/:id/apply' => 'templates#apply'
+  match 'users/:id/make_admin' => 'users#make_admin'
+  match 'users/:id/remove_admin' => 'users#remove_admin'
   match 'help' => 'welcome#help'
   match "/delayed_job" => DelayedJobWeb, :anchor => false, via: [:get, :post]
   root :to => 'projects#index'

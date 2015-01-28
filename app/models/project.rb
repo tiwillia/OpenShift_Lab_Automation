@@ -12,8 +12,8 @@ class Project < ActiveRecord::Base
   before_create :create_on_backend
   before_destroy :destroy_backend
 
-  def deploy_all
-    deployment = self.deployments.new(:action => "build", :complete => false)
+  def deploy_all(user_id)
+    deployment = self.deployments.new(:action => "build", :complete => false, :started_by => user_id)
     if deployment.save
       deployment.begin
       return true
@@ -22,8 +22,8 @@ class Project < ActiveRecord::Base
     end
   end
  
-  def deploy_one(instance_id)
-    deployment = self.deployments.new(:action => "single_deployment", :instance_id => instance_id, :complete => false)
+  def deploy_one(instance_id, user_id)
+    deployment = self.deployments.new(:action => "single_deployment", :instance_id => instance_id, :complete => false, :started_by => user_id)
     if deployment.save
       Instance.find(instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
       deployment.begin
@@ -33,8 +33,8 @@ class Project < ActiveRecord::Base
     end
   end
 
-  def undeploy_all
-    deployment = self.deployments.new(:action => "tear_down", :complete => false)
+  def undeploy_all(user_id)
+    deployment = self.deployments.new(:action => "tear_down", :complete => false, :started_by => user_id)
     if deployment.save
       deployment.begin
       return true

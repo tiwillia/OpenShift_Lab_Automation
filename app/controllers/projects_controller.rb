@@ -109,7 +109,7 @@ before_filter :is_logged_in?, :only => :check_out
 
   def deploy_all
     @project = Project.find(params[:id])
-    @project.deploy_all
+    @project.deploy_all(current_user.id)
     flash[:success] = "Environment deployment has begun. Deployment status will refresh every 30 seconds."
     redirect_to project_path(@project)
   end
@@ -117,7 +117,7 @@ before_filter :is_logged_in?, :only => :check_out
   def deploy_one
     @project = Project.find(params[:id])
     instance = Instance.find(params[:instance_id])
-    if @project.deploy_one(instance.id)
+    if @project.deploy_one(instance.id, current_user.id)
       flash[:success] = "#{instance.fqdn} queued for deployment."
     else
       flash[:success] = "#{instance.fqdn} could not be queued for deployment."
@@ -127,15 +127,15 @@ before_filter :is_logged_in?, :only => :check_out
 
   def undeploy_all
     @project = Project.find(params[:id])
-    @project.undeploy_all
+    @project.undeploy_all(current_user.id)
     flash[:success] = "Project queued to undeploy. Deployed will refresh every 30 seconds."
     redirect_to project_path(@project)
   end
   
   def redeploy_all
     @project = Project.find(params[:id])
-    if @project.undeploy_all
-      @project.deploy_all
+    if @project.undeploy_al(current_user.id)
+      @project.deploy_all(current_user.id)
       flash[:success] = "Project destroyed and queued to start."
       redirect_to project_path(@project)
     else
@@ -150,15 +150,36 @@ before_filter :is_logged_in?, :only => :check_out
     @project = Project.find(params[:id])
     if @project.checked_out?
       user = User.find(@project.checked_out_by)
-      flash[:error] = "Project is already checked out to #{user.name}"
-      redirect_to project_path(@project)
+      respond_to do |format|
+        format.html {
+          flash[:error] = "Project is already checked out to #{user.name}"
+          redirect_to project_path(@project)
+          }
+        format.json {
+          render :json => {:success => false, :message => "Project is already checked out to #{user.name}"}
+        }
+      end
     else
       if @project.check_out(user_id)
-        flash[:success] = "Project checked out."
-        redirect_to project_path(@project)  
+        respond_to do |format|
+          format.html {
+            flash[:success] = "Project checked out."
+            redirect_to project_path(@project)  
+          }
+          format.json {
+            render :json => {:success => true, :user => current_user.name, :time => DateTime.now.to_s}
+          }
+        end
       else
-        flash[:error] = "Could not check out project, contact administrator."
-        redirect_to project_path(@project)
+        respond_to do |format|
+          format.html {
+            flash[:error] = "Could not check out project, contact administrator."
+            redirect_to project_path(@project)
+          }
+          format.json {
+            render :json => {:success => false, :message => "Could not check out project for some reason."}
+          }
+        end
       end
     end
   end
@@ -167,15 +188,36 @@ before_filter :is_logged_in?, :only => :check_out
     @project = Project.find(params[:id])
     if @project.checked_out?
       if @project.uncheck_out
-        flash[:success] = "Project is now available for check out."
-        redirect_to project_path(@project)  
+        respond_to do |format|
+          format.html {
+            flash[:success] = "Project is now available for check out."
+            redirect_to project_path(@project)  
+          }
+          format.json {
+            render :json => {:success => true}
+          }
+        end
       else
-        flash[:error] = "Could not free project, contact administrator."
-        redirect_to project_path(@project)
+        respond_to do |format|
+          format.html {
+            flash[:error] = "Could not free project, contact administrator."
+            redirect_to project_path(@project)
+          }
+          format.json {
+            render :json => {:success => false, :message => "Could not uncheck-out project for some reason."}
+          }
+        end
       end
     else
-      flash[:error] = "Project is not checked out, cannot free project that is already free."
-      redirect_to project_path(@project)
+      respond_to do |format|
+        format.html {
+          flash[:error] = "Project is not checked out, cannot free project that is already free."
+          redirect_to project_path(@project)
+          }
+        format.json {
+          render :json => {:success => false, :message => "Project is not checked out, can't uncheck-out."}
+        }
+      end
     end
   end
 
