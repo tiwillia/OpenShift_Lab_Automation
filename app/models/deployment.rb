@@ -394,7 +394,7 @@ private
   def dlog(message, level = :info)
     date_time = DateTime.now.to_s
     full_message = "[" + date_time + "] (DEPLOYMENT #{self.id}) " + message
-    Rails.logger.send level, full_message
+    Rails.logger.deployments.send level, full_message
   end
 
   def define_instance_vars

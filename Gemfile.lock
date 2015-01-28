@@ -94,6 +94,8 @@ GEM
     mime-types (1.25.1)
     minitest (4.7.5)
     multi_json (1.8.2)
+    multi_logger (0.1.0)
+      railties
     mysql2 (0.3.14)
     net-ssh (2.8.0)
     pg (0.17.0)
@@ -195,6 +197,7 @@ DEPENDENCIES
   jquery-ui-rails
   less-rails
   minitest (= 4.7.5)
+  multi_logger
   mysql2
   net-ssh
   openstack!
