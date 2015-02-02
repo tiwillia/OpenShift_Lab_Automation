@@ -131,7 +131,7 @@ class Instance < ActiveRecord::Base
 
     tries = 3
     begin
-        server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
+      server = c.create_server(:name => self.name, :imageRef => image_id, :flavorRef => flavor_id, :security_groups => [sec_grp], :user_data => cloud_init, :networks => [{:uuid => network_id}])
     rescue => e
       tries -= 1
       if tries > 0
@@ -342,7 +342,7 @@ EOF
     cinit = cinit + <<EOF
 - echo "$(date) - Completely updating system and installing extra packages..." >> /root/.install_log
 - yum update -y
-- yum install sysstat lsof wget vim-enhanced mlocate nmap -y
+- yum install sysstat lsof screen wget vim-enhanced mlocate nmap -y
 - echo "$(date) - System update completed." >> /root/.install_log
 - echo "$(date) - Generating installation variables into file /root/.install_variables." >> /root/.install_log
 EOF
