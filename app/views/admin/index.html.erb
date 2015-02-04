@@ -16,10 +16,11 @@
         <div class="panel-heading">
           <h4 class="panel-title">
             <%= deployment.action.titleize + " for project " + project.name.titleize %>
+            <span class="pull-right">Active for <%= ((Time.now - deployment.started_time.to_time) / 60).to_i %> minutes</span>
           </h4>
         </div>
         <div class="panel-body">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <dl>
               <dt>Started at:</dt>
               <dd>&nbsp;&nbsp;<%= deployment.started_time %></dd>
@@ -42,60 +43,85 @@
               <% end %>
             </dl>
           </div>
-          <div class="col-md-8">
-            UNDER CONSTRUCTION
-            Include buttons for the deployment here
-            Maybe include one button that extracts all of the deployment's logs from the production.log
-              Create a new deployment log?
+          <div class="col-md-9">
+            <div class="col-md-9">
+              <h4>
+                <b>Status:</b>
+                <a class="pull-right btn btn-sm btn-info refresh_status_button" deployment_id="<%= deployment.id %>">
+                  <span class="glyphicon glyphicon-refresh"></span>&nbsp;Refresh
+                </a><br>
+                <span id="deployment_status_<%= deployment.id %>">
+                  <%= deployment.status %>
+                </span>
+              </h4>
+              <h4>
+                <b>Deployment Log:</b>
+                <a class="pull-right btn btn-sm btn-info expand_log_button" deployment_id="<%= deployment.id %>" data-toggle="modal" data-target="#deployment_log_modal">
+                  <span class="glyphicon glyphicon-fullscreen"></span>&nbsp;Expand log
+                </a><br>
+
+              </h4>
+              <%= text_area_tag "deployment_log_#{deployment.id}", nil, :style => "width:100%", :rows => 5, :class => "deployment_log", :deployment_id => deployment.id %>
+            </div>
+            <div class="col-md-3">
+              <a class="btn btn-danger stop_deployment_button" deployment_id="<%= deployment.id %>">Stop Deployment</a>
+            </div>
           </div>
         </div>
       </div>
     <% end %>
     </hr>
     <h3>Inactive Deployments:</h3>
-    <% @deployments_inactive.each do |deployment| %>
-      <% project = Project.find(deployment.project_id) %>
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4 class="panel-title">
-            <%= deployment.action.titleize + " for project " + project.name.titleize %>
-          </h4>
-        </div>
-        <div class="panel-body">
-          <div class="col-md-4">
-            <dl>
-              <dt>Started at:</dt>
-              <dd>&nbsp;&nbsp;<%= deployment.started_time %></dd>
-              <dt>Started by:</dt>
-              <dd>&nbsp;&nbsp;<%= User.find(deployment.started_by).name %></dd>
-              <dt>Completed at:</dt>
-              <dd>&nbsp;&nbsp;<%= deployment.completed_time %></dd>
-              <dt>Action:</dt>
-              <dd>&nbsp;&nbsp;<%= deployment.action.titleize %></dd>
-              <dt>Project:</dt>
-              <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
-              <dt>Instances:</dt>
-              <% if deployment.instance_id %>
-                <% instance = Instance.find(deployment.instance_id) %>
-                <% if instance %>
-                  <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
-                <% else %>
-                  <dd>&nbsp;&nbsp;Id #<% deployment.instance_id %> (No longer exists)</dd>
-                <% end %>
-              <% else %>
-                <dd>&nbsp;&nbsp;All</dd>
-              <% end %>
-            </dl>
+    <div class="panel-group" id="accordian">
+      <% @deployments_inactive.each do |deployment| %>
+        <% project = Project.find(deployment.project_id) %>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" data-parent="#accordian" href="#collapse_<%= deployment.id %>">
+                <%= deployment.action.titleize + " for project " + project.name.titleize %>
+                <span class="pull-right"><%= deployment.completed_time %></span>
+              </a>
+            </h4>
           </div>
-          <div class="col-md-8">
-            UNDER CONTRUCTION
-            Include buttons for the deployment here
-            Maybe include one button that extracts all of the deployment's logs from the production.log
-              Create a new deployment log?
+          <div id="collapse_<%= deployment.id %>" class="panel-collapse collapse">
+            <div class="panel-body">
+              <div class="col-md-4">
+                <dl>
+                  <dt>Started at:</dt>
+                  <dd>&nbsp;&nbsp;<%= deployment.started_time %></dd>
+                  <dt>Started by:</dt>
+                  <dd>&nbsp;&nbsp;<%= User.find(deployment.started_by).name %></dd>
+                  <dt>Completed at:</dt>
+                  <dd>&nbsp;&nbsp;<%= deployment.completed_time %></dd>
+                  <dt>Action:</dt>
+                  <dd>&nbsp;&nbsp;<%= deployment.action.titleize %></dd>
+                  <dt>Project:</dt>
+                  <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
+                  <dt>Instances:</dt>
+                  <% if deployment.instance_id %>
+                    <% instance = Instance.find(deployment.instance_id) %>
+                    <% if instance %>
+                      <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
+                    <% else %>
+                      <dd>&nbsp;&nbsp;Id #<% deployment.instance_id %> (No longer exists)</dd>
+                    <% end %>
+                  <% else %>
+                    <dd>&nbsp;&nbsp;All</dd>
+                  <% end %>
+                </dl>
+              </div>
+              <div class="col-md-8">
+                UNDER CONTRUCTION
+                Include buttons for the deployment here
+                Maybe include one button that extracts all of the deployment's logs from the production.log
+                  Create a new deployment log?
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
     <!-- END Deployment tab -->
   </div>
   <div class="tab-pane" id="projects_tab">
@@ -136,7 +162,7 @@
                 <a class="btn btn-warning uncheck_out_button" project_id="<%= project.id %>" style="display:none">Uncheck-out</a>
                 <a class="btn btn-success check_out_button" project_id="<%= project.id %>">Check out</a>
               <% end %>
-              <a class="btn btn-danger" data-method="delete" data-confirm="Are you sure you want to delete <%= project.name.titleize %>?">Delete</a>
+              <a href="/projects/<%= project.id %>" class="btn btn-danger" data-method="delete" data-confirm="Are you sure you want to delete <%= project.name.titleize %>?">Delete</a>
             </td>
           </tr>
         <% end %>
@@ -190,3 +216,4 @@
     <!-- END User tab -->
   </div>
 </div>
+<%= render 'deployment_log' %>

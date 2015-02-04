@@ -3,6 +3,66 @@
 
 $(document).ready(function() {
 
+  // DEPLOYMENTS 
+
+  $('.deployment_log').each(function() {
+    var element = $(this);
+    var deployment_id = element.attr("deployment_id");
+    console.log("Getting log for deployment " + deployment_id);
+    $.getJSON("/deployments/" + deployment_id + "/log_messages", function(result) {
+      if (result["success"] === true) {
+        console.log("Got log for deployment " + deployment_id);
+        element.text(result["message"]);
+      } else {
+        console.log("Could not get log for deployment " + deployment_id);
+        element.text(result["message"]);
+      };
+    });
+  });
+
+  // Add text from small log textarea to large modal textarea
+  $('.expand_log_button').click(function () {
+    var element = $(this);
+    var deployment_id = element.attr("deployment_id");
+    var log_text = $('#deployment_log_' + deployment_id).text();
+    $('#deployment_log_textarea').text(log_text);
+  });
+
+  $('.stop_deployment_button').click(function() {
+    var element = $(this);
+    var deployment_id = element.attr("deployment_id");
+    console.log("Stopping deployment " + deployment_id);
+    element.html('<img src="/assets/ajax-loader.gif"></img>');
+    $.getJSON("/deployments/" + deployment_id + "/stop", function(result) {
+      if (result["message"] === "success") {
+        console.log("Successfully sent stop request to deployment");
+        element.html("Stop Deployment");
+        element.attr("disabled", "disabled");
+      } else {
+        console.log("Could not send stop request to deployment");
+        element.html("Stop Deployment");
+      };
+    });
+  });
+
+  $('.refresh_status_button').click(function() {
+    var element = $(this);
+    var deployment_id = element.attr("deployment_id");
+    console.log("Refreshing deployment status " + deployment_id);
+    element.html('<img src="/assets/ajax-loader.gif"></img>');
+    $.getJSON("/deployments/" + deployment_id + "/status", function(result) {
+      if (result["success"] === true) {
+        console.log("Successfully got status from deployment");
+        $('#deployment_status_' + deployment_id).html(result["message"]);
+      } else {
+        console.log("Could not get status from deployment");
+      };
+    });
+    element.html('<span class="glyphicon glyphicon-refresh"></span>&nbsp;Refresh');
+  });
+
+  // PROJECTS
+
   $('.check_out_button').click(function() {
     var element = $(this)
     var project_id = element.attr("project_id");
@@ -37,6 +97,7 @@ $(document).ready(function() {
     });
   });
 
+  // USERS
 
   $('.make_admin_button').click(function() {
     var element = $(this)

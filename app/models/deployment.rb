@@ -4,6 +4,38 @@ class Deployment < ActiveRecord::Base
 
   after_create :define_instance_vars
 
+  # Easy way to log messages from deployments
+  def dlog(message, level = :info)
+    date_time = DateTime.now.to_s
+    full_message = "[" + date_time + "] (DEPLOYMENT #{self.id}) " + message
+    Rails.logger.deployments.send level, full_message
+  end
+
+  # Get all log messages from deployment
+  def log_messages
+    deployment_log = "#{Rails.root}/log/deployments.log"
+    if File.exists?(deployment_log)
+      messages = String.new
+      File.foreach(deployment_log) do |line|
+        if line.include?("DEPLOYMENT #{self.id}")
+          messages << line
+        end
+      end
+      if messages.empty?
+        return "Not log messages found for deployment"
+      end
+      return messages
+    else
+      return "No deployment log found"
+    end
+  end
+
+  def update_status(status_message)
+    # TODO remove this debug message
+    Rails.logger.debug "Updating status of deployment #{self.id} to #{status_message}"
+    self.update_attributes(:status => status_message)
+  end
+
   def queue
     $redis.hgetall("deployment_queue_#{self.id}")
   end
@@ -17,7 +49,11 @@ class Deployment < ActiveRecord::Base
     if q.length > 0
       r_val = q.first
       $redis.hdel("deployment_queue_#{self.id}", r_val[0])
-      return {:instance_id => r_val[0], :message => r_val[1]}
+      if r_val[0] == "interrupt"
+        return {:instance_id => nil, :message => r_val[0]}
+      else
+        return {:instance_id => r_val[0], :message => r_val[1]}
+      end
     else
       return false
     end
@@ -33,51 +69,36 @@ class Deployment < ActiveRecord::Base
       case self.action
 
       when "build"
-        dlog "Starting deployment #{@project.name}"
+        dlog "Queueing deployment #{@project.name}"
         begin
-          dlog "Started deployment #{@project.name}"
-          build_deployment
+          job = Deployments::BuildJob.new(self.id)
         rescue => e
           dlog("ERROR could not start deployment #{e.message}", :error)
           dlog("#{e.backtrace}", :error)
         end
 
       when "single_deployment"
-        dlog "Starting single deployment for #{@project.name}"
+        dlog "Queueing single deployment for #{@project.name}"
         begin
-          dlog "Started deployment #{@project.name}"
-          single_deployment
+          job = Deployments::SingleDeploymentJob.new(self.id)
         rescue => e
           dlog("ERROR could not start deployment #{e.message}", :error)
           dlog("#{e.backtrace}", :error)
         end
 
       when "tear_down"
-        dlog "Undeploying deployment #{@project.name}"
+        dlog "Queueing tear down deployment #{@project.name}"
         begin
-          destroy_deployment
-          dlog "Undeploying deployment #{@project.name}"
+          job = Deployments::TearDownJob.new(self.id)
         rescue => e
           dlog("ERROR could not undeploy deployment #{e.message}", :error)
           dlog("#{e.backtrace}", :error)
         end
 
-      # NOT USED YET
-      when "destroy_all"
-        dlog "Destroying all instances on the backend for project #{@project.name}"
-        begin
-          destroy_on_backend
-          dlog "Destroyed all isntances on the backend for project #{@project.name}"
-        rescue => e
-          dlog("ERROR could not destroy all instances on the backend #{e.message}", :error)
-          dlog("#{e.backtrace}", :error)
-        end
-
       when "redeploy"
-        dlog "Restarting deployment #{@project.name}"
+        dlog "Queueing redeployment #{@project.name}"
         begin
-          rebuild_deployment
-          dlog "Restarted deployment #{@project.name}"
+          job = Deployments::RedeployJob.new(self.id)
         rescue => e
           dlog("ERROR could not restart deployment #{e.message}", :error)
           dlog("#{e.backtrace}", :error)
@@ -86,8 +107,9 @@ class Deployment < ActiveRecord::Base
       else
         dlog("Action not recognized", :error)
       end
+      Delayed::Job.enqueue job, :queue => 'deployments'
     rescue => e
-      dlog("CRITICAL ERROR | Thread failed with: #{e.message}", :error)
+      dlog("Could not create job: #{e.message}", :error)
       dlog("#{e.backtrace}", :error)
       self.update_attributes(:started => false)
       return false
@@ -96,7 +118,9 @@ class Deployment < ActiveRecord::Base
   end
 
   def finish
-    self.update_attributes(:complete => true, :completed_time => DateTime.now) 
+    self.update_attributes(:complete => true, :completed_time => DateTime.now)
+    update_status("Deployment completed")
+    dlog("Deployment completed") 
     until self.queue.empty?
       self.pop
     end
@@ -110,6 +134,15 @@ class Deployment < ActiveRecord::Base
       $redis.hdel("deployment_queue_#{self.id}", nil)
     end
     self.push(instance_id, message)
+  end
+
+  def interrupt
+    if self.queue.nil?
+      dlog "Deployment queue has mysteriously become nil, replacing..."  
+      $redis.hset("deployment_queue_#{self.id}", nil, nil)
+      $redis.hdel("deployment_queue_#{self.id}", nil)
+    end
+    $redis.hset("deployment_queue_#{self.id}", "interrupt", "interrupt")
   end
 
   def in_progress?
@@ -128,9 +161,8 @@ class Deployment < ActiveRecord::Base
     self.in_progress?
   end
 
-private
-  
   def single_deployment
+    update_status("Deployment of a single instance started.")
     @project = Project.find(self.project_id)
     raise "No instance id providied" if self.instance_id.nil?
     instance = Instance.find(self.instance_id)
@@ -140,17 +172,22 @@ private
       dlog "Started instance #{instance.fqdn} with id #{instance.id} for deployment id #{self.id}"
     else
       dlog("Could not start instance #{instance.fqdn} with id #{instance.id} for deployment id #{self.id}", :error)
-      return false
+      raise "Could not start instance #{instance.fqdn} with id #{instance.id}" 
     end
 
     complete = false
     time_waited = 0
+    update_status("Instance created, waiting for automated deployment to complete.")
     until complete do
       while self.queue.empty? do
         sleep 10
         time_waited += 10
       end
       work = self.pop
+      if work[:message] == "interrupt" && work[:instance_id] == nil
+        update_status("Deployment interrupted to be stopped.")
+        raise "Deployment manually interrupted"
+      end
       instance = Instance.find(work[:instance_id])
       message = work[:message]
       case message
@@ -162,6 +199,7 @@ private
       when "failure"
         dlog("Instance #{instance.fqdn} failed. Re-deploying", :error)
         instance.undeploy
+        update_status("Instance automatic deployment failed, trying again...")
         sleep 5
         instance.deploy(self.id)
         instance.update_attributes(:deployment_started => true, :deployment_completed => false)
@@ -173,9 +211,9 @@ private
     dlog "Deployment complete!"
     self.finish
   end
-  handle_asynchronously :single_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
   def build_deployment
+    update_status("Environment deployment started")
     @project = Project.find(self.project_id)
 
     # Order is:
@@ -211,7 +249,8 @@ private
         phase4 << inst
       end
     end
-
+    
+    update_status("Deployment method determined and configured, deploying instances.")
     dlog "Created phases, starting instances..." 
     dlog "Phase1: #{phase1}" 
     dlog "Phase2: #{phase2}" 
@@ -222,6 +261,7 @@ private
       dlog "Phase one started, waiting 2 minutes..." 
       sleep 120 
     end
+    update_status("Deploying instances, phase 1 complete.")
     unless phase2.empty? && phase3.empty?
       dlog "Phase 2 + 3 begin..." 
       phase2.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
@@ -229,8 +269,10 @@ private
       dlog "Phase 2 + 3 complete, waiting 2 minutes..." 
       sleep 120
     end
+    update_status("Deploying instances, phase 3 complete.")
     dlog "Phase 4 begin..." 
     phase4.each {|i|i.update_attributes(:deployment_started => true, :deployment_completed => false); i.deploy(self.id)}   
+    update_status("Deploying instances complete, waiting for automatic OpenShift deployment to complete.")
     dlog "Deployment queue after phase 4: #{self.queue}"
     dlog "Phase 4 complete, waiting for completion..." 
 
@@ -238,7 +280,6 @@ private
     last_node = phase3.last
     all_complete = false 
     complete_instances = []
-    @project.instances.where(:no_openshift => true).each {|i| complete_instances << i}
 
     # Wait for all instances to complete
     time_waited = 0
@@ -249,6 +290,10 @@ private
         dlog("Waiting for instance callbacks. Time waited: #{time_waited}")
       end
       work = self.pop
+      if work[:message] == "interrupt" && work[:instance_id] == nil
+        update_status("Deployment interrupted to be stopped.")
+        raise "Deployment manually interrupted"
+      end
       instance = Instance.find(work[:instance_id])
       message = work[:message]
       case message
@@ -269,8 +314,12 @@ private
       if complete_instances.count == @project.instances.count
         all_complete = true
       end
-    end 
+    end
+    update_status("All instances deployed with OpenShift installed, running post deployment operations.")
     dlog("All instances completed. Completed instances: #{complete_instances.map {|i| i.name}}")
+
+    # Allow time for the nodes to reboot. They send the all-complete, then reboot. If we try to access them right afterwards, they may be still booting up.
+    sleep(30)
 
     # Datastore replicant configuration
     if datastore_instance.class == Instance
@@ -341,19 +390,19 @@ private
     dlog "Deployment complete!"
     self.finish
   end
-  handle_asynchronously :build_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
   
   def destroy_deployment
+    update_status("Un-deployment started, shutting down and destroying instances.")
     @project = Project.find(self.project_id)
     @project.instances.each do |inst|
       inst.undeploy
     end
+    update_status("Un-deployment complete. Ensuring backend tenant is ready for a new deployment.")
     # destroy_on_backend is not necessary at all, but we do it to avoid confusion for users who don't realize that
     #   a server not created by the project might exist on the openstack backend.
     destroy_on_backend
     self.finish
   end
-  handle_asynchronously :destroy_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
 
   def destroy_on_backend
     @project = Project.find(self.project_id)
@@ -361,12 +410,14 @@ private
   end
 
   def rebuild_deployment
+    update_status("Re-deployment started, un-deploying environment.")
     destroy_on_backend
+    update_status("Un-deployment complete, waiting for backend to be ready for deployment.")
     sleep 20 # Wait for slow openstack servers
     build_deployment
-    self.finish
   end
-  handle_asynchronously :rebuild_deployment, :queue => "deployments", :run_at => Proc.new { DateTime.now }
+
+private
 
   def ssh_session(instance)
     ip = instance.floating_ip
@@ -388,13 +439,6 @@ private
       end
     end
     return ssh
-  end
-
-  # Easy way to log from deployments
-  def dlog(message, level = :info)
-    date_time = DateTime.now.to_s
-    full_message = "[" + date_time + "] (DEPLOYMENT #{self.id}) " + message
-    Rails.logger.deployments.send level, full_message
   end
 
   def define_instance_vars

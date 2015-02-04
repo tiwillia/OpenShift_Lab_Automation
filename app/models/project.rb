@@ -11,6 +11,8 @@ class Project < ActiveRecord::Base
 
   before_create :create_on_backend
   before_destroy :destroy_backend
+  before_destroy :destroy_instances
+  before_destroy :destroy_deployments
 
   def deploy_all(user_id)
     deployment = self.deployments.new(:action => "build", :complete => false, :started_by => user_id)
@@ -536,6 +538,30 @@ class Project < ActiveRecord::Base
     identity_c.delete_tenant(self.uuid)
 
     Rails.logger.info "Removal of tenant #{self.name} on the OpenStack backend succeeded."
+  end
+
+  def destroy_instances
+    Rails.logger.info "Removing all instances in tenant"
+    self.instances.each do |inst| 
+      begin
+        inst.destroy
+      rescue => e
+        Rails.logger.error "Could not remove instance #{inst.fqdn}: #{e.message}"
+      end
+    end
+    Rails.logger.info "All instances removed"
+  end
+
+  def destroy_deployments
+    Rails.logger.info "Removing all deployments created from tenant"
+    self.deployments.each do |dep| 
+      begin
+        dep.destroy
+      rescue => e
+        Rails.logger.error "Could not remove deployment #{dep.id}: #{e.message}"
+      end
+    end
+    Rails.logger.info "All deployments removed"
   end
 
 end
