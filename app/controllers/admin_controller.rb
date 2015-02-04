@@ -5,7 +5,7 @@ class AdminController < ApplicationController
   def index
     deployments = Deployment.all 
     @deployments_active = deployments.select {|d| d.in_progress?}.sort_by {|d| d.started_time}
-    @deployments_inactive = deployments.select {|d| !d.in_progress?}.sort_by {|d| d.completed_time}
+    @deployments_inactive = deployments.select {|d| !d.in_progress?}.sort_by {|d| d.completed_time}.reverse
     @projects = Project.all
     @users = User.all
   end
