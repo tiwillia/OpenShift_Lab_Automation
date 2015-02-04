@@ -144,7 +144,7 @@
           <tr>
             <td><%= project.id %></td>
             <td><%= link_to project.name.titleize, "/projects/#{project.id}" %></td>
-            <td><%= link_to lab.name.titleize, "/labs/#{lab.id}" %></td>
+            <td><%= link_to lab.name, "/labs/#{lab.id}" %></td>
             <td><%= lab.geo %></td>
             <td id="checked_out_by_<%= project.id %>">
               <% if project.checked_out? %>
