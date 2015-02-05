@@ -110,7 +110,7 @@ before_filter :is_logged_in?, :only => :check_out
   def deploy_all
     @project = Project.find(params[:id])
     @project.deploy_all(current_user.id)
-    flash[:success] = "Environment deployment has begun. Deployment status will refresh every 30 seconds."
+    flash[:success] = "Environment deployment has begun. Deployment status will refresh every 10 seconds."
     redirect_to project_path(@project)
   end
 

@@ -7,15 +7,26 @@ $(document).ready(function() {
   if ($('.instance_id_list').length) {
     // This will be run right after the page is loaded
     $('#instanceLogTextArea').toggle();
-    deployed_check_all();
+    check_all();
     // If a deployment is in progress, check every 30 seconds.
     if ($('#in_progress').length) {
-      console.log("Deployment is in progress, checking deployed status every 30 seconds");
-      setInterval(deployed_check_all, 30000);
+      console.log("Deployment is in progress, checking deployed status every 10 seconds");
+      setInterval(check_all, 10000);
     };
   };
 
-  function deployed_check_all() {
+  function check_all() {
+    console.log("Checking deployment status...");
+    status_el = $('#deployment_status');
+    deployment_id = status_el.attr("deployment_id");
+    $.getJSON("/deployments/" + deployment_id + "/status", function(result) {
+      if (result["success"] === true) {
+        console.log("Successfully got status from deployment");
+        $('.deployment_status').html(result["message"]);
+      } else {
+        console.log("Could not get status from deployment");
+      };
+    });
     console.log("Checking all instance deployed statuses...");
     var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
     var proj_id = $('#project_page_header').attr("project_id");

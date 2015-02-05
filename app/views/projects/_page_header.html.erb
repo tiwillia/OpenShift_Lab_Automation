@@ -29,6 +29,9 @@
         <span id="in_progress">Un-Deployment in progress. Started: <%= parse_date(deployment.started_time) %></span> 
       <% when "unknown" %>
         Status unknown
+      <% end %><br>
+      <% if deployment_status.include?("in progress") %>
+        <span id="deployment_status" deployment_id="<%= @most_recent_deployment.last %>"><%= @most_recent_deployment.status %></span>
       <% end %>
     </small>
 
