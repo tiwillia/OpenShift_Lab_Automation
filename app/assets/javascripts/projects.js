@@ -21,8 +21,8 @@ $(document).ready(function() {
     deployment_id = status_el.attr("deployment_id");
     $.getJSON("/deployments/" + deployment_id + "/status", function(result) {
       if (result["success"] === true) {
-        console.log("Successfully got status from deployment");
-        $('.deployment_status').html(result["message"]);
+        console.log("Successfully got status from deployment: " + result["message"]);
+        $('#deployment_status').html(result["message"]);
       } else {
         console.log("Could not get status from deployment");
       };
