@@ -31,7 +31,7 @@
         Status unknown
       <% end %><br>
       <% if deployment_status.include?("in progress") %>
-        <span id="deployment_status" deployment_id="<%= @most_recent_deployment.last %>"><%= @most_recent_deployment.status %></span>
+        <span id="deployment_status" deployment_id="<%= @most_recent_deployment.id %>"><%= @most_recent_deployment.status %></span>
       <% end %>
     </small>
 
