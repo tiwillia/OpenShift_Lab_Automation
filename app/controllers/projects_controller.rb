@@ -128,15 +128,14 @@ before_filter :is_logged_in?, :only => :check_out
   def undeploy_all
     @project = Project.find(params[:id])
     @project.undeploy_all(current_user.id)
-    flash[:success] = "Project queued to undeploy. Deployed will refresh every 30 seconds."
+    flash[:success] = "Project queued to undeploy. Deployment status will refresh every 10 seconds."
     redirect_to project_path(@project)
   end
   
   def redeploy_all
     @project = Project.find(params[:id])
-    if @project.undeploy_al(current_user.id)
-      @project.deploy_all(current_user.id)
-      flash[:success] = "Project destroyed and queued to start."
+    if @project.redeploy_all(current_user.id)
+      flash[:success] = "Project will be redeployed. Deployment status will refresh every 10 seconds."
       redirect_to project_path(@project)
     else
       flash[:error] = "Project could not be restarted."

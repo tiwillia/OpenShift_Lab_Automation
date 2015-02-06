@@ -412,8 +412,12 @@ class Deployment < ActiveRecord::Base
   def rebuild_deployment
     update_status("Re-deployment started, un-deploying environment.")
     destroy_on_backend
+    update_status("Cleaning up frontend")
+    @project = Project.find(self.project_id)
+    @project.instances.each do |inst|
+      inst.update_attributes(:deployment_started => false, :deployment_completed => false)
+    end
     update_status("Un-deployment complete, waiting for backend to be ready for deployment.")
-    sleep 20 # Wait for slow openstack servers
     build_deployment
   end
 
