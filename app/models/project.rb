@@ -66,7 +66,7 @@ class Project < ActiveRecord::Base
   end
 
   def redeploy_all
-    deployment = self.deployments.new(:action => "redeploy")
+    deployment = self.deployments.new(:action => "redeploy", :complete => false, :started_by => user_id)
     if deployment.save
       deployment.begin
       return true
