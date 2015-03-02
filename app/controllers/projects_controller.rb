@@ -5,7 +5,11 @@ before_filter :is_admin?, :only => [:new, :create, :destroy]
 before_filter :is_logged_in?, :only => :check_out
 
   def index
-    @projects = Project.all.sort_by {|p| p.lab_id}
+    @projects = Array.new
+    Lab.all.sort_by {|l| l.geo}.each do |lab|
+      p = Project.where(:lab_id => lab.id).sort_by {|p| p.ose_version}
+      @projects = @projects + p
+    end
     if @projects.empty? && Lab.all.empty?
       redirect_to '/labs/new'
     end
