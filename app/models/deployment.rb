@@ -31,9 +31,8 @@ class Deployment < ActiveRecord::Base
   end
 
   def update_status(status_message)
-    # TODO remove this debug message
-    Rails.logger.debug "Updating status of deployment #{self.id} to #{status_message}"
     self.update_attributes(:status => status_message)
+    dlog("Updated status: #{status_message}"
   end
 
   def queue
