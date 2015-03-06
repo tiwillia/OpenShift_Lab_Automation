@@ -15,7 +15,7 @@
       <div class="panel panel-default">
         <div class="panel-heading">
           <h4 class="panel-title">
-            <%= deployment.action.titleize + " for project " + project.name.titleize %>
+            <%= deployment.id %>&nbsp;|&nbsp;<%= deployment.action.titleize + " for project " + project.name.titleize %>
             <span class="pull-right">Active for <%= ((Time.now - deployment.started_time.to_time) / 60).to_i %> minutes</span>
           </h4>
         </div>
