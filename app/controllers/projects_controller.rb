@@ -138,7 +138,7 @@ before_filter :is_logged_in?, :only => :check_out
   
   def redeploy_all
     @project = Project.find(params[:id])
-    if @project.redeploy_all
+    if @project.redeploy_all(current_user.id)
       flash[:success] = "Project will be redeployed. Deployment status will refresh every 10 seconds."
       redirect_to project_path(@project)
     else
