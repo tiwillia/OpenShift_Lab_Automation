@@ -32,7 +32,7 @@ class Deployment < ActiveRecord::Base
 
   def update_status(status_message)
     self.update_attributes(:status => status_message)
-    dlog("Updated status: #{status_message}"
+    dlog("Updated status: #{status_message}")
   end
 
   def queue
