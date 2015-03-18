@@ -342,7 +342,7 @@ EOF
     cinit = cinit + <<EOF
 - echo "$(date) - Completely updating system and installing extra packages..." >> /root/.install_log
 - yum update -y
-- yum install sysstat lsof screen wget vim-enhanced mlocate nmap man -y
+- yum install sysstat lsof screen wget vim-enhanced mlocate nmap man sos bind-utils -y
 - echo "$(date) - System update completed." >> /root/.install_log
 - echo "$(date) - Generating installation variables into file /root/.install_variables." >> /root/.install_log
 EOF
