@@ -1,0 +1,15 @@
+<%= @user.name %>,<br>
+<br>
+This is a reminder that you have the OpenShift lab environment <a href="http://labs-gssos.itos.redhat.com/projects/<%= @project.id %>"><%= @project.name.titleize %></a> checked out. You have had this environment checked out for <%= (DateTime.now - @project.checked_out_at.to_datetime).to_i %> days.<br>
+<br>
+If you are no longer using or no longer need the environment, please be sure to un-check out the environment so that other people are free to use the lab systems. You can use the link below to un-check out the environment now:<br>
+<br>
+<a href="http://labs-gssos.itos.redhat.com/projects/<%= @project.id %>/uncheck_out">Un-check out <%= @project.name %></a><br>
+<br>
+If you are still using the lab environment, then no worries! Use it as long as you need it, just be sure to free the environment when you are done.<br>
+<br>
+Thanks,<br>
+<br>
+<% User.where(:admin => true).each do |usr|%>
+  <%= usr.name %> | <%= usr.email %><br>
+<% end %>

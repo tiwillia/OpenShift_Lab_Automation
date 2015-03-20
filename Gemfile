@@ -81,6 +81,7 @@ gem 'redis-rails'
 gem 'delayed_job_active_record'
 gem 'daemons'
 gem 'delayed_job_web'
+gem 'delayed_job_recurring'
 
 # Log to multiple non-standard files, the lazy way.
 gem 'multi_logger'

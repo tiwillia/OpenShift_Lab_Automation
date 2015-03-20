@@ -150,6 +150,13 @@ class Project < ActiveRecord::Base
     !!self.checked_out_by
   end
 
+  # Check if project has been checked out for at least 7 days
+  def inactive?
+    return false unless self.checked_out?
+    return false if self.hidden
+    (Date.today - self.checked_out_at.to_date) >= 7
+  end
+
   def user_can_edit?(user)
     if user && (user.admin? || self.checked_out_by == user.id)
       return true

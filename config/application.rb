@@ -41,6 +41,15 @@ module RailsApp
 
     config.threadsafe!
 
+    # Mailer configuration
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+    address:              'smtp.corp.redhat.com',
+    port:                 25,
+    domain:               'redhat.com',
+    authentication:       'none',
+    enable_starttls_auto: false  }
+
     # Only load the plugins named here, in the order given (default is alphabetical).
     # :all can be used as a placeholder for all plugins not explicitly named.
     # config.plugins = [ :exception_notification, :ssl_requirement, :all ]
