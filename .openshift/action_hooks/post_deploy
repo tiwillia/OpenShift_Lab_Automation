@@ -3,5 +3,6 @@
 # is deployed and started.  This script gets executed directly, so 
 # it could be python, php, ruby, etc.
 
+cd $OPENSHIFT_REPO_DIR
 echo "exec rake recurring:init RAILS_ENV=${RAILS_ENV:-production}"
 /usr/bin/scl enable nodejs010 ruby193 "bundle exec rake recurring:init RAILS_ENV=${RAILS_ENV:-production}"

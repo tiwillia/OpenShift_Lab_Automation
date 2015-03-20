@@ -39,7 +39,7 @@ module RailsApp
     config.autoload_paths += %W(#{config.root}/lib)
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
-    config.threadsafe!
+    config.threadsafe! unless File.split($0).last == 'rake' # unless this is a rake task
 
     # Mailer configuration
     config.action_mailer.delivery_method = :smtp
