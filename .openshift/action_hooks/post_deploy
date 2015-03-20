@@ -4,4 +4,4 @@
 # it could be python, php, ruby, etc.
 
 echo "exec rake recurring:init RAILS_ENV=${RAILS_ENV:-production}"
-ruby_with_nodejs_context "bundle exec rake recurring:init RAILS_ENV=${RAILS_ENV:-production}"
+/usr/bin/scl enable nodejs010 ruby193 "bundle exec rake recurring:init RAILS_ENV=${RAILS_ENV:-production}"
