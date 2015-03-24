@@ -399,6 +399,7 @@ EOF
 - echo "$(date) - Downloading several extra tools to the /root/TOOLS directory." >> /root/.install_log
 - mkdir /root/TOOLS
 - curl #{CONFIG[:URL]}/ose_files/stress_test.rb > /root/TOOLS/stress_test.rb
+- curl #{CONFIG[:URL]}/ose_files/regenerate_dns.rb > /root/TOOLS/regenerate_dns.rb
 - curl #{CONFIG[:URL]}/ose_files/find_master.sh > /root/TOOLS/find_master.sh
 - curl #{CONFIG[:URL]}/ose_files/node_gear_count.sh > /root/TOOLS/node_gear_count.sh
 - curl -k https://raw.githubusercontent.com/openshift/openshift-extras/enterprise-#{ose_version}/admin/reset_deployment.rb > /root/TOOLS/reset_deployment.sh
