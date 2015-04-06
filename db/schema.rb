@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150320181407) do
+ActiveRecord::Schema.define(:version => 20150406183806) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0, :null => false
@@ -102,14 +102,15 @@ ActiveRecord::Schema.define(:version => 20150320181407) do
     t.text     "bind_key"
     t.text     "valid_gear_sizes"
     t.integer  "lab_id"
-    t.datetime "created_at",                                 :null => false
-    t.datetime "updated_at",                                 :null => false
+    t.datetime "created_at",                                   :null => false
+    t.datetime "updated_at",                                   :null => false
     t.string   "ose_version"
     t.integer  "checked_out_by"
     t.datetime "checked_out_at"
-    t.boolean  "deployed",                :default => false
+    t.boolean  "deployed",                  :default => false
     t.string   "uuid"
-    t.boolean  "hidden",                  :default => false
+    t.boolean  "hidden",                    :default => false
+    t.date     "inactive_reminder_sent_at"
   end
 
   create_table "templates", :force => true do |t|
