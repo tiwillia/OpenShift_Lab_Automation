@@ -182,7 +182,7 @@ class Instance < ActiveRecord::Base
 # vim:syntax=yaml
 hostname: #{self.safe_name}
 fqdn: #{self.fqdn}
-manage_etc_hosts: true
+manage_etc_hosts: false
 debug: True
 ssh_pwauth: True
 disable_root: false
@@ -236,7 +236,7 @@ EOF
 # vim:syntax=yaml
 hostname: #{self.safe_name}
 fqdn: #{self.fqdn}
-manage_etc_hosts: true
+manage_etc_hosts: false
 debug: True
 ssh_pwauth: True
 disable_root: false
