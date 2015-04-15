@@ -22,7 +22,7 @@ class Lab < ActiveRecord::Base
   end
 
   def get_keystone
-    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => "admin", :service_type => "identity"})
+    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => self.auth_tenant, :service_type => "identity"})
   end
 
 private

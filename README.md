@@ -1,5 +1,5 @@
 #OpenShift Labs
-
+ 
 This application was designed to manage and deploy OpenShift instances for testing purposes. The OpenShift deployments are not designed to be permanent, but instead to be re-deployed repeatedly. 
 
 The application supports automatic deployment of small and extremely large OpenShift deployments. Deploying HA datastores and activemq servers is also supported. Deploying fully HA environments with HA brokers and an external load balancer is not yet supported.
