@@ -59,11 +59,11 @@ class LabsController < ApplicationController
 private
 
   def new_lab_params
-    params.require(:lab).permit!
+    params.require(:lab).permit(:name, :controller, :geo, :username, :password, :api_url, :auth_tenant, :default_quota_instances, :default_quota_cores, :default_quota_ram, :nameservers)
   end
 
   def edit_lab_params
-    params.permit!
+    params.require(:lab).permit(:name, :controller, :geo, :username, :password, :api_url, :auth_tenant, :default_quota_instances, :default_quota_cores, :default_quota_ram, :nameservers)
   end
 
   def is_admin?
