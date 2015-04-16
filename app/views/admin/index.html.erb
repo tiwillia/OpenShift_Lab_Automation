@@ -32,7 +32,7 @@
               <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
               <dt>Instances:</dt>
               <% if deployment.instance_id %>
-                <% instance = Instance.find(deployment.instance_id) unless Instance.exists?(deployment.instance_id)%>
+                <% instance = Instance.find(deployment.instance_id) if Instance.exists?(deployment.instance_id)%>
                 <% Instance.exists?(deployment.instance_id) ? instance = Instance.find(deployment.instance_id) : instance = nil %>
                 <% if instance %>
                   <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
@@ -101,7 +101,7 @@
                   <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
                   <dt>Instances:</dt>
                   <% if deployment.instance_id %>
-                    <% instance = Instance.find(deployment.instance_id) unless Instance.exists?(deployment.instance_id)%>
+                    <% instance = Instance.find(deployment.instance_id) if Instance.exists?(deployment.instance_id)%>
                     <% Instance.exists?(deployment.instance_id) ? instance = Instance.find(deployment.instance_id) : instance = nil %>
                     <% if instance %>
                       <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
