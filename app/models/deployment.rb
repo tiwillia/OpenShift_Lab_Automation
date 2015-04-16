@@ -351,8 +351,8 @@ class Deployment < ActiveRecord::Base
       begin
         ssh_session(node)
         ssh.exec!("service ruby193-mcollective restart")
-      rescue
-        dlog("Unable to ssh to node #{node.fqdn} and restart mcollective, continuing anyway...", :error)
+      rescue => e
+        dlog("Unable to ssh to node #{node.fqdn} and restart mcollective, continuing anyway...\n #{e.message}", :error)
       end
     end
 
