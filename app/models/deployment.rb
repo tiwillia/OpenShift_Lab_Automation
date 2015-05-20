@@ -397,9 +397,6 @@ class Deployment < ActiveRecord::Base
       inst.undeploy
     end
     update_status("Un-deployment complete. Ensuring backend tenant is ready for a new deployment.")
-    # destroy_on_backend is not necessary at all, but we do it to avoid confusion for users who don't realize that
-    #   a server not created by the project might exist on the openstack backend.
-    destroy_on_backend
     self.finish
   end
 
