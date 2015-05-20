@@ -9,7 +9,7 @@ class Notifications < ActionMailer::Base
     @user = user
     @project = project
     email_with_name = "#{@user.name} <#{@user.email}>"
-    mail(to: email_with_name, subject: "You have had an OpenShift lab environment checked out for some time meow.")
+    mail(to: email_with_name, subject: "You have had an OpenShift lab environment checked out for some time now.")
   end
 
   private
