@@ -15,10 +15,6 @@ function ruby_with_nodejs_context {
 
 set -e
 
-if [ ! -z "$OPENSHIFT_POSTGRESQL_DB_HOST" ]; then
-  export RAILS_DB="postgresql"
-fi
-
 if [ ! -z "$OPENSHIFT_MYSQL_DB_HOST" ]; then
   export RAILS_DB="mysql"
 fi
@@ -27,8 +23,7 @@ if [ -z "$RAILS_DB" ]; then
   echo 1>&2
   echo "Could not find the database cartridge.  Please run:" 1>&2
   echo "rhc cartridge add -a $OPENSHIFT_APP_NAME -c mysql-5.1" 1>&2
-  echo "or"
-  echo "rhc cartridge add -a $OPENSHIFT_APP_NAME -c postgresql-9.2" 1>&2
+  echo "" 1>&2
   echo "then make a sample commit (add whitespace somewhere) and re-push" 1>&2
   echo 1>&2
   exit 5

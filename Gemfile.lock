@@ -11,11 +11,10 @@ GIT
 
 GIT
   remote: https://github.com/tiwillia/ruby-openstack.git
-  revision: e6da927d67ba97666440f0324ca599257937e8fa
+  revision: 8b803a7fa8b66173e46bdf392aaebe3496063599
   specs:
     openstack (0.0.0)
       json
-      openstack
 
 GEM
   remote: https://rubygems.org/
@@ -101,7 +100,6 @@ GEM
       railties
     mysql2 (0.3.14)
     net-ssh (2.8.0)
-    pg (0.17.0)
     polyglot (0.3.3)
     pry (0.10.0)
       coderay (~> 1.1.0)
@@ -205,7 +203,6 @@ DEPENDENCIES
   mysql2
   net-ssh
   openstack!
-  pg
   pry
   rack (~> 1.4.5)
   rails (~> 3.2.16)

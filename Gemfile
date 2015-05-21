@@ -10,10 +10,6 @@ group :production, :mysql do
   gem 'mysql2'
 end
 
-group :production, :postgresql do
-  gem 'pg'
-end
-
 group :development, :test do
   gem 'sqlite3'
   gem 'pry'      # Way helpful in development
