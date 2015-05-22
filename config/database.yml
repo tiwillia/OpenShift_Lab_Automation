@@ -12,6 +12,7 @@ mysql_devel: &mysql_devel
   adapter: mysql2
   database: "labs_development"
   username: "tiwillia"
+  password: "iliektests"
   host: "localhost"
   timeout: 5000
 
