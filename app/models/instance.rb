@@ -480,7 +480,8 @@ private
     project_details = project.details
     ose_version = project.ose_version
     return nil if project_details.nil?
-    variables = { :CONF_DOMAIN => project_details[:domain],
+    variables = { :CONF_DOMAIN => "apps.#{project_details[:domain]}",
+                  :CONF_HOSTS_DOMAIN => project_details[:domain],
                   :CONF_NAMED_IP_ADDR => project_details[:named_ip],
                   :CONF_NAMED_HOSTNAME => project_details[:named_hostname],
                   :CONF_DATASTORE_HOSTNAME => project_details[:datastore_replicants].first,
@@ -500,7 +501,7 @@ private
                   :CONF_ACTIVEMQ_AMQ_USER_PASSWORD => project_details[:activemq_user_password],
                   :CONF_OPENSHIFT_USER1 => project_details[:openshift_username],
                   :CONF_OPENSHIFT_PASSWORD1 => project_details[:openshift_password],
-                  :CONF_BIND_KEY => project_details[:bind_key], 
+                  :CONF_BIND_KEY => project_details[:bind_key],
                   :CONF_VALID_GEAR_SIZES => project_details[:valid_gear_sizes].join(","),
                   :CONF_ACTIONS => "do_all_actions"}
  
