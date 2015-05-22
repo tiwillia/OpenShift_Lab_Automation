@@ -7,3 +7,9 @@ if password
 else
   $redis = Redis.new(:host => host, :port => port)
 end
+
+begin
+  $redis.ping
+rescue CannotConnectError
+  Rails.logger.error("FATAL ERROR: Unable to connect to redis server with host #{host}:#{port} and password #{password}. Deployments WILL fail.")
+end
