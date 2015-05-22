@@ -299,21 +299,21 @@ class Project < ActiveRecord::Base
     c = get_connection
     flav_a = Array.new
     c.flavors.each {|f| flav_a << f[:name] }
-    flav_a
+    flav_a.sort
   end
 
   def images
     c = get_connection
     image_a = Array.new
     c.images.each {|i| image_a << i[:name]}
-    image_a
+    image_a.sort
   end
 
   def floating_ips
     c = get_connection
     ip_a = Array.new
     c.floating_ips.each {|i| ip_a << i.ip}
-    ip_a
+    ip_a.sort_by {|ip| ip.split('.').last.to_i }
   end
 
   # Returns a hash with the following keys:
@@ -351,7 +351,7 @@ class Project < ActiveRecord::Base
   end
 
   private
-    
+
   # Create the tenant and configure it properly on the OpenStack backend
   # TODO: Ensure backend is deleted if this fails anywhere
   # TODO: Check if the backend already exists? If so, check each requirement.
