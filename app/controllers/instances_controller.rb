@@ -62,6 +62,7 @@ before_filter :is_logged_in?, :only => :console
   def callback_script
     @instance = Instance.find(params[:id])
     @deployment = Deployment.find(params[:deployment_id])
+    @domain = Project.find(@instance.project_id).domain
     render :layout => false
   end
 

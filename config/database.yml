@@ -12,18 +12,8 @@ mysql_devel: &mysql_devel
   adapter: mysql2
   database: "labs_development"
   username: "tiwillia"
+  password: "iliektests"
   host: "localhost"
-  timeout: 5000
-
-postgresql: &postgresql
-  adapter: postgresql
-  database: <%=ENV['OPENSHIFT_APP_NAME']%>
-  username: <%=ENV['OPENSHIFT_POSTGRESQL_DB_USERNAME']%>
-  password: <%=ENV['OPENSHIFT_POSTGRESQL_DB_PASSWORD']%>
-  host:     <%=ENV['OPENSHIFT_POSTGRESQL_DB_HOST']%>
-  port:     <%=ENV['OPENSHIFT_POSTGRESQL_DB_PORT']%>
-  min_messages: ERROR
-  reconnect: false
   timeout: 5000
 
 defaults: &defaults

@@ -145,18 +145,17 @@ class Instance < ActiveRecord::Base
     end
 
     server_id = server.id
-    server_status = server.status
-    until server_status == "ACTIVE"
+    until server.status == "ACTIVE"
       Rails.logger.debug "Waiting for #{self.fqdn} to become active. Current status is \"#{server.status}\""
       sleep 3
-      server_status = c.get_server(server.id).status
+      server = c.get_server(server.id)
     end
     c.attach_floating_ip({:server_id => server_id, :ip_id => floating_ip_id})
 
-    self.update_attributes(:uuid => server_id)
+    self.update_attributes(:uuid => server_id, :internal_ip => server.accessipv4)
 
     true
-  
+
   end
 
   def undeploy
@@ -169,7 +168,7 @@ class Instance < ActiveRecord::Base
     end
     server = c.get_server(s[:id])
     if server.delete!
-      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :uuid => nil)
+      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :uuid => nil, :internal_ip => nil)
       return true
     else
       return false
@@ -480,7 +479,8 @@ private
     project_details = project.details
     ose_version = project.ose_version
     return nil if project_details.nil?
-    variables = { :CONF_DOMAIN => project_details[:domain],
+    variables = { :CONF_DOMAIN => "apps.#{project_details[:domain]}",
+                  :CONF_HOSTS_DOMAIN => project_details[:domain],
                   :CONF_NAMED_IP_ADDR => project_details[:named_ip],
                   :CONF_NAMED_HOSTNAME => project_details[:named_hostname],
                   :CONF_DATASTORE_HOSTNAME => project_details[:datastore_replicants].first,
@@ -500,7 +500,7 @@ private
                   :CONF_ACTIVEMQ_AMQ_USER_PASSWORD => project_details[:activemq_user_password],
                   :CONF_OPENSHIFT_USER1 => project_details[:openshift_username],
                   :CONF_OPENSHIFT_PASSWORD1 => project_details[:openshift_password],
-                  :CONF_BIND_KEY => project_details[:bind_key], 
+                  :CONF_BIND_KEY => project_details[:bind_key],
                   :CONF_VALID_GEAR_SIZES => project_details[:valid_gear_sizes].join(","),
                   :CONF_ACTIONS => "do_all_actions"}
  

@@ -233,6 +233,16 @@ before_filter :is_logged_in?, :only => :check_out
     end
   end
 
+  def dns_conf_file
+    @project = Project.find(params[:id])
+    output = @project.generate_dns_file(dns_conf_params[:dns_conf_file])
+    respond_to do |format|
+      format.text {
+        render :text => output, :layout => false
+      }
+    end
+  end
+
 private
 
   def new_project_params
@@ -241,6 +251,10 @@ private
 
   def edit_project_params
     params.require(:project).permit!
+  end
+
+  def dns_conf_params
+    params.require(:project).permit(:id, :dns_conf_file)
   end
 
   def can_edit?
