@@ -185,23 +185,24 @@ class Project < ActiveRecord::Base
     end
     true
   end
- 
+
   def details
     return nil if not self.ready?
-    
+
     datastore_replicants = Array.new
-    activemq_replicants = Array.new    
+    activemq_replicants = Array.new
     named_entries = Array.new
+    internal_named_entries = Array.new
     named_ip = ""
     named_hostname = ""
     broker_hostname = ""
     node_hostname = ""
-  
+
     self.instances.each do |inst|
 
       if inst.types.include?("named")
         named_instance = inst
-        named_ip = named_instance.floating_ip
+        named_ip = named_instance.internal_ip
         named_hostname = named_instance.fqdn
       end
       if inst.types.include?("datastore")
@@ -212,26 +213,33 @@ class Project < ActiveRecord::Base
       end
       if inst.types.include?("broker")
         broker_hostname = inst.fqdn
-      end      
+      end
       if inst.types.include?("node")
         node_hostname = inst.fqdn
       end
 
       named_entry = inst.name + ":" + inst.floating_ip
       named_entries << named_entry
+      if inst.internal_ip
+        int_named_entry = inst.name + ":" + inst.internal_ip
+        internal_named_entries << int_named_entry
+      end
     end
 
-    return {:named_ip => named_ip, 
+    self.instances.first
+
+    return {:named_ip => named_ip,
             :named_hostname => named_hostname,
             :broker_hostname => broker_hostname,
-            :node_hostname => node_hostname, 
-            :named_entries => named_entries, 
-            :valid_gear_sizes => valid_gear_sizes, 
-            :domain => self.domain, 
-            :activemq_replicants => activemq_replicants, 
-            :datastore_replicants => datastore_replicants, 
-            :bind_key => self.bind_key, 
-            :openshift_username => self.openshift_username, 
+            :node_hostname => node_hostname,
+            :named_entries => named_entries,
+            :internal_named_entries => internal_named_entries,
+            :valid_gear_sizes => valid_gear_sizes,
+            :domain => self.domain,
+            :activemq_replicants => activemq_replicants,
+            :datastore_replicants => datastore_replicants,
+            :bind_key => self.bind_key,
+            :openshift_username => self.openshift_username,
             :openshift_password => self.openshift_password,
             :mcollective_username => self.mcollective_username,
             :mcollective_password => self.mcollective_password,
@@ -348,6 +356,175 @@ class Project < ActiveRecord::Base
     when "network"
       Lab.find(self.lab_id).get_neutron(self.name)
     end 
+  end
+
+  # conf_file can be one of the following:
+  #  named
+  #    - /etc/named.conf (default)
+  #  static-global
+  #    - /var/named/static/<domain>.db-global
+  #  static-internal
+  #    - /var/named/static/<domain>.db-internal
+  #  dynamic-master
+  #    - /var/named/dynamic/<apps-domain>.db
+  #  dynamic-slave
+  #    - /var/named/dynamic/<apps-domain>.db-slave
+  #  static-ips
+  #    - /var/named/static/<int_ip_without_last_digit> (like 192.168.1)
+  #
+  #  This method is beyond ugly.
+  def generate_dns_file(conf_file=nil)
+    project_info = self.details
+    domain = project_info[:domain]
+    case conf_file
+## named.conf
+    when nil, "named"
+      forwarders = Lab.find(self.lab_id).nameservers.gsub(",",";")
+      base_file = File.open(Rails.root + "lib/configurations/named.conf_base", 'rb')
+      conf = base_file.read
+      base_file.close
+      conf+=<<EOF
+include "#{domain}.key";
+
+acl "openstack" { 192.168.1.0/24; };
+
+view "internal" {
+  match-clients { "openstack"; };
+  include "/etc/named.rfc1912.zones";
+  recursion yes;
+  forwarders { #{forwarders}; };
+
+  zone "#{domain}" IN {
+        type master;
+        file "static/#{domain}-internal.db";
+  };
+
+  zone "apps.#{domain}" IN {
+          type slave;
+          masters { 127.0.0.1; };
+          file "dynamic/apps.#{domain}-slave.db";
+          allow-notify { #{project_info[:named_ip]}; };
+          allow-update-forwarding { "openstack"; };
+  };
+
+  zone "1.168.192.in-addr.arpa" IN {
+        type master;
+        file "static/192.168.1.db";
+  };
+};
+
+view "global" {
+  match-clients { any; };
+  include "/etc/named.rfc1912.zones";
+  recursion no;
+
+  zone "apps.#{domain}" IN {
+          type master;
+          file "dynamic/apps.#{domain}.db";
+          allow-update { key #{domain} ; };
+          allow-transfer { 127.0.0.1; #{project_info[:named_ip]}; };
+          also-notify { #{project_info[:named_ip]}; };
+  };
+
+  zone "#{domain}" IN {
+        type master;
+        file "static/#{domain}-global.db";
+  };
+};
+EOF
+
+## STATIC GLOBAL
+    when "static-global"
+      conf=<<EOF
+$ORIGIN .
+$TTL 60  ; 1 minute
+#{domain}              IN SOA  #{project_info[:named_hostname]}. hostmaster.#{domain}. (
+                                2011112941 ; serial
+                                60         ; refresh (1 minute)
+                                15         ; retry (15 seconds)
+                                1800       ; expire (30 minutes)
+                                10         ; minimum (10 seconds)
+                                )
+                        NS      #{project_info[:named_hostname]}.
+$ORIGIN #{domain}.
+apps IN NS #{project_info[:named_hostname]}.
+
+EOF
+      project_info[:named_entries].each do |entry|
+        host = entry.split(":")[0]
+        ip = entry.split(":")[1]
+        conf += "#{host} A #{ip}\n"
+      end
+
+## STATIC INTERNAL
+    when "static-internal"
+      conf=<<EOF
+$ORIGIN .
+$TTL 60  ; 1 minute
+#{domain}              IN SOA  #{project_info[:named_hostname]}. hostmaster.#{domain}. (
+                                2011112941 ; serial
+                                60         ; refresh (1 minute)
+                                15         ; retry (15 seconds)
+                                1800       ; expire (30 minutes)
+                                10         ; minimum (10 seconds)
+                                )
+                        NS      #{project_info[:named_hostname]}.
+$ORIGIN #{domain}.
+apps IN NS #{project_info[:named_hostname]}.
+
+EOF
+      project_info[:internal_named_entries].each do |entry|
+        host = entry.split(":")[0]
+        ip = entry.split(":")[1]
+        conf += "#{host} A #{ip}\n"
+      end
+
+## DYNAMIC
+    when "dynamic-master", "dynamic-slave", "dynamic"
+      conf=<<EOF
+$ORIGIN .
+$TTL 10 ; 10 seconds
+apps.#{domain}   IN SOA  #{project_info[:named_hostname]}. hostmaster.#{domain}. (
+        2012113117 ; serial
+        60         ; refresh (1 minute)
+        15         ; retry (15 seconds)
+        1800       ; expire (30 minutes)
+        10         ; minimum (10 seconds)
+        )
+      NS  #{project_info[:named_hostname]}.
+$ORIGIN apps.#{domain}.
+$TTL 60 ; 1 minute
+EOF
+      project_info[:named_entries].each do |entry|
+        host = entry.split(":")[0]
+        conf += "#{host} CNAME #{host}.#{domain}\n"
+      end
+
+## STATIC IPS
+    when "static-ips"
+      conf=<<EOF
+$TTL 60  ; 1 minute
+; 192.168.1.0/24
+; 1.168.192.in-addr.arpa.
+@              IN SOA  #{project_info[:named_hostname]}. hostmaster.#{domain}. (
+                                2011112942 ; serial
+                                60         ; refresh (1 minute)
+                                15         ; retry (15 seconds)
+                                1800       ; expire (30 minutes)
+                                10         ; minimum (10 seconds)
+                                )
+                        NS      #{project_info[:named_hostname]}.
+
+EOF
+      project_info[:internal_named_entries].each do |entry|
+        host = entry.split(":")[0]
+        ip_end = entry.split(":")[1].split(".").last
+        conf += "#{ip_end} IN PTR #{host}.#{domain}.\n"
+      end
+    else
+      raise "Unrecognized dns configuration file requested."
+    end
+    conf
   end
 
   private

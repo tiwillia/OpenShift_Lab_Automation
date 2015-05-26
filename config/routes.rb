@@ -13,6 +13,7 @@ RailsApp::Application.routes.draw do
   match 'projects/:id/redeploy' => 'projects#redeploy_all'
   match 'projects/:id/destroy_on_backend' => 'projects#destroy_on_backend'
   match 'projects/:id/check_deployed' => 'projects#check_deployed'
+  match 'projects/:id/dns_conf_file' => 'projects#dns_conf_file', :defaults => { :format => 'text' }
   match 'instances/:id/undeploy' => 'instances#undeploy'
   match 'instances/:id/callback_script' => 'instances#callback_script'
   match 'instances/:id/check_deployed' => 'instances#check_deployed'

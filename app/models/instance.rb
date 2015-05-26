@@ -145,18 +145,17 @@ class Instance < ActiveRecord::Base
     end
 
     server_id = server.id
-    server_status = server.status
-    until server_status == "ACTIVE"
+    until server.status == "ACTIVE"
       Rails.logger.debug "Waiting for #{self.fqdn} to become active. Current status is \"#{server.status}\""
       sleep 3
-      server_status = c.get_server(server.id).status
+      server = c.get_server(server.id)
     end
     c.attach_floating_ip({:server_id => server_id, :ip_id => floating_ip_id})
 
-    self.update_attributes(:uuid => server_id)
+    self.update_attributes(:uuid => server_id, :internal_ip => server.accessipv4)
 
     true
-  
+
   end
 
   def undeploy
@@ -169,7 +168,7 @@ class Instance < ActiveRecord::Base
     end
     server = c.get_server(s[:id])
     if server.delete!
-      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :uuid => nil)
+      self.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false, :uuid => nil, :internal_ip => nil)
       return true
     else
       return false
