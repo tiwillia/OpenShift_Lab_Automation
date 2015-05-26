@@ -379,12 +379,12 @@ class Project < ActiveRecord::Base
     case conf_file
 ## named.conf
     when nil, "named"
-      forwarders = Lab.find(self.lab_id).nameservers.gsub(",",";")
+      forwarders = Lab.find(self.lab_id).nameservers.join(";")
       base_file = File.open(Rails.root + "lib/configurations/named.conf_base", 'rb')
       conf = base_file.read
       base_file.close
       conf+=<<EOF
-include "#{domain}.key";
+include "apps.#{domain}.key";
 
 acl "openstack" { 192.168.1.0/24; };
 
@@ -421,7 +421,7 @@ view "global" {
   zone "apps.#{domain}" IN {
           type master;
           file "dynamic/apps.#{domain}.db";
-          allow-update { key #{domain} ; };
+          allow-update { key "apps.#{domain}" ; };
           allow-transfer { 127.0.0.1; #{project_info[:named_ip]}; };
           also-notify { #{project_info[:named_ip]}; };
   };

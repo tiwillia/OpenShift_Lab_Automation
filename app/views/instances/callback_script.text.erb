@@ -12,6 +12,7 @@
       curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"dynamic"}}' <%= CONFIG[:URL] %>/projects/<%= @instance.project_id %>/dns_conf_file > /var/named/dynamic/apps.<%= @domain %>.db
       curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"dynamic"}}' <%= CONFIG[:URL] %>/projects/<%= @instance.project_id %>/dns_conf_file > /var/named/dynamic/apps.<%= @domain %>-slave.db
       curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"static-ips"}}' <%= CONFIG[:URL] %>/projects/<%= @instance.project_id %>/dns_conf_file > /var/named/static/192.168.1.db
+      chown -R named:named /var/named/dynamic/ /var/named/static/ /var/named/data
       service named restart &>> /root/.install_log
     <% end %>
     curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"success","instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id %>/instance_message &>> /root/.install_log
