@@ -27,6 +27,17 @@ class RedeployJob < Struct.new(:deployment_id)
     # TODO Actually roll back deployment
     #   Need to review status's for redployment and have case statement
     #   for which status we failed on and roll back depending
+    update_status("ERROR Job failed - Rolling back deployment")
+    deployment = Deployment.find(deployment_id)
+    deployment.dlog("Rolling back deployment")
+    project = Project.find(deployment.project_id)
+    project.destroy_all
+    project.instances.each do |inst|
+      inst.update_attributes(:deployment_started => false, :deployment_completed => false)
+    end
+    deployment.finish
+    deployment.update_status("Deployment failed")
+    deployment.dlog("Rollback completed.")
     update_status("Deployment Failed")
   end
 

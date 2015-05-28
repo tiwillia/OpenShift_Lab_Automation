@@ -20,7 +20,6 @@ class BuildJob < Struct.new(:deployment_id)
     deployment = Deployment.find(deployment_id)
     deployment.dlog("ERROR in deployment: #{exception.message}")
     deployment.dlog(exception.backtrace)
-    failure
   end
 
   def failure(job)
