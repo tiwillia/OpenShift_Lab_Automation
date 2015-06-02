@@ -7,7 +7,6 @@ class User < ActiveRecord::Base
   validates :first_name, :last_name, :username, :email, presence: true
   validates :email, uniqueness: true
   validates :email, format: /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
-  validates :first_name, :last_name, length: {minimum: 3}
 
   before_validation :get_user_details
   before_create :check_admin
