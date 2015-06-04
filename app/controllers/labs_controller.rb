@@ -28,7 +28,7 @@ class LabsController < ApplicationController
   end
   
   def update
-    new_lab_params[:nameservers] = new_lab_params[:nameservers].split(",")
+    edit_lab_params[:nameservers] = edit_lab_params[:nameservers].split(",")
     @lab = Lab.find(params[:id]) 
     if @lab.update_attributes(edit_lab_params)
       flash[:success] = "Lab #{edit_lab_params[:name]} successfully modified."
@@ -36,7 +36,7 @@ class LabsController < ApplicationController
     else
       errors = @lab.errors.full_messages
       flash[:error] = errors.join(", ")
-      redirect_to new_lab_path
+      redirect_to edit_lab_path
     end
   end
 
