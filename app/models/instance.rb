@@ -484,7 +484,8 @@ private
                   :CONF_NAMED_IP_ADDR => project_details[:named_ip],
                   :CONF_NAMED_HOSTNAME => project_details[:named_hostname],
                   :CONF_DATASTORE_HOSTNAME => project_details[:datastore_replicants].first,
-                  :CONF_ACTIVEMQ_HOSTNAME => project_details[:activemq_replicants].first,
+                  :CONF_ACTIVEMQ_HOSTNAME => self.types.include?('activemq') ? self.fqdn :
+                                             project_details[:activemq_replicants].first,
                   :CONF_BROKER_HOSTNAME => project_details[:broker_hostname],
                   :CONF_NODE_HOSTNAME => project_details[:node_hostname],
                   :CONF_INSTALL_COMPONENTS => self.types.join(","),
