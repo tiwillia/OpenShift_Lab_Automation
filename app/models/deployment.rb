@@ -248,7 +248,12 @@ class Deployment < ActiveRecord::Base
         phase4 << inst
       end
     end
-    
+
+    all_blank = false
+    if @project.instances.map {|i| i.types}.flatten == []
+      all_blank = true
+    end
+
     update_status("Deployment method determined and configured, deploying instances.")
     dlog "Created phases, starting instances..." 
     dlog "Phase1: #{phase1}" 
@@ -317,70 +322,73 @@ class Deployment < ActiveRecord::Base
     update_status("All instances deployed with OpenShift installed, running post deployment operations.")
     dlog("All instances completed. Completed instances: #{complete_instances.map {|i| i.name}}")
 
-    # Allow time for the nodes to reboot. They send the all-complete, then reboot. If we try to access them right afterwards, they may be still booting up.
-    sleep(30)
+    unless all_blank
 
-    # Datastore replicant configuration
-    if datastore_instance.class == Instance
-      dlog "Configuring replica set..."
-      replicants_complete = false
-      tries = 0
-      until replicants_complete || tries > 5 do
-        tries += 1
-        ssh = ssh_session(datastore_instance)
-        ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=configure_datastore_add_replicants >> /root/.install_log")
-        exit_code = ssh.exec!("echo $?").chomp
-        ssh.close
-        if exit_code == "0"
-          replicants_complete = true
+      # Allow time for the nodes to reboot. They send the all-complete, then reboot. If we try to access them right afterwards, they may be still booting up.
+      sleep(30)
+
+      # Datastore replicant configuration
+      if datastore_instance.class == Instance
+        dlog "Configuring replica set..."
+        replicants_complete = false
+        tries = 0
+        until replicants_complete || tries > 5 do
+          tries += 1
+          ssh = ssh_session(datastore_instance)
+          ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=configure_datastore_add_replicants >> /root/.install_log")
+          exit_code = ssh.exec!("echo $?").chomp
+          ssh.close
+          if exit_code == "0"
+            replicants_complete = true
+          else
+            dlog("Replica set configuration failed, trying again...", :error)
+            sleep 30
+          end
+        end
+        if replicants_complete
+          dlog "Datastore replicas configured."
         else
-          dlog("Replica set configuration failed, trying again...", :error)
-          sleep 30
+          dlog("Could not configure datstore after #{tries} tries. Giving up.", :error)
         end
       end
-      if replicants_complete
-        dlog "Datastore replicas configured."
-      else
-        dlog("Could not configure datstore after #{tries} tries. Giving up.", :error)
-      end
-    end
 
-    # Restart mcollective on nodes to ensure availablity
-    phase3.each do |node|
-      dlog("Restarting mcollective on node #{node.fqdn} with id #{node.id}")
-      begin
-        ssh_session(node)
-        ssh.exec!("service ruby193-mcollective restart")
-      rescue => e
-        dlog("Unable to ssh to node #{node.fqdn} and restart mcollective, continuing anyway...\n #{e.message}", :error)
-      end
-    end
-
-    # Post deployment script
-    if @project.ose_version =~ /2\.[1,2,3]/
-      dlog "Running post deploy..."
-      post_deploy_complete = false
-      tries = 0
-      until post_deploy_complete || tries > 5 do
-        tries += 1
-        ssh = ssh_session(broker_instance)
-        ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy >> /root/.install_log")
-        exit_code = ssh.exec!("echo $?").chomp
-        ssh.close
-        if exit_code == "0"
-          post_deploy_complete = true
-        else
-          dlog("Post deployment failed, trying again...", :error)
-          sleep 30
+      # Restart mcollective on nodes to ensure availablity
+      phase3.each do |node|
+        dlog("Restarting mcollective on node #{node.fqdn} with id #{node.id}")
+        begin
+          ssh_session(node)
+          ssh.exec!("service ruby193-mcollective restart")
+        rescue => e
+          dlog("Unable to ssh to node #{node.fqdn} and restart mcollective, continuing anyway...\n #{e.message}", :error)
         end
       end
-      if post_deploy_complete
-        dlog "Post deployment complete."
-      else
-        dlog("Could not post deploy after #{tries} tries. Giving up.", :error)
+
+      # Post deployment script
+      if @project.ose_version =~ /2\.[1,2,3]/
+        dlog "Running post deploy..."
+        post_deploy_complete = false
+        tries = 0
+        until post_deploy_complete || tries > 5 do
+          tries += 1
+          ssh = ssh_session(broker_instance)
+          ssh.exec!("source /root/.install_variables; sh /root/openshift.sh actions=post_deploy >> /root/.install_log")
+          exit_code = ssh.exec!("echo $?").chomp
+          ssh.close
+          if exit_code == "0"
+            post_deploy_complete = true
+          else
+            dlog("Post deployment failed, trying again...", :error)
+            sleep 30
+          end
+        end
+        if post_deploy_complete
+          dlog "Post deployment complete."
+        else
+          dlog("Could not post deploy after #{tries} tries. Giving up.", :error)
+        end
       end
-    end
-   
+    end # all blank
+
     @project.instances.each do |i|
       if i.deployment_completed == false || i.deployment_started == true
         i.update_attributes(:deployment_completed => true, :deployment_started => false)
