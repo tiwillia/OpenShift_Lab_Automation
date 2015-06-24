@@ -1,0 +1,40 @@
+<div class="page-header">
+  <h1>
+    <% if admin? %>
+      <%= link_to "Destroy", "/v3_projects/#{@project.id}", :method => :delete, :class => "btn btn-danger pull-right", :data=> {:confirm => "Are you sure you want to remove the #{@project.name} project?"} %></a>
+    <% end %>
+    <% if current_user and ((current_user.id == @project.checked_out_by) || current_user.admin?) %>
+      <a href="/v3_projects/<%= @project.id %>/edit" class="btn btn-info pull-right">Edit</a>
+    <% end %> 
+    <% if @project.checked_out? %>
+      <% if current_user and ((current_user.id == @project.checked_out_by) || current_user.admin?) %>
+        <a href="/v3_projects/<%= @project.id %>/uncheck_out" class="btn btn-warning pull-right">Un-check out</a>
+      <% end %> 
+    <% else %>
+      <a href="/v3_projects/<%= @project.id %>/check_out" class="btn btn-primary pull-right">Available for check out</a> 
+    <% end %>     
+    <%= @project.name %> 
+    <small>
+      OSE <%= @project.ose_version %><br>
+      <% case deployment_status %>
+      <% when "complete" %>
+        Deployed at <%= parse_date(deployment.completed_time) %>
+      <% when "undeployed" %>
+        Un-Deployed at <%= parse_date(deployment.completed_time) %>
+      <% when "never deployed" %>
+        Never deployed           
+      <% when "build in progress" %>
+        <span id="in_progress">Deployment in progress. Started: <%= parse_date(deployment.started_time) %></span>
+      <% when "tear_down in progress" %>
+        <span id="in_progress">Un-Deployment in progress. Started: <%= parse_date(deployment.started_time) %></span> 
+      <% when "unknown" %>
+        Status unknown
+      <% end %><br>
+      <% if deployment_status.include?("in progress") %>
+        <span id="deployment_status" deployment_id="<%= @most_recent_deployment.id %>"><%= @most_recent_deployment.status %></span>
+      <% end %>
+    </small>
+
+  </h1>
+</div>  
+

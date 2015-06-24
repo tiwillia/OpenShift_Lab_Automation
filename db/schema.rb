@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150624152734) do
+ActiveRecord::Schema.define(:version => 20150624193305) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0, :null => false
@@ -132,6 +132,45 @@ ActiveRecord::Schema.define(:version => 20150624152734) do
     t.string   "uuid"
     t.boolean  "hidden",                    :default => false
     t.date     "inactive_reminder_sent_at"
+  end
+
+  create_table "v3_instances", :force => true do |t|
+    t.text     "name"
+    t.text     "floating_ip"
+    t.text     "internal_ip"
+    t.text     "fqdn"
+    t.integer  "v3_project_id"
+    t.text     "root_password"
+    t.string   "flavor"
+    t.string   "image"
+    t.boolean  "deployment_started"
+    t.boolean  "deployment_completed"
+    t.boolean  "reachable"
+    t.datetime "last_checked_reachable"
+    t.string   "uuid"
+    t.datetime "created_at",             :null => false
+    t.datetime "updated_at",             :null => false
+  end
+
+  create_table "v3_projects", :force => true do |t|
+    t.text     "name"
+    t.text     "network"
+    t.text     "security_group"
+    t.text     "domain"
+    t.text     "floating_ips"
+    t.text     "availabliltiy_zone"
+    t.text     "openshift_username"
+    t.text     "openshift_password"
+    t.integer  "lab_id"
+    t.string   "ose_version"
+    t.integer  "checked_out_by"
+    t.datetime "checked_out_at"
+    t.boolean  "deployed"
+    t.string   "uuid"
+    t.date     "inactive_reminder_sent_at"
+    t.boolean  "hidden"
+    t.datetime "created_at",                :null => false
+    t.datetime "updated_at",                :null => false
   end
 
 end

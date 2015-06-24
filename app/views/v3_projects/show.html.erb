@@ -1,0 +1,214 @@
+<div class="row" id="project_page_header" v3_project_id="<%= @project.id %>">
+  <div class="col-md-12">
+    <%# Moved page header to a seperate partial, as it continues to grow in size and complexity %>
+    <%= render "page_header", :deployment_status => @deployment_status, :deployment => @most_recent_deployment, :@project => @project %>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title text-center">Instances</h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-condensed">
+      <thead class="text-center">
+        <tr>
+          <% if logged_in? %>
+            <td>Console</td>
+          <% end %>
+          <td>Deployed</td>
+          <td>Hostname</td>
+          <td>Type(s)</td>
+          <td>Floating IP</td>
+          <td>Root Password</td>
+          <td>Image</td>
+          <td>Flavor</td>
+          <td>Reachable</td>
+          <td></td>
+        </tr>
+      </thead>  
+      <tbody>
+        <% verified_user = current_user %>
+        <% instances = @project.v3_instances.sort_by{|i| i.name } %>
+        <span class="v3_instance_id_list" v3_instance_ids="<%= instances.map {|i| i.id}.join(",") %>"></span>
+        <% instances.each do |inst| %>
+          <tr class="instance_row" v3_instance_id="<%= inst.id %>">
+            <% if logged_in? %>
+              <td class="text-center">
+                <a href="#console_row_<%= inst.id %>" class="console_link" id="console_link_<%= inst.id %>" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span>
+                </a>
+              </td>
+            <% end %>
+            <td class="text-center">
+              <img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_<%= inst.id %>" />
+            </td>
+            <td><%= inst.name %></td>
+            <% if inst.no_openshift %>
+              <td>Blank host</td>
+            <% else %>
+              <td><%= inst.types.join(", ") %></td>
+            <% end %>
+            <td><%= inst.floating_ip %></td>
+            <td><%= logged_in? ? inst.root_password : "********" %></td>
+            <td><%= inst.image %></td>
+            <td><%= inst.flavor %></td>
+            <td>
+              <% if inst.reachable %>
+                <a class="btn btn-default reachable_button pull-right" v3_instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" v3_instance_id="<%= inst.id %>">
+                    <span class="glyphicon glyphicon-ok" ></span> 
+                    Check
+                  </div>
+                </a>
+              <% elsif inst.reachable == false && !inst.last_checked_reachable.nil? %>
+                <a class="btn btn-default reachable_button pull-right" v3_instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" v3_instance_id="<%= inst.id %>">
+                    <span class="glyphicon glyphicon-remove"></span> 
+                    Check
+                  </div>
+                </a>
+              <% else %>
+                <a class="btn btn-default reachable_button pull-right" v3_instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" v3_instance_id="<%= inst.id %>">
+                    Check
+                  </div>
+                </a>
+              <% end %>
+            </td>
+            <td>
+              <% if verified_user and @project.user_can_edit?(verified_user) %>
+              <div class="dropdown">
+                <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href='/v3_projects/<%= @project.id %>/deploy_one?v3_instance_id=<%= inst.id %>'>Deploy</a></li>
+                  <li><a href="/v3_instances/<%= inst.id %>/undeploy" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
+                  <li><a href="" data-toggle="modal" data-target="#instanceLog" class="instanceLogButton" v3_instance_id="<%= inst.id %>">Install log</a></li>
+                <hr />
+                <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
+                <li><a href="/v3_instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove from project</a></li>
+                </ul>
+              </div>
+              <% end %>
+            </td>
+          </tr>
+          <tr class="collapse" id="console_row_<%= inst.id %>">
+            <td colspan="11" id="console_td_<%= inst.id %>">
+              Unable to access console.
+            </td> 
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% if @project.user_can_edit?(current_user) %>
+  <div class="col-md-4">
+    <div class="btn-group">
+      <% if not @project.all_deployed? %>
+        <a href="/v3_projects/<%= @project.id %>/deploy" class="btn btn-success">Deploy All</a>
+      <% end %>
+      <% if not @project.none_deployed? %>
+        <a href="/v3_projects/<%= @project.id %>/undeploy" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
+        <a href="/v3_projects/<%= @project.id %>/redeploy" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
+      <% end %>
+    </div>
+  </div>
+  <div class="col-md-1"></div>
+  <div class="col-md-2">
+    <a class="btn btn-default reachable_button_all" v3_instance_ids="<%= @v3_instance_id_list.join(',') %>" >Check all for reachability</a>
+  </div>
+  <div class="col-md-2">
+    <a class="btn btn-default" data-toggle="modal" data-target="#newTemplate" id="new_template_button">
+      <div id="new_template_button_content">Save to template</div>
+    </a>
+  </div>
+  <div class="col-md-1"></div>
+  <div class="col-md-2">
+    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newInstance">Add New Instance</a>
+  </div>
+  <% end %>
+  </div>
+</div>
+<hr />
+<div class="row">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title text-center">OpenStack Config</h3>
+      </div>
+      <div class="panel-body">
+        <div class="col-md-6">
+          <dl class="dl-horizontal">
+            <dt>Tenant Name:</dt>
+            <dd><%= @project.name %></dd>
+            <dt>Domain:</dt>
+            <dd><%= @project.domain %></dd>
+            <dt>Network Name:</dt>
+            <dd><%= @project.network %></dd>
+            <dt>Security Group:</dt>
+            <dd><%= @project.security_group %></dd>
+          </dl>
+        </div>
+        <div class="col-md-6">
+          <dl class="dl-horizontal">
+            <dt>Max Instances:</dt>
+            <dd><%= @limits[:max_instances] %></dd>
+            <dt>Used Instances:</dt>
+            <dd><%= @limits[:used_instances] %></dd>
+            <dt>Max CPUs:</dt>
+            <dd><%= @limits[:max_cpus] %></dd>
+            <dt>Used CPUs:</dt>
+            <dd><%= @limits[:used_cpus] %></dd>
+            <dt>Max RAM:</dt>
+            <dd><%= @limits[:max_ram] %></dd>
+            <dt>Used RAM:</dt>
+            <dd><%= @limits[:used_ram] %></dd>
+          </dl>
+        </div>
+        <% if current_user and (@project.checked_out_by == current_user.id || current_user.admin?) %>
+          <a data-toggle="modal" data-target="#destroy_all_warning_modal" class="btn btn-danger">Destroy all instances on backend</a>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title text-center">Credentials</h3>
+      </div>
+      <div class="panel-body">
+        <dl class="dl-horizontal">
+          <dt>OpenShift Username:</dt>
+          <dd><%= @project.openshift_username %></dd>
+          <dt>OpenShfit Password:</dt>
+          <dd><%= @project.openshift_password %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+<% if current_user and (@project.checked_out_by == current_user.id || current_user.admin?) %>
+  <div class="modal fade" id="destroy_all_warning_modal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Are you sure you want to remove all instances on the backend?</h3>
+        </div>
+        <div class="modal-body">
+          This will remove any instances in this tenant that were created on the openstack backend inside and outside of this application. All instances in this project will be un-depoyed.<br>
+          There are <b><%= @project.v3_instances.count %></b> instances in this application.<br>
+          There are <b><%= @limits[:used_instances] %></b> instances on the openstack backend.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <a href="/v3_projects/<%= @project.id %>/destroy_on_backend" class="btn btn-danger">Destroy all</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%= render :template => "v3_instances/new", :locals => {:v3_project_id => @project.id} %>
+  <%= render :template => "templates/new", :locals => {:v3_project_id => @project.id, :template => @template} %>
+  <%= render :template => "v3_instances/install_log" %>
+<% end %>
+<% @project.v3_instances.each do |inst| %>
+  <% next if inst.id.nil? %>
+  <%= render :template => "v3_instances/edit", :locals => {:v3_project_id => @project.id, :@instance => inst} %>
+<% end %>

@@ -5,6 +5,10 @@ module Instance
     before_save :determine_fqdn
   end
 
+  def safe_name
+    self.name.gsub(/[\s\W]/, "_")
+  end
+
   # Returns true or false
   # If false, also returns error message
   def reachable?
@@ -30,7 +34,7 @@ module Instance
 
   def install_log
     if self.reachable?
-      begin.
+      begin
         Timeout::timeout(10) {
           ssh = Net::SSH.start(self.floating_ip, 'root', :password => self.root_password, :paranoid => false, :timeout => 5)
           log_text = ssh.exec!("cat /root/.install_log")

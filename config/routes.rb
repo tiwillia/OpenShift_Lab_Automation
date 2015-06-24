@@ -2,6 +2,8 @@ RailsApp::Application.routes.draw do
 
   resources :v2_instances
   resources :v2_projects
+  resources :v3_instances
+  resources :v3_projects
   resources :labs
   resources :templates
   match 'admin' => 'admin#index'

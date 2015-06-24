@@ -1,0 +1,31 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  name: MyText
+  floating_ip: MyText
+  internal_ip: MyText
+  fqdn: MyText
+  v3_project_id: 1
+  root_password: MyText
+  flavor: MyString
+  image: MyString
+  deployment_started: false
+  deployment_completed: false
+  reachable: false
+  last_checked_reachable: 2015-06-24 15:33:05
+  uuid: MyString
+
+two:
+  name: MyText
+  floating_ip: MyText
+  internal_ip: MyText
+  fqdn: MyText
+  v3_project_id: 1
+  root_password: MyText
+  flavor: MyString
+  image: MyString
+  deployment_started: false
+  deployment_completed: false
+  reachable: false
+  last_checked_reachable: 2015-06-24 15:33:05
+  uuid: MyString

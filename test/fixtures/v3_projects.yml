@@ -1,0 +1,37 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  name: MyText
+  network: MyText
+  security_group: MyText
+  domain: MyText
+  floating_ips: MyText
+  availabliltiy_zone: MyText
+  openshift_username: MyText
+  openshift_password: MyText
+  lab_id: 1
+  ose_version: MyString
+  checked_out_by: 1
+  checked_out_at: 2015-06-24 13:56:42
+  deployed: false
+  uuid: MyString
+  inactive_reminder_sent_at: 2015-06-24
+  hidden: false
+
+two:
+  name: MyText
+  network: MyText
+  security_group: MyText
+  domain: MyText
+  floating_ips: MyText
+  availabliltiy_zone: MyText
+  openshift_username: MyText
+  openshift_password: MyText
+  lab_id: 1
+  ose_version: MyString
+  checked_out_by: 1
+  checked_out_at: 2015-06-24 13:56:42
+  deployed: false
+  uuid: MyString
+  inactive_reminder_sent_at: 2015-06-24
+  hidden: false

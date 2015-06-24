@@ -1,0 +1,47 @@
+<h1>Edit <%= @project.name %></h1>
+
+
+<%= form_for @project, :html => {:role => "form"} do |f| %>
+  <div class="well">
+    <div class="form-group">
+      <%= f.label "Name", :class => "control-label" %>
+        <%= f.text_field :name, :class => "form-control" %>
+        <p class="help-block">This should be the case-sensitive name of the tenant/project on the OpenStack lab.</p>
+    </div>
+    <div class="form-group">
+      <%= f.label "Domain", :class => "control-label" %>
+        <%= f.text_field :domain, :class => "form-control" %>
+        <p class="help-block">Domain for the openshift environment.</p>
+    </div>
+    <div class="form-group">
+      <%= f.label "Network Name", :class => "control-label" %>
+        <%= f.text_field :network, :class => "form-control" %>
+        <p class="help-block">Name of the network used by the environment. Note that this should already be set up appropriately, with a subnet and connection to the exteral network via a router.</p>
+    </div>
+    <div class="form-group">
+      <%= f.label "Secuirty Group", :class => "control-label" %>
+        <%= f.text_field :security_group, :class => "form-control" %>
+        <p class="help-block">Name of the security group to use for each instance.</p>
+    </div>
+<hr />
+    <div class="form-group">
+      <%= f.label "OpenShift Version", :class => "control-label" %><br>
+        <%= f.select :ose_version, options_for_select([["3.0", "3.0"]], @project.ose_version), {}, {:class => "form-control"}  %>
+    </div>
+    <div class="form-group">
+      <%= f.label "OpenShift Initial User Username", :class => "control-label" %>
+        <%= f.text_field :openshift_username, :class => "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label "OpenShift Initial User Password", :class => "control-label" %>
+        <%= f.text_field :openshift_password, :class => "form-control" %>
+    </div>
+    <div class="form-group">
+      <%= f.label "Bind Key", :class => "control-label" %>
+        <%= f.text_field :bind_key, :class => "form-control" %>
+    </div>
+  </div>
+  <%= f.submit 'Submit', :class => "btn btn-primary" %>
+</div>
+<% end %>
+

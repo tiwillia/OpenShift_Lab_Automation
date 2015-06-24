@@ -1,6 +1,8 @@
 class V2Instance < ActiveRecord::Base
   # attr_accessible :title, :body
 
+  include Instance
+
   belongs_to :v2_project
 
   serialize :types
@@ -390,10 +392,6 @@ EOF
 
     cinit
   end 
- 
-  def safe_name
-    self.name.gsub(/[\s\W]/, "_")
-  end
 
 private
 

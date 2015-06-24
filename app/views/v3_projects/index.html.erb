@@ -1,5 +1,5 @@
 <div class="col-md-10">
-  <h1>OpenShift v2 Labs</h1>
+  <h1>OpenShift v3 Labs</h1>
 </div>
 <div class="col-md-2">
   <% if logged_in? && current_user.admin? && !Lab.all.empty? %>
@@ -21,15 +21,15 @@
   <tbody>
   <% @projects.each do |project| %>
     <tr>
-      <td><a href="/v2_projects/<%= project.id %>" class="btn btn-default">View</a></td>
+      <td><a href="/v3_projects/<%= project.id %>" class="btn btn-default">View</a></td>
       <td><%= Lab.find(project.lab_id).geo %></td>
       <td><%= project.ose_version %></td>
       <td><b><%= project.name %></b></td>
       <td><%= project.domain %></td>
-      <td><%= project.v2_instances.count %></td>
+      <td><%= project.v3_instances.count %></td>
       <td><% if project.checked_out? %><%= User.find(project.checked_out_by).name %><% else %><span class="text-success">Nobody!</span><% end %></td>
     </tr>
   <% end %>
   </tbody>
 </table>
-<%= render :template => 'v2_projects/new', :locals => {:@project => V2Project.new, :lab_id => Lab.all.first.id}  %>
+<%= render :template => 'v3_projects/new', :locals => {:@project => V3Project.new, :lab_id => Lab.all.first.id}  %>
