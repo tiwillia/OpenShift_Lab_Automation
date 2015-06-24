@@ -1,15 +1,15 @@
-class InstancesController < ApplicationController
+class V2InstancesController < ApplicationController
 
 before_filter :can_edit?, :except => [:callback_script, :reachable, :new, :create, :check_deployed]
 before_filter :is_logged_in?, :only => :console
 
   def new
-    @instance = Instance.new
+    @instance = V2Instance.new
   end
 
   def create
     pars = new_instance_params
-    @instance = Instance.new(pars)
+    @instance = V2Instance.new(pars)
     if @instance.save
       flash[:success] = "Instance Successfully created."
       redirect_to :back
@@ -22,12 +22,12 @@ before_filter :is_logged_in?, :only => :console
   end
 
   def edit
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
   end
 
   def update
     pars = edit_instance_params
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     if @instance.update_attributes(pars)
       flash[:success] = "Instance Successfully updated."
       redirect_to :back
@@ -39,7 +39,7 @@ before_filter :is_logged_in?, :only => :console
   end
     
   def destroy
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     if @instance.destroy
       flash[:success] = "Instance Successfully removed."
       redirect_to :back
@@ -50,7 +50,7 @@ before_filter :is_logged_in?, :only => :console
   end
 
   def undeploy
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     if @instance.undeploy
       flash[:success] = "Instance undeployed!"
     else
@@ -60,14 +60,14 @@ before_filter :is_logged_in?, :only => :console
   end
 
   def callback_script
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     @deployment = Deployment.find(params[:deployment_id])
-    @domain = Project.find(@instance.project_id).domain
+    @domain = V2Project.find(@instance.v2_project_id).domain
     render :layout => false
   end
 
   def reachable
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     reachable, err = @instance.reachable?
     if reachable
       respond_to do |format|
@@ -81,7 +81,7 @@ before_filter :is_logged_in?, :only => :console
   end
 
   def check_deployed
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     in_progress = @instance.deployment_started
     if in_progress or !@instance.deployed?
       respond_to do |format|
@@ -95,7 +95,7 @@ before_filter :is_logged_in?, :only => :console
   end
 
   def install_log
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     log_text, error = @instance.install_log
     if log_text
       respond_to do |format|
@@ -109,7 +109,7 @@ before_filter :is_logged_in?, :only => :console
   end
 
   def console
-    @instance = Instance.find(params[:id])
+    @instance = V2Instance.find(params[:id])
     result, message = @instance.get_console
     if result
       respond_to do |format|
@@ -133,10 +133,10 @@ private
   end
 
   def can_edit?
-    @instance = Instance.find(params[:id])
-    if current_user and (Project.find(@instance.project_id).checked_out_by != current_user.id && !current_user.admin)
+    @instance = V2Instance.find(params[:id])
+    if current_user and (V2Project.find(@instance.v2_project_id).checked_out_by != current_user.id && !current_user.admin)
       flash[:error] = "You do not have permissions to make changes to this instance"
-      redirect_to "/projects"
+      redirect_to "/v2_projects"
     end
   end
 

@@ -30,9 +30,9 @@ class RedeployJob < Struct.new(:deployment_id)
     update_status("ERROR Job failed - Rolling back deployment")
     deployment = Deployment.find(deployment_id)
     deployment.dlog("Rolling back deployment")
-    project = Project.find(deployment.project_id)
+    project = V2Project.find(deployment.v2_project_id)
     project.destroy_all
-    project.instances.each do |inst|
+    project.v2_instances.each do |inst|
       inst.update_attributes(:deployment_started => false, :deployment_completed => false)
     end
     deployment.finish

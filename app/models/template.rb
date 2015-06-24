@@ -8,7 +8,7 @@ class Template < ActiveRecord::Base
 
   validates_uniqueness_of :name
   validates_format_of :name, :with => /^[a-zA-Z0-9\ \_\-]+$/i
-  validates_presence_of :name, :description, :created_by, :project_id
+  validates_presence_of :name, :description, :created_by, :v2_project_id
 
   serialize :content
 
@@ -45,7 +45,7 @@ EOF
 private
 
   def generate_content
-    project = Project.find(self.project_id)
+    project = V2Project.find(self.v2_project_id)
     content = {"project_details" => {
       "ose_version" => project.ose_version,
       "mcollective_username" => project.mcollective_username,
@@ -63,7 +63,7 @@ private
       },
       "instances" => []
     }
-    project.instances.each do |inst|
+    project.v2_instances.each do |inst|
       content["instances"] << {
         "name" => inst.name,
         "types" => inst.types,

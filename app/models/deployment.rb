@@ -1,6 +1,6 @@
 class Deployment < ActiveRecord::Base
 
-  belongs_to :project
+  belongs_to :v2_project
 
   after_create :define_instance_vars
 
@@ -39,8 +39,8 @@ class Deployment < ActiveRecord::Base
     $redis.hgetall("deployment_queue_#{self.id}")
   end
 
-  def push(instance_id, message)
-    $redis.hset("deployment_queue_#{self.id}", instance_id, message)
+  def push(v2_instance_id, message)
+    $redis.hset("deployment_queue_#{self.id}", v2_instance_id, message)
   end
 
   def pop
@@ -49,9 +49,9 @@ class Deployment < ActiveRecord::Base
       r_val = q.first
       $redis.hdel("deployment_queue_#{self.id}", r_val[0])
       if r_val[0] == "interrupt"
-        return {:instance_id => nil, :message => r_val[0]}
+        return {:v2_instance_id => nil, :message => r_val[0]}
       else
-        return {:instance_id => r_val[0], :message => r_val[1]}
+        return {:v2_instance_id => r_val[0], :message => r_val[1]}
       end
     else
       return false
@@ -125,14 +125,14 @@ class Deployment < ActiveRecord::Base
     end
   end
 
-  def instance_message(instance_id, message)
-    dlog "Got message for #{Instance.find(instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
+  def instance_message(v2_instance_id, message)
+    dlog "Got message for #{V2Instance.find(v2_instance_id).fqdn}: \"#{message}\", pushing to deployment queue..."
     if self.queue.nil?
       dlog "Deployment queue has mysteriously become nil, replacing..."  
       $redis.hset("deployment_queue_#{self.id}", nil, nil)
       $redis.hdel("deployment_queue_#{self.id}", nil)
     end
-    self.push(instance_id, message)
+    self.push(v2_instance_id, message)
   end
 
   def interrupt
@@ -162,9 +162,9 @@ class Deployment < ActiveRecord::Base
 
   def single_deployment
     update_status("Deployment of a single instance started.")
-    @project = Project.find(self.project_id)
-    raise "No instance id providied" if self.instance_id.nil?
-    instance = Instance.find(self.instance_id)
+    @project = V2Project.find(self.v2_project_id)
+    raise "No instance id providied" if self.v2_instance_id.nil?
+    instance = Instance.find(self.v2_instance_id)
 
     if instance.deploy(self.id)
       instance.update_attributes(:deployment_started => true, :deployment_completed => false) unless instance.deployment_started && !instance.deployment_completed
@@ -183,11 +183,11 @@ class Deployment < ActiveRecord::Base
         time_waited += 10
       end
       work = self.pop
-      if work[:message] == "interrupt" && work[:instance_id] == nil
+      if work[:message] == "interrupt" && work[:v2_instance_id] == nil
         update_status("Deployment interrupted to be stopped.")
         raise "Deployment manually interrupted"
       end
-      instance = Instance.find(work[:instance_id])
+      instance = Instance.find(work[:v2_instance_id])
       message = work[:message]
       case message
       when "success"
@@ -213,7 +213,7 @@ class Deployment < ActiveRecord::Base
 
   def build_deployment
     update_status("Environment deployment started")
-    @project = Project.find(self.project_id)
+    @project = V2Project.find(self.v2_project_id)
 
     # Order is:
     #   phase1, wait 2 mins, phase 2 + 3, wait 2 mins, phase4
@@ -229,7 +229,7 @@ class Deployment < ActiveRecord::Base
 
     datastore_instance = ""
 
-    @project.instances.each do |inst|
+    @project.v2_instances.each do |inst|
       case 
       when inst.types.include?("named")
         phase1 << inst
@@ -250,7 +250,7 @@ class Deployment < ActiveRecord::Base
     end
 
     all_blank = false
-    if @project.instances.map {|i| i.types}.flatten == []
+    if @project.v2_instances.map {|i| i.types}.flatten == []
       all_blank = true
     end
 
@@ -280,7 +280,7 @@ class Deployment < ActiveRecord::Base
     dlog "Deployment queue after phase 4: #{self.queue}"
     dlog "Phase 4 complete, waiting for completion..." 
 
-    broker_instance = @project.instances.select {|i| i.types.include?("broker") }.first
+    broker_instance = @project.v2_instances.select {|i| i.types.include?("broker") }.first
     last_node = phase3.last
     all_complete = false 
     complete_instances = []
@@ -294,11 +294,11 @@ class Deployment < ActiveRecord::Base
         dlog("Waiting for instance callbacks. Time waited: #{time_waited}")
       end
       work = self.pop
-      if work[:message] == "interrupt" && work[:instance_id] == nil
+      if work[:message] == "interrupt" && work[:v2_instance_id] == nil
         update_status("Deployment interrupted to be stopped.")
         raise "Deployment manually interrupted"
       end
-      instance = Instance.find(work[:instance_id])
+      instance = V2Instance.find(work[:v2_instance_id])
       message = work[:message]
       case message
       when "success"
@@ -315,7 +315,7 @@ class Deployment < ActiveRecord::Base
       else
         dlog("Received unprocessable message for project #{@project.name} and instance #{instance.fqdn}: \"#{message}\"",:error)
       end
-      if complete_instances.count == @project.instances.count
+      if complete_instances.count == @project.v2_instances.count
         all_complete = true
       end
     end
@@ -389,7 +389,7 @@ class Deployment < ActiveRecord::Base
       end
     end # all blank
 
-    @project.instances.each do |i|
+    @project.v2_instances.each do |i|
       if i.deployment_completed == false || i.deployment_started == true
         i.update_attributes(:deployment_completed => true, :deployment_started => false)
       end
@@ -400,8 +400,8 @@ class Deployment < ActiveRecord::Base
   
   def destroy_deployment
     update_status("Un-deployment started, shutting down and destroying instances.")
-    @project = Project.find(self.project_id)
-    @project.instances.each do |inst|
+    @project = V2Project.find(self.v2_project_id)
+    @project.v2_instances.each do |inst|
       inst.undeploy
     end
     update_status("Un-deployment complete. Ensuring backend tenant is ready for a new deployment.")
@@ -409,7 +409,7 @@ class Deployment < ActiveRecord::Base
   end
 
   def destroy_on_backend
-    @project = Project.find(self.project_id)
+    @project = V2Project.find(self.v2_project_id)
     @project.destroy_all 
   end
 
@@ -417,8 +417,8 @@ class Deployment < ActiveRecord::Base
     update_status("Re-deployment started, un-deploying environment.")
     destroy_on_backend
     update_status("Cleaning up frontend")
-    @project = Project.find(self.project_id)
-    @project.instances.each do |inst|
+    @project = V2Project.find(self.v2_project_id)
+    @project.v2_instances.each do |inst|
       inst.update_attributes(:deployment_started => false, :deployment_completed => false)
     end
     update_status("Un-deployment complete, waiting for backend to be ready for deployment.")
@@ -450,7 +450,7 @@ private
   end
 
   def define_instance_vars
-    @project = Project.find(self.project_id)
+    @project = V2Project.find(self.v2_project_id)
   end
 
 end

@@ -11,7 +11,7 @@
     <!-- Deployment tab -->
     <h3>Active Deployments:</h3>
     <% @deployments_active.each do |deployment| %>
-      <% project = Project.find(deployment.project_id) %>
+      <% project = V2Project.find(deployment.v2_project_id) %>
       <div class="panel panel-default">
         <div class="panel-heading">
           <h4 class="panel-title">
@@ -29,15 +29,15 @@
               <dt>Action:</dt>
               <dd>&nbsp;&nbsp;<%= deployment.action.titleize %></dd>
               <dt>Project:</dt>
-              <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
+              <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/v2_projects/#{project.id}" %></dd>
               <dt>Instances:</dt>
-              <% if deployment.instance_id %>
-                <% instance = Instance.find(deployment.instance_id) if Instance.exists?(deployment.instance_id)%>
-                <% Instance.exists?(deployment.instance_id) ? instance = Instance.find(deployment.instance_id) : instance = nil %>
+              <% if deployment.v2_instance_id %>
+                <% instance = V2Instance.find(deployment.v2_instance_id) if V2Instance.exists?(deployment.v2_instance_id)%>
+                <% V2Instance.exists?(deployment.v2_instance_id) ? instance = V2Instance.find(deployment.v2_instance_id) : instance = nil %>
                 <% if instance %>
                   <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
                 <% else %>
-                  <dd>&nbsp;&nbsp;Id #<% deployment.instance_id %> (No longer exists)</dd>
+                  <dd>&nbsp;&nbsp;Id #<% deployment.v2_instance_id %> (No longer exists)</dd>
                 <% end %>
               <% else %>
                 <dd>&nbsp;&nbsp;All</dd>
@@ -75,7 +75,7 @@
     <h3>Inactive Deployments:</h3>
     <div class="panel-group" id="accordian">
       <% @deployments_inactive.each do |deployment| %>
-        <% project = Project.find(deployment.project_id) %>
+        <% project = V2Project.find(deployment.v2_project_id) %>
         <div class="panel panel-default">
           <div class="panel-heading">
             <h4 class="panel-title">
@@ -98,15 +98,15 @@
                   <dt>Action:</dt>
                   <dd>&nbsp;&nbsp;<%= deployment.action.titleize %></dd>
                   <dt>Project:</dt>
-                  <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/projects/#{project.id}" %></dd>
+                  <dd>&nbsp;&nbsp;<%= link_to project.name.titleize, "/v2_projects/#{project.id}" %></dd>
                   <dt>Instances:</dt>
-                  <% if deployment.instance_id %>
-                    <% instance = Instance.find(deployment.instance_id) if Instance.exists?(deployment.instance_id)%>
-                    <% Instance.exists?(deployment.instance_id) ? instance = Instance.find(deployment.instance_id) : instance = nil %>
+                  <% if deployment.v2_instance_id %>
+                    <% instance = V2Instance.find(deployment.v2_instance_id) if V2Instance.exists?(deployment.v2_instance_id)%>
+                    <% V2Instance.exists?(deployment.v2_instance_id) ? instance = V2Instance.find(deployment.v2_instance_id) : instance = nil %>
                     <% if instance %>
                       <dd>&nbsp;&nbsp;<%= instance.name %> with id #<%= instance.id %></dd>
                     <% else %>
-                      <dd>&nbsp;&nbsp;Id #<% deployment.instance_id %> (No longer exists)</dd>
+                      <dd>&nbsp;&nbsp;Id #<% deployment.v2_instance_id %> (No longer exists)</dd>
                     <% end %>
                   <% else %>
                     <dd>&nbsp;&nbsp;All</dd>
@@ -145,7 +145,7 @@
           <% lab = Lab.find(project.lab_id) %>
           <tr>
             <td><%= project.id %></td>
-            <td><%= link_to project.name.titleize, "/projects/#{project.id}" %></td>
+            <td><%= link_to project.name.titleize, "/v2_projects/#{project.id}" %></td>
             <td><%= link_to lab.name, "/labs/#{lab.id}" %></td>
             <td><%= lab.geo %></td>
             <td id="checked_out_by_<%= project.id %>">
@@ -158,13 +158,13 @@
             <td id="checked_out_since_<%= project.id %>"><%= project.checked_out_at %></td>
             <td>
               <% if project.checked_out? %>
-                <a class="btn btn-warning uncheck_out_button" project_id="<%= project.id %>">Uncheck-out</a>
-                <a class="btn btn-success check_out_button" project_id="<%= project.id %>" style="display:none">Check out</a>
+                <a class="btn btn-warning uncheck_out_button" v2_project_id="<%= project.id %>">Uncheck-out</a>
+                <a class="btn btn-success check_out_button" v2_project_id="<%= project.id %>" style="display:none">Check out</a>
               <% else %>
-                <a class="btn btn-warning uncheck_out_button" project_id="<%= project.id %>" style="display:none">Uncheck-out</a>
-                <a class="btn btn-success check_out_button" project_id="<%= project.id %>">Check out</a>
+                <a class="btn btn-warning uncheck_out_button" v2_project_id="<%= project.id %>" style="display:none">Uncheck-out</a>
+                <a class="btn btn-success check_out_button" v2_project_id="<%= project.id %>">Check out</a>
               <% end %>
-              <a href="/projects/<%= project.id %>" class="btn btn-danger" data-method="delete" data-confirm="Are you sure you want to delete <%= project.name.titleize %>?">Delete</a>
+              <a href="/v2_projects/<%= project.id %>" class="btn btn-danger" data-method="delete" data-confirm="Are you sure you want to delete <%= project.name.titleize %>?">Delete</a>
             </td>
           </tr>
         <% end %>

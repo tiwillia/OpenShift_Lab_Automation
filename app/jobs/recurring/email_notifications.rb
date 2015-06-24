@@ -6,7 +6,7 @@ module Recurring
     timezone 'US/Pacific'
     def perform
       # Check for inactive projects and send emails to users.
-      Project.all.each do |project|
+      V2Project.all.each do |project|
         if project.inactive?
           if project.inactive_reminder_sent_at and (Date.today - project.inactive_reminder_sent_at) <= 7
             Rails.logger.info "Not sending reminder email for project #{project.name} because a reminder was sent less than 7 days ago"

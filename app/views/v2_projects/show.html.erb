@@ -1,4 +1,4 @@
-<div class="row" id="project_page_header" project_id="<%= @project.id %>">
+<div class="row" id="project_page_header" v2_project_id="<%= @project.id %>">
   <div class="col-md-12">
     <%# Moved page header to a seperate partial, as it continues to grow in size and complexity %>
     <%= render "page_header", :deployment_status => @deployment_status, :deployment => @most_recent_deployment, :@project => @project %>
@@ -30,10 +30,10 @@
       </thead>  
       <tbody>
         <% verified_user = current_user %>
-        <% instances = @project.instances.sort_by{|i| i.name } %>
-        <span class="instance_id_list" instance_ids="<%= instances.map {|i| i.id}.join(",") %>"></span>
+        <% instances = @project.v2_instances.sort_by{|i| i.name } %>
+        <span class="v2_instance_id_list" v2_instance_ids="<%= instances.map {|i| i.id}.join(",") %>"></span>
         <% instances.each do |inst| %>
-          <tr class="instance_row" instance_id="<%= inst.id %>">
+          <tr class="instance_row" v2_instance_id="<%= inst.id %>">
             <% if logged_in? %>
               <td class="text-center">
                 <a href="#console_row_<%= inst.id %>" class="console_link" id="console_link_<%= inst.id %>" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span>
@@ -56,22 +56,22 @@
             <td><%= inst.gear_size if !inst.no_openshift and inst.types.include?("node") %></td>
             <td>
               <% if inst.reachable %>
-                <a class="btn btn-default reachable_button pull-right" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
-                  <div class="reachable_button_content" instance_id="<%= inst.id %>">
+                <a class="btn btn-default reachable_button pull-right" v2_instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" v2_instance_id="<%= inst.id %>">
                     <span class="glyphicon glyphicon-ok" ></span> 
                     Check
                   </div>
                 </a>
               <% elsif inst.reachable == false && !inst.last_checked_reachable.nil? %>
-                <a class="btn btn-default reachable_button pull-right" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
-                  <div class="reachable_button_content" instance_id="<%= inst.id %>">
+                <a class="btn btn-default reachable_button pull-right" v2_instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" v2_instance_id="<%= inst.id %>">
                     <span class="glyphicon glyphicon-remove"></span> 
                     Check
                   </div>
                 </a>
               <% else %>
-                <a class="btn btn-default reachable_button pull-right" instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
-                  <div class="reachable_button_content" instance_id="<%= inst.id %>">
+                <a class="btn btn-default reachable_button pull-right" v2_instance_id="<%= inst.id %>" title="Last checked: <%= inst.last_checked_reachable ? inst.last_checked_reachable : 'Never' %>">
+                  <div class="reachable_button_content" v2_instance_id="<%= inst.id %>">
                     Check
                   </div>
                 </a>
@@ -82,12 +82,12 @@
               <div class="dropdown">
                 <a data-toggle="dropdown" href="#" class="btn btn-default"><span class="glyphicon glyphicon-align-justify"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                  <li><a href='/projects/<%= @project.id %>/deploy_one?instance_id=<%= inst.id %>'>Deploy</a></li>
-                  <li><a href="/instances/<%= inst.id %>/undeploy" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
-                  <li><a href="" data-toggle="modal" data-target="#instanceLog" class="instanceLogButton" instance_id="<%= inst.id %>">Install log</a></li>
+                  <li><a href='/v2_projects/<%= @project.id %>/deploy_one?v2_instance_id=<%= inst.id %>'>Deploy</a></li>
+                  <li><a href="/v2_instances/<%= inst.id %>/undeploy" data-confirm="Are you sure you want to undeploy <%= inst.fqdn %>?">Undeploy</a></li>
+                  <li><a href="" data-toggle="modal" data-target="#instanceLog" class="instanceLogButton" v2_instance_id="<%= inst.id %>">Install log</a></li>
                 <hr />
                 <li><a href="#" data-toggle="modal" data-target="#editInstance<%= inst.id %>">Edit</a></li>
-                <li><a href="/instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove from project</a></li>
+                <li><a href="/v2_instances/<%= inst.id %>" data-method="delete" data-confirm="Are you sure you want to delete <%= inst.fqdn %>?">Remove from project</a></li>
                 </ul>
               </div>
               <% end %>
@@ -105,17 +105,17 @@
   <div class="col-md-4">
     <div class="btn-group">
       <% if not @project.all_deployed? %>
-        <a href="/projects/<%= @project.id %>/deploy" class="btn btn-success">Deploy All</a>
+        <a href="/v2_projects/<%= @project.id %>/deploy" class="btn btn-success">Deploy All</a>
       <% end %>
       <% if not @project.none_deployed? %>
-        <a href="/projects/<%= @project.id %>/undeploy" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
-        <a href="/projects/<%= @project.id %>/redeploy" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
+        <a href="/v2_projects/<%= @project.id %>/undeploy" class="btn btn-danger" data-confirm="Are you sure you want to undeploy all <%= @project.name%> instances?">Undeploy All</a>
+        <a href="/v2_projects/<%= @project.id %>/redeploy" class="btn btn-warning" data-confirm="Are you sure you want to redeploy all <%= @project.name %> instances?">Redeploy All</a>
       <% end %>
     </div>
   </div>
   <div class="col-md-1"></div>
   <div class="col-md-2">
-    <a class="btn btn-default reachable_button_all" instance_ids="<%= @instance_id_list.join(',') %>" >Check all for reachability</a>
+    <a class="btn btn-default reachable_button_all" v2_instance_ids="<%= @v2_instance_id_list.join(',') %>" >Check all for reachability</a>
   </div>
   <div class="col-md-2">
     <a class="btn btn-default" data-toggle="modal" data-target="#newTemplate" id="new_template_button">
@@ -212,21 +212,21 @@
         </div>
         <div class="modal-body">
           This will remove any instances in this tenant that were created on the openstack backend inside and outside of this application. All instances in this project will be un-depoyed.<br>
-          There are <b><%= @project.instances.count %></b> instances in this application.<br>
+          There are <b><%= @project.v2_instances.count %></b> instances in this application.<br>
           There are <b><%= @limits[:used_instances] %></b> instances on the openstack backend.
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <a href="/projects/<%= @project.id %>/destroy_on_backend" class="btn btn-danger">Destroy all</a>
+          <a href="/v2_projects/<%= @project.id %>/destroy_on_backend" class="btn btn-danger">Destroy all</a>
         </div>
       </div>
     </div>
   </div>
-  <%= render :template => "instances/new", :locals => {:project_id => @project.id} %>
-  <%= render :template => "templates/new", :locals => {:project_id => @project.id, :template => @template} %>
-  <%= render :template => "instances/install_log" %>
+  <%= render :template => "v2_instances/new", :locals => {:v2_project_id => @project.id} %>
+  <%= render :template => "templates/new", :locals => {:v2_project_id => @project.id, :template => @template} %>
+  <%= render :template => "v2_instances/install_log" %>
 <% end %>
-<% @project.instances.each do |inst| %>
+<% @project.v2_instances.each do |inst| %>
   <% next if inst.id.nil? %>
-  <%= render :template => "instances/edit", :locals => {:project_id => @project.id, :@instance => inst} %>
+  <%= render :template => "v2_instances/edit", :locals => {:v2_project_id => @project.id, :@instance => inst} %>
 <% end %>

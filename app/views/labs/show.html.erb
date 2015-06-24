@@ -39,7 +39,7 @@
   </div>
 </div>
 <div class="panel-group" id="accordian">
-  <% @lab.projects.each do |project| %>
+  <% @lab.v2_projects.each do |project| %>
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
@@ -50,17 +50,17 @@
               </a>
             </div>
             <div class="col-md-6">
-              <p class="text-right"><a href="/projects/<%= project.id %>" class="btn btn-default">View Project Page</a></p>
+              <p class="text-right"><a href="/v2_projects/<%= project.id %>" class="btn btn-default">View Project Page</a></p>
             </div>
           </div>
         </h4>
       </div>
       <div id="collapse<%= project.id %>" class="panel-collapse collapse">
         <div class="panel-body">
-          <p class="lead">Instance count: <%= project.instances.count %></p>
+          <p class="lead">Instance count: <%= project.v2_instances.count %></p>
         </div>
       </div>
     </div>
   <% end %>
 </div>
-<%= render :template => "projects/new", :locals => {:@project => Project.new, :lab_id => @lab.id} %>
+<%= render :template => "v2_projects/new", :locals => {:@project => V2Project.new, :lab_id => @lab.id} %>

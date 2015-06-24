@@ -1,7 +1,7 @@
-class Instance < ActiveRecord::Base
+class V2Instance < ActiveRecord::Base
   # attr_accessible :title, :body
 
-  belongs_to :project
+  belongs_to :v2_project
 
   serialize :types
   serialize :install_variables
@@ -9,7 +9,7 @@ class Instance < ActiveRecord::Base
   before_save :determine_fqdn
   before_save :ensure_types_exists
 
-  validates :name, :floating_ip, :root_password, :flavor, :image, :project, presence: true
+  validates :name, :floating_ip, :root_password, :flavor, :image, :v2_project, presence: true
   validates :root_password, length: { minimum: 3 }
 
   # Returns true or false
@@ -36,7 +36,7 @@ class Instance < ActiveRecord::Base
   end
 
   def deployed?
-    p = Project.find(self.project_id)
+    p = V2Project.find(self.v2_project_id)
     c = p.get_connection
 
     servers = c.servers.map {|s| s[:name]} 
@@ -64,7 +64,7 @@ class Instance < ActiveRecord::Base
 
   def get_console
     if self.uuid
-      p = Project.find(self.project_id)
+      p = V2Project.find(self.v2_project_id)
       c = p.get_connection
       begin
         console_url = c.get_console({:server_id => self.uuid})
@@ -79,7 +79,7 @@ class Instance < ActiveRecord::Base
 
   def deploy(deployment_id)
     # Get the connection and instance
-    p = Project.find(self.project_id)
+    p = V2Project.find(self.v2_project_id)
     c = p.get_connection
     q = p.get_connection("network")
 
@@ -159,7 +159,7 @@ class Instance < ActiveRecord::Base
   end
 
   def undeploy
-    p = Project.find(self.project_id)
+    p = V2Project.find(self.v2_project_id)
     c = p.get_connection
     s = c.servers.select {|s| s[:id] == self.uuid}.first
     if s.nil?
@@ -217,7 +217,7 @@ runcmd:
 - subscription-manager repos --disable=* &>> /root/.rhsm_output
 - subscription-manager repos --enable=rhel-6-server-rpms &>> /root/.rhsm_output
 - echo "$(date) - Enabled repositories = rhel-6-server-rpms" >> /root/.install_log
-- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
+- curl #{CONFIG[:URL]}/v2_instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
 - echo "$(date) - Called to labs application to generate and download the installation handler script." >> /root/.install_log
 - sh /root/.install_handler.sh
 - echo "$(date) - Deployment completed." >> /root/.install_log
@@ -227,7 +227,7 @@ EOF
   # Generate cloudinit details 
   def cloud_init(deployment_id)
 
-    ose_version = Project.find(self.project_id).ose_version
+    ose_version = V2Project.find(self.v2_project_id).ose_version
 
     # Establish the base
     cinit=<<EOF
@@ -265,7 +265,7 @@ runcmd:
 - chmod 0600 /root/.ssh/id_rsa
 - chmod 0600 /root/.ssh/id_rsa.pub
 - mkdir -p /etc/pki/product
-- curl #{CONFIG[:URL]}/instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
+- curl #{CONFIG[:URL]}/v2_instances/#{self.id}/callback_script?deployment_id=#{deployment_id} > /root/.install_handler.sh
 - echo "$(date) - Called to labs application to generate and download the installation handler script." >> /root/.install_log
 - exit_code=255; while [ $exit_code != 0 ]; do echo "$(date) - Attempting to register with RHSM. Previous exit code  $exit_code" >> /root/.install_log; subscription-manager register --force --username=#{CONFIG[:rhsm_username]} --password=#{CONFIG[:rhsm_password]} --name=#{self.safe_name} &>> /root/.rhsm_output; exit_code=$?; done
 - echo "$(date) - Registered via RHSM with username #{CONFIG[:rhsm_username]} and server name #{self.safe_name}." >> /root/.install_log
@@ -423,7 +423,7 @@ private
 
   # Create FQDN
   def determine_fqdn
-    fqdn = self.safe_name + "." + Project.find(self.project_id).domain
+    fqdn = self.safe_name + "." + V2Project.find(self.v2_project_id).domain
     self.fqdn = fqdn
   end
 
@@ -475,7 +475,7 @@ private
       # CONF_NODE_PROFILE
 
     variables = Hash.new
-    project = Project.find(self.project_id)
+    project = V2Project.find(self.v2_project_id)
     project_details = project.details
     ose_version = project.ose_version
     return nil if project_details.nil?

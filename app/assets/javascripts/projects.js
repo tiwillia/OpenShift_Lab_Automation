@@ -4,7 +4,7 @@
 
 $(document).ready(function() {
 
-  if ($('.instance_id_list').length) {
+  if ($('.v2_instance_id_list').length) {
     // This will be run right after the page is loaded
     $('#instanceLogTextArea').toggle();
     check_all();
@@ -28,19 +28,19 @@ $(document).ready(function() {
       };
     });
     console.log("Checking all instance deployed statuses...");
-    var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
+    var inst_id_list = $('.v2_instance_id_list').attr("v2_instance_ids").split(",");
     var proj_id = $('#project_page_header').attr("project_id");
     for (i = 0; i < inst_id_list.length; i++) {
       inst_id = inst_id_list[i];
       $('#deployed_glyph_' + inst_id).replaceWith('<img src="/assets/ajax-loader.gif" title="Working..." id="deployed_glyph_' + inst_id + '" />');
     };
-    $.getJSON("/projects/" + proj_id + "/check_deployed", function(result) {
+    $.getJSON("/v2_projects/" + proj_id + "/check_deployed", function(result) {
       console.log("Got result for project deployment check.");
       for (i = 0; i < inst_id_list.length; i++) {
         inst_id = inst_id_list[i];
         if (result[inst_id] === "deployed") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-ok" id="deployed_glyph_' + inst_id + '"></span>');
-          var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          var row=$('.instance_row[v2_instance_id="' + inst_id + '"]');
           row.css("color", "#000000");
           if (row.hasClass("bg-info") || row.hasClass("bg-danger")) {
             console.log("row is:" + row);
@@ -53,7 +53,7 @@ $(document).ready(function() {
           $('#console_link_' + inst_id).css('pointer-events', 'auto');
         } else if (result[inst_id] === "undeployed") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span class="glyphicon glyphicon-remove" id="deployed_glyph_' + inst_id + '"></span>');
-          var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          var row=$('.instance_row[v2_instance_id="' + inst_id + '"]');
           row.css("color", "#000000");
           if (row.hasClass("bg-success") || row.hasClass("bg-info")) {
             row.removeClass("bg-success bg-info");
@@ -65,7 +65,7 @@ $(document).ready(function() {
           $('#console_link_' + inst_id).css('pointer-events', 'none');
         } else if (result[inst_id] === "in_progress") {
           $('#deployed_glyph_' + inst_id).replaceWith('<span id="deployed_glyph_' + inst_id + '">In Progress</span>');
-          var row=$('.instance_row[instance_id="' + inst_id + '"]');
+          var row=$('.instance_row[v2_instance_id="' + inst_id + '"]');
           row.css("color", "#000000");
           if (row.hasClass("bg-success") || row.hasClass("bg-danger")) {
             row.removeClass("bg-success bg-danger");
@@ -82,27 +82,27 @@ $(document).ready(function() {
 
   // Check to see if an instance is reachable via ssh, replace 'Reachable' entry in instance table
   function reachable_check(inst_id) {
-    $('.reachable_button_content[instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" instance_id="' + inst_id + '"><img src="/assets/ajax-loader.gif" title="Working..." /></div>')
+    $('.reachable_button_content[v2_instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" v2_instance_id="' + inst_id + '"><img src="/assets/ajax-loader.gif" title="Working..." /></div>')
     console.log("Checking reachability for instance id:" + inst_id);
-    $.getJSON("/instances/" + inst_id + "/reachable", function(result){
+    $.getJSON("/v2_instances/" + inst_id + "/reachable", function(result){
       console.log("Got result for " + inst_id + ": " + result.reachable);
       if (result.reachable === "true") {
-        $('.reachable_button_content[instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" instance_id="' + inst_id + '"><span class="text-success glyphicon glyphicon-ok" title="Success!"></span></div>')
+        $('.reachable_button_content[v2_instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" v2_instance_id="' + inst_id + '"><span class="text-success glyphicon glyphicon-ok" title="Success!"></span></div>')
       } else {
-        $('.reachable_button_content[instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" instance_id="' + inst_id + '"><span class="text-danger glyphicon glyphicon-remove" title="' + result.error + '"></span></div>')
+        $('.reachable_button_content[v2_instance_id="' + inst_id + '"]').replaceWith('<div class="reachable_button_content" v2_instance_id="' + inst_id + '"><span class="text-danger glyphicon glyphicon-remove" title="' + result.error + '"></span></div>')
       }
     }); 
   }
 
   // Check one for reachability
   $('.reachable_button').click(function() {
-    var inst_id = $(this).attr("instance_id");
+    var inst_id = $(this).attr("v2_instance_id");
     reachable_check(inst_id);
   });
 
   // Check all for reachability
   $('.reachable_button_all').click(function(){
-    var inst_id_list = $('.instance_id_list').attr("instance_ids").split(",");
+    var inst_id_list = $('.v2_instance_id_list').attr("v2_instance_ids").split(",");
     for (i = 0; i < inst_id_list.length; i++) {
       reachable_check(inst_id_list[i]);
     }
@@ -135,23 +135,23 @@ $(document).ready(function() {
 
   // Same as above, just for the edit instance form
   $('.edit_instance_check_box_no_openshift').change(function(){
-    var inst_id = $(this).attr("instance_id");
+    var inst_id = $(this).attr("v2_instance_id");
     console.log(inst_id);
     if (this.checked) {
-      $('.edit_instance_check_boxes[instance_id=' + inst_id  + ']').prop('checked', false); 
-      $('.edit_instance_check_boxes[instance_id=' + inst_id  + ']').prop('disabled', true); 
-      $('.edit_instance_gear_size[instance_id=' + inst_id  + ']').prop('disabled', true); 
+      $('.edit_instance_check_boxes[v2_instance_id=' + inst_id  + ']').prop('checked', false); 
+      $('.edit_instance_check_boxes[v2_instance_id=' + inst_id  + ']').prop('disabled', true); 
+      $('.edit_instance_gear_size[v2_instance_id=' + inst_id  + ']').prop('disabled', true); 
     } else if (this.checked === false) {
-      $('.edit_instance_check_boxes[instance_id=' + inst_id  + ']').prop('disabled', false); 
+      $('.edit_instance_check_boxes[v2_instance_id=' + inst_id  + ']').prop('disabled', false); 
     };
   });
 
   $('.edit_instance_check_box_node').change(function(){
-    var inst_id = $(this).attr("instance_id");
+    var inst_id = $(this).attr("v2_instance_id");
     if (this.checked) {
-      $('.edit_instance_gear_size[instance_id=' + inst_id  + ']').prop('disabled', false); 
+      $('.edit_instance_gear_size[v2_instance_id=' + inst_id  + ']').prop('disabled', false); 
     } else if (this.checked === false) {
-      $('.edit_instance_gear_size[instance_id=' + inst_id  + ']').prop('disabled', true); 
+      $('.edit_instance_gear_size[v2_instance_id=' + inst_id  + ']').prop('disabled', true); 
     };
   });
 
@@ -169,9 +169,9 @@ $(document).ready(function() {
       $('#instanceLogTextArea').val("");
       $('#instanceLogTextArea').hide();
       $('#instanceLogLoading').show();
-    var inst_id = $(this).attr("instance_id");
+    var inst_id = $(this).attr("v2_instance_id");
     console.log("Instance log button pressed for instance " + inst_id);
-    $.getJSON("/instances/" + inst_id + "/install_log", function(result){
+    $.getJSON("/v2_instances/" + inst_id + "/install_log", function(result){
       var textarea = $('#instanceLogTextArea')
       if (result.result == "success") {
         textarea.val(result.log_text);
@@ -203,7 +203,7 @@ $(document).ready(function() {
 
     $.ajax({
       type: "GET",
-      url: "/instances/" + inst_id + "/console",
+      url: "/v2_instances/" + inst_id + "/console",
       async: false,
       //dataType: "json",
       success: function(response, textStatus, jqXHR) {
@@ -226,7 +226,7 @@ $(document).ready(function() {
   }); // end  console_link listener
   
 
-  // take two parameters: instance_id and console_url
+  // take two parameters: v2_instance_id and console_url
   function open_console(inst_id, console_url){
     var divID = "#console_row_" + inst_id;
     var theRow = $(divID);

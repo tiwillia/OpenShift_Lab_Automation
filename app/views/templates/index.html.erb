@@ -53,11 +53,11 @@
             <% else %>
               <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
               <%= f.hidden_field :template_id, :value => t.id %>
-              <%= f.label :project_id, "Project: ", :class => "control-label" %><br>
+              <%= f.label :v2_project_id, "Project: ", :class => "control-label" %><br>
               <% if current_user and current_user.admin? %>
-                <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), {}, {:class => "form-control"} %>
+                <%= f.select :v2_project_id, options_from_collection_for_select(V2Project.all, :id, :name), {}, {:class => "form-control"} %>
               <% else %>
-                <%= f.select :project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), {}, {:class => "form-control"} %>
+                <%= f.select :v2_project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), {}, {:class => "form-control"} %>
               <% end %><br>
               <span class="pull-right">
                 <%= f.submit "Apply", :data => {:confirm => "This will wipe the current environment setup, are you sure you want to apply this template?"}, :class => "btn btn-sm btn-primary", :id => "apply_template_button_#{t.id}" %>
@@ -129,11 +129,11 @@
             <% else %>
               <%= form_for t, :remote => true, :html => {:class => "apply_template_form", :role => "form", :method => "", :id => "apply_template_#{t.id}"} do |f| %>
               <%= f.hidden_field :template_id, :value => t.id %>
-              <%= f.label :project_id, "Project: ", :class => "control-label" %>
+              <%= f.label :v2_project_id, "Project: ", :class => "control-label" %>
               <% if current_user and current_user.admin? %>
-                <%= f.select :project_id, options_from_collection_for_select(Project.all, :id, :name), :class => "form-control" %>
+                <%= f.select :v2_project_id, options_from_collection_for_select(V2Project.all, :id, :name), :class => "form-control" %>
               <% else %>
-                <%= f.select :project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), :class => "form-control" %>
+                <%= f.select :v2_project_id, options_from_collection_for_select(@user_checked_out_projects, :id, :name), :class => "form-control" %>
               <% end %>
               <%= f.submit "Apply", :data => {:confirm => "This will wipe the current environment setup, are you sure you want to apply this template?"}, :class => "btn btn-sm btn-primary", :id => "apply_template_button_#{t.id}" %>
               <% end %>

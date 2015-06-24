@@ -67,7 +67,7 @@ $(document).ready(function() {
     var element = $(this)
     var project_id = element.attr("project_id");
     console.log("checking out project " + project_id);
-    $.getJSON("/projects/" + project_id + "/check_out", function(result) {
+    $.getJSON("/v2_projects/" + project_id + "/check_out", function(result) {
       if (result["success"] === true) {
         console.log("Successfully checked out project");
         element.hide();
@@ -84,7 +84,7 @@ $(document).ready(function() {
     var element = $(this)
     var project_id = element.attr("project_id");
     console.log("unchecking out project " + project_id);
-    $.getJSON("/projects/" + project_id + "/uncheck_out", function(result) {
+    $.getJSON("/v2_projects/" + project_id + "/uncheck_out", function(result) {
       if (result["success"] === true) {
         console.log("Successfully unchecked out project");
         element.hide();

@@ -18,14 +18,14 @@
               <% ["broker","named","datastore", "activemq", "node"].each do |inst_type| %>
               <label class="checkbox-inline" for="instance">
                 <% if inst_type == "node" %>
-                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes edit_instance_check_box_node", :instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
+                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes edit_instance_check_box_node", :v2_instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
                 <% else %> 
-                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes", :instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
+                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes", :v2_instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
                 <% end %>
               </label>
               <% end %><br>
               <label class="checkbox-inline" for="instance"> 
-                <%= f.check_box :no_openshift, {:class => "edit_instance_check_box_no_openshift", :instance_id => @instance.id}, true, false %>Blank host (no OpenShift)
+                <%= f.check_box :no_openshift, {:class => "edit_instance_check_box_no_openshift", :v2_instance_id => @instance.id}, true, false %>Blank host (no OpenShift)
               </label> 
             </div>
             <div class="form-group">
@@ -48,16 +48,16 @@
             <div class="form-group">
               <%= f.label "Gear Size (Node only)", :class => "control-label" %>
               <% if @instance.types.include?("node")%>
-                <%= f.select :gear_size, options_for_select(@gear_sizes, @instance.gear_size), {}, {:class => "form-control edit_instance_gear_size", :instance_id => @instance.id} %>
+                <%= f.select :gear_size, options_for_select(@gear_sizes, @instance.gear_size), {}, {:class => "form-control edit_instance_gear_size", :v2_instance_id => @instance.id} %>
               <% else %>
-                  <%= f.select :gear_size, options_for_select(@gear_sizes, @instance.gear_size), {}, {:class => "form-control edit_instance_gear_size", :disabled => true, :instance_id => @instance.id} %>
+                  <%= f.select :gear_size, options_for_select(@gear_sizes, @instance.gear_size), {}, {:class => "form-control edit_instance_gear_size", :disabled => true, :v2_instance_id => @instance.id} %>
               <% end %>
             </div>
           </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <%= f.hidden_field :project_id, :value => project_id %>
+          <%= f.hidden_field :v2_project_id, :value => v2_project_id %>
           <%= f.submit 'Submit', :class => "btn btn-primary" %>
         <% end %>
       </div>

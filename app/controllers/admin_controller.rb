@@ -6,7 +6,7 @@ class AdminController < ApplicationController
     deployments = Deployment.all 
     @deployments_active = deployments.select {|d| d.in_progress?}.sort_by {|d| d.started_time}
     @deployments_inactive = deployments.select {|d| !d.in_progress?}.sort_by {|d| d.completed_time}.reverse
-    @projects = Project.all
+    @projects = V2Project.all
     @users = User.all
   end
 

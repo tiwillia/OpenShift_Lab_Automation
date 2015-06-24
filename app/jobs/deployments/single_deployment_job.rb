@@ -27,7 +27,7 @@ class SingleDeploymentJob < Struct.new(:deployment_id)
     update_status("ERROR Job failed - Rolling back deployment")
     deployment = Deployment.find(deployment_id)
     deployment.dlog("Rolling back deployment")
-    instance = Instance.find(deployment.instance_id)
+    instance = Instance.find(deployment.v2_instance_id)
     instance.undeploy
     deployment.finish
     deployment.update_status("Deployment failed")

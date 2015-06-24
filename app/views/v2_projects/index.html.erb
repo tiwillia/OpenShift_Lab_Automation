@@ -21,15 +21,15 @@
   <tbody>
   <% @projects.each do |project| %>
     <tr>
-      <td><a href="/projects/<%= project.id %>" class="btn btn-default">View</a></td>
+      <td><a href="/v2_projects/<%= project.id %>" class="btn btn-default">View</a></td>
       <td><%= Lab.find(project.lab_id).geo %></td>
       <td><%= project.ose_version %></td>
       <td><b><%= project.name %></b></td>
       <td><%= project.domain %></td>
-      <td><%= project.instances.count %></td>
+      <td><%= project.v2_instances.count %></td>
       <td><% if project.checked_out? %><%= User.find(project.checked_out_by).name %><% else %><span class="text-success">Nobody!</span><% end %></td>
     </tr>
   <% end %>
   </tbody>
 </table>
-<%= render :template => 'projects/new', :locals => {:@project => Project.new, :lab_id => Lab.all.first.id}  %>
+<%= render :template => 'v2_projects/new', :locals => {:@project => V2Project.new, :lab_id => Lab.all.first.id}  %>

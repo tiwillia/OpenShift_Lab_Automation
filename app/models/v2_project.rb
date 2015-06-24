@@ -1,10 +1,10 @@
-class Project < ActiveRecord::Base
+class V2Project < ActiveRecord::Base
   # attr_accessible :title, :body
  
   require 'base64'
  
   belongs_to :lab
-  has_many :instances
+  has_many :v2_instances
   has_many :deployments
 
   validates :name,:domain,:lab,:ose_version, presence: true
@@ -24,10 +24,10 @@ class Project < ActiveRecord::Base
     end
   end
  
-  def deploy_one(instance_id, user_id)
-    deployment = self.deployments.new(:action => "single_deployment", :instance_id => instance_id, :complete => false, :started_by => user_id)
+  def deploy_one(v2_instance_id, user_id)
+    deployment = self.deployments.new(:action => "single_deployment", :v2_instance_id => v2_instance_id, :complete => false, :started_by => user_id)
     if deployment.save
-      Instance.find(instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
+      V2Instance.find(v2_instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
       deployment.begin
       return true
     else
@@ -56,7 +56,7 @@ class Project < ActiveRecord::Base
         return false
       end
     end
-    self.instances.each do |i|
+    self.v2_instances.each do |i|
       if not i.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
         Rails.logger.error "Unable to update instance after destroying on backend: #{i.inspect}"
         return false
@@ -85,12 +85,12 @@ class Project < ActiveRecord::Base
   end
 
   # This checks all instances and returns a hash in the format:
-  #   {instance_id => ["deployed"|"in_progress"|"undeployed"]}
+  #   {v2_instance_id => ["deployed"|"in_progress"|"undeployed"]}
   def check_all_deployed
     c = self.get_connection
     servers = c.servers.map {|s| s[:id]}
     deployment_hash = Hash.new
-    self.instances.each do |i|
+    self.v2_instances.each do |i|
       if servers.include?(i.uuid) 
         if i.deployment_completed && !i.deployment_started
           deployment_hash[i.id] = "deployed"
@@ -106,7 +106,7 @@ class Project < ActiveRecord::Base
 
   def all_deployed?
     all_deployed = true
-    self.instances.each do |i|
+    self.v2_instances.each do |i|
       next if i.deployment_completed && !i.deployment_started
       all_deployed = false
       break
@@ -116,7 +116,7 @@ class Project < ActiveRecord::Base
 
   def none_deployed?
     none_deployed = true
-    self.instances.each do |i|
+    self.v2_instances.each do |i|
       next if !i.deployment_completed && !i.deployment_started
       none_deployed = false
       break
@@ -168,12 +168,12 @@ class Project < ActiveRecord::Base
   def apply_template(content, assign_floating_ips=true)
     begin
       raise "Could not destroy all backend instances" unless self.destroy_all
-      self.instances.each {|i| i.delete}
+      self.v2_instances.each {|i| i.delete}
       self.update_attributes(content[:project_details])
       floating_ip_list = self.floating_ips if assign_floating_ips
       content["instances"].each do |i|
-        new_inst = self.instances.build(i)
-        new_inst.project_id = self.id
+        new_inst = self.v2_instances.build(i)
+        new_inst.v2_project_id = self.id
         new_inst.floating_ip = floating_ip_list.pop 
         new_inst.save
       end
@@ -198,7 +198,7 @@ class Project < ActiveRecord::Base
     broker_hostname = ""
     node_hostname = ""
 
-    self.instances.each do |inst|
+    self.v2_instances.each do |inst|
 
       if inst.types.include?("named")
         named_instance = inst
@@ -226,7 +226,7 @@ class Project < ActiveRecord::Base
       end
     end
 
-    self.instances.first
+    self.v2_instances.first
 
     return {:named_ip => named_ip,
             :named_hostname => named_hostname,
@@ -253,12 +253,12 @@ class Project < ActiveRecord::Base
   end
 
   def available_floating_ips
-    self.floating_ips - self.instances.map {|i| i.floating_ip }
+    self.floating_ips - self.v2_instances.map {|i| i.floating_ip }
   end
 
   def valid_gear_sizes
     gear_sizes = []
-    self.instances.each do |i|
+    self.v2_instances.each do |i|
       if i.types.include? "node"
         gear_sizes << i.gear_size
       end
@@ -276,7 +276,7 @@ class Project < ActiveRecord::Base
     end
 
     types = Array.new
-    self.instances.each do |inst|
+    self.v2_instances.each do |inst|
       types << inst.types
     end
     types.flatten!
@@ -291,8 +291,8 @@ class Project < ActiveRecord::Base
       return false, "No gear sizes are defined"
     end
     limits = self.limits
-    if limits[:max_instances] < self.instances.count
-      return false, "There are more #{self.instances.count - limits[:max_instances]} more instances than the project limit of \"#{limits[:max_instances]}\" allows."
+    if limits[:max_instances] < self.v2_instances.count
+      return false, "There are more #{self.v2_instances.count - limits[:max_instances]} more instances than the project limit of \"#{limits[:max_instances]}\" allows."
     end
     types.uniq!
     types.compact!
@@ -650,8 +650,8 @@ EOF
 
     Rails.logger.info "Undeploying all instances for tenant #{self.name}..."
     # Delete all instances
-    if self.instances.count > 0
-      success = self.instances.each {|i| i.undeploy }
+    if self.v2_instances.count > 0
+      success = self.v2_instances.each {|i| i.undeploy }
       if success
         Rails.logger.info "Removed all instances for tenant #{self.name}."
       else
@@ -726,7 +726,7 @@ EOF
 
   def destroy_instances
     Rails.logger.info "Removing all instances in tenant"
-    self.instances.each do |inst| 
+    self.v2_instances.each do |inst| 
       begin
         inst.destroy
       rescue => e

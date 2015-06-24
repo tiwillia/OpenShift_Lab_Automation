@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150406183806) do
+ActiveRecord::Schema.define(:version => 20150624152734) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0, :null => false
@@ -30,7 +30,7 @@ ActiveRecord::Schema.define(:version => 20150406183806) do
   add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
 
   create_table "deployments", :force => true do |t|
-    t.integer  "project_id"
+    t.integer  "v2_project_id"
     t.integer  "started_by"
     t.text     "action"
     t.boolean  "complete",       :default => false
@@ -39,31 +39,9 @@ ActiveRecord::Schema.define(:version => 20150406183806) do
     t.datetime "completed_time"
     t.datetime "created_at",                        :null => false
     t.datetime "updated_at",                        :null => false
-    t.integer  "instance_id"
+    t.integer  "v2_instance_id"
     t.text     "status"
     t.integer  "job_id"
-  end
-
-  create_table "instances", :force => true do |t|
-    t.text     "name"
-    t.text     "types"
-    t.text     "floating_ip"
-    t.text     "internal_ip"
-    t.text     "fqdn"
-    t.integer  "project_id"
-    t.datetime "created_at",                                :null => false
-    t.datetime "updated_at",                                :null => false
-    t.text     "root_password"
-    t.text     "install_variables"
-    t.string   "gear_size"
-    t.string   "flavor"
-    t.string   "image"
-    t.boolean  "deployment_started",     :default => false
-    t.boolean  "deployment_completed",   :default => false
-    t.boolean  "reachable",              :default => false
-    t.datetime "last_checked_reachable"
-    t.boolean  "no_openshift",           :default => false
-    t.string   "uuid"
   end
 
   create_table "labs", :force => true do |t|
@@ -82,7 +60,50 @@ ActiveRecord::Schema.define(:version => 20150406183806) do
     t.text     "nameservers"
   end
 
-  create_table "projects", :force => true do |t|
+  create_table "templates", :force => true do |t|
+    t.integer  "v2_project_id"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
+    t.string   "name"
+    t.text     "description"
+    t.string   "file_location"
+    t.text     "content"
+    t.integer  "created_by"
+  end
+
+  create_table "users", :force => true do |t|
+    t.string   "first_name"
+    t.string   "last_name"
+    t.string   "username"
+    t.string   "email"
+    t.boolean  "admin",      :default => false
+    t.datetime "created_at",                    :null => false
+    t.datetime "updated_at",                    :null => false
+  end
+
+  create_table "v2_instances", :force => true do |t|
+    t.text     "name"
+    t.text     "types"
+    t.text     "floating_ip"
+    t.text     "internal_ip"
+    t.text     "fqdn"
+    t.integer  "v2_project_id"
+    t.datetime "created_at",                                :null => false
+    t.datetime "updated_at",                                :null => false
+    t.text     "root_password"
+    t.text     "install_variables"
+    t.string   "gear_size"
+    t.string   "flavor"
+    t.string   "image"
+    t.boolean  "deployment_started",     :default => false
+    t.boolean  "deployment_completed",   :default => false
+    t.boolean  "reachable",              :default => false
+    t.datetime "last_checked_reachable"
+    t.boolean  "no_openshift",           :default => false
+    t.string   "uuid"
+  end
+
+  create_table "v2_projects", :force => true do |t|
     t.text     "name"
     t.text     "network"
     t.text     "security_group"
@@ -111,27 +132,6 @@ ActiveRecord::Schema.define(:version => 20150406183806) do
     t.string   "uuid"
     t.boolean  "hidden",                    :default => false
     t.date     "inactive_reminder_sent_at"
-  end
-
-  create_table "templates", :force => true do |t|
-    t.integer  "project_id"
-    t.datetime "created_at",    :null => false
-    t.datetime "updated_at",    :null => false
-    t.string   "name"
-    t.text     "description"
-    t.string   "file_location"
-    t.text     "content"
-    t.integer  "created_by"
-  end
-
-  create_table "users", :force => true do |t|
-    t.string   "first_name"
-    t.string   "last_name"
-    t.string   "username"
-    t.string   "email"
-    t.boolean  "admin",      :default => false
-    t.datetime "created_at",                    :null => false
-    t.datetime "updated_at",                    :null => false
   end
 
 end

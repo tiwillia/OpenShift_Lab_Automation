@@ -18,7 +18,7 @@ before_filter :can_edit?, :only => [:destroy]
   def index
     current_user(true)
     @users_templates = Template.where(:created_by => current_user.id) unless not logged_in?
-    @user_checked_out_projects = Project.where(:checked_out_by => current_user.id)
+    @user_checked_out_projects = V2Project.where(:checked_out_by => current_user.id)
     @templates = Template.all
     @templates = @templates - @users_templates if defined? @users_templates
   end
@@ -39,14 +39,14 @@ before_filter :can_edit?, :only => [:destroy]
 
   def apply
     @template = Template.find(params[:id])
-    project = Project.find(template_params[:project_id])
+    project = V2Project.find(template_params[:v2_project_id])
     if project.apply_template(@template.content)
       respond_to do |format|
-        format.json { render :json => {:applied => "true", :project_id => project.id} }
+        format.json { render :json => {:applied => "true", :v2_project_id => project.id} }
       end
     else
       respond_to do |format|
-        format.json { render :json => {:applied => "false", :project_id => project.id} }
+        format.json { render :json => {:applied => "false", :v2_project_id => project.id} }
       end
     end
      
@@ -55,7 +55,7 @@ before_filter :can_edit?, :only => [:destroy]
 private
 
   def template_params
-    params.require(:template).permit(:name, :description, :project_id, :created_by)
+    params.require(:template).permit(:name, :description, :v2_project_id, :created_by)
   end
 
   def can_edit?

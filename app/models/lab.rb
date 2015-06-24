@@ -1,7 +1,7 @@
 class Lab < ActiveRecord::Base
   # attr_accessible :title, :body
 
-  has_many :projects
+  has_many :v2_projects
 
   validates :name,:controller,:username,:password,:api_url,:auth_tenant, :nameservers, presence: true
   validate :can_connect

@@ -1,17 +1,17 @@
 <div class="page-header">
   <h1>
     <% if admin? %>
-      <%= link_to "Destroy", "/projects/#{@project.id}", :method => :delete, :class => "btn btn-danger pull-right", :data=> {:confirm => "Are you sure you want to remove the #{@project.name} project?"} %></a>
+      <%= link_to "Destroy", "/v2_projects/#{@project.id}", :method => :delete, :class => "btn btn-danger pull-right", :data=> {:confirm => "Are you sure you want to remove the #{@project.name} project?"} %></a>
     <% end %>
     <% if current_user and ((current_user.id == @project.checked_out_by) || current_user.admin?) %>
-      <a href="/projects/<%= @project.id %>/edit" class="btn btn-info pull-right">Edit</a>
+      <a href="/v2_projects/<%= @project.id %>/edit" class="btn btn-info pull-right">Edit</a>
     <% end %> 
     <% if @project.checked_out? %>
       <% if current_user and ((current_user.id == @project.checked_out_by) || current_user.admin?) %>
-        <a href="/projects/<%= @project.id %>/uncheck_out" class="btn btn-warning pull-right">Un-check out</a>
+        <a href="/v2_projects/<%= @project.id %>/uncheck_out" class="btn btn-warning pull-right">Un-check out</a>
       <% end %> 
     <% else %>
-      <a href="/projects/<%= @project.id %>/check_out" class="btn btn-primary pull-right">Available for check out</a> 
+      <a href="/v2_projects/<%= @project.id %>/check_out" class="btn btn-primary pull-right">Available for check out</a> 
     <% end %>     
     <%= @project.name %> 
     <small>
