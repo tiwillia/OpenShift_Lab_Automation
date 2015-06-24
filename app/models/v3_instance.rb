@@ -5,6 +5,10 @@ class V3Instance < ActiveRecord::Base
 
   belongs_to :v3_project
 
+  def project
+    V3Project.find(self.v3_project_id)
+  end
+
   def deployed?
   end
 

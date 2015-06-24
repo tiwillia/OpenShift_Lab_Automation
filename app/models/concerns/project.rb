@@ -20,6 +20,18 @@ module Project
     end
   end
 
+  def deploy_one(instance_id, user_id)
+    #TODO need to suppor v3 single deployments
+    deployment = self.deployments.new(:action => "single_deployment", :v2_instance_id => instance_id, :complete => false, :started_by => user_id)
+    if deployment.save
+      find_instance(instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
+      deployment.begin
+      return true
+    else
+      return false
+    end
+  end
+
   def undeploy_all(user_id)
     deployment = self.deployments.new(:action => "tear_down", :complete => false, :started_by => user_id)
     if deployment.save
@@ -48,6 +60,67 @@ module Project
       false
     end
   end
+
+  # This checks all instances and returns a hash in the format:
+  #   {instance_id => ["deployed"|"in_progress"|"undeployed"]}
+  def check_all_deployed
+    c = self.get_connection
+    servers = c.servers.map {|s| s[:id]}
+    deployment_hash = Hash.new
+    instances.each do |i|
+      if servers.include?(i.uuid)
+        if i.deployment_completed && !i.deployment_started
+          deployment_hash[i.id] = "deployed"
+        else
+          deployment_hash[i.id] = "in_progress"
+        end
+      else
+        deployment_hash[i.id] = "undeployed"
+      end
+    end
+    deployment_hash
+  end
+
+  def all_deployed?
+    all_deployed = true
+    instances.each do |i|
+      next if i.deployment_completed && !i.deployment_started
+      all_deployed = false
+      break
+    end
+    all_deployed
+  end
+
+  def none_deployed?
+    none_deployed = true
+    instances.each do |i|
+      next if !i.deployment_completed && !i.deployment_started
+      none_deployed = false
+      break
+    end
+    none_deployed
+  end
+
+  # This will remove all instances in a project, whether they were created by
+  #   the project or not.
+  def destroy_all
+    c = self.get_connection
+    c.servers.each do |s|
+      server = c.get_server(s[:id])
+      if !server.delete!
+        Rails.logger.error "Unable to delete server on backend: #{server.inspect}"
+        return false
+      end
+    end
+    instances.each do |i|
+      if not i.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
+        Rails.logger.error "Unable to update instance after destroying on backend: #{i.inspect}"
+        return false
+      end
+    end
+    return true
+  end
+
 
   def check_out(user_id)
     if User.where(:id => user_id)
@@ -110,6 +183,11 @@ module Project
     c.floating_ips.each {|i| ip_a << i.ip}
     ip_a.sort_by {|ip| ip.split('.').last.to_i }
   end
+
+  def available_floating_ips
+    self.floating_ips - instances.map {|i| i.floating_ip }
+  end
+
 
   # Returns a hash with the following keys:
   # :max_isntances
@@ -343,6 +421,26 @@ module Project
       end
     end
     Rails.logger.info "All deployments removed"
+  end
+
+  def destroy_instances
+    Rails.logger.info "Removing all instances in tenant"
+    c = self.get_connection
+    c.servers.each do |s|
+      server = c.get_server(s[:id])
+      if !server.delete!
+        Rails.logger.error "Unable to delete server on backend: #{server.inspect}"
+        return false
+      end
+    end
+    instances.each do |inst|
+      begin
+        inst.destroy
+      rescue => e
+        Rails.logger.error "Could not remove instance #{inst.fqdn}: #{e.message}"
+      end
+    end
+    Rails.logger.info "All instances removed"
   end
 
 end

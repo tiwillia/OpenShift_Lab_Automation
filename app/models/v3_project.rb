@@ -5,6 +5,14 @@ class V3Project < ActiveRecord::Base
 
   has_many :v3_instances
 
+  def instances
+    self.v3_instances
+  end
+
+  def find_instance(instance_id)
+    V3Instance.find(instance_id)
+  end
+
   def ready?
   end
 

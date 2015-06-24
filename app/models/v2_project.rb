@@ -6,76 +6,13 @@ class V2Project < ActiveRecord::Base
   has_many :v2_instances
 
   validates :name,:domain,:lab,:ose_version, presence: true
- 
-  def deploy_one(v2_instance_id, user_id)
-    deployment = self.deployments.new(:action => "single_deployment", :v2_instance_id => v2_instance_id, :complete => false, :started_by => user_id)
-    if deployment.save
-      V2Instance.find(v2_instance_id).update_attributes(:deployment_started => true, :deployment_completed => false)
-      deployment.begin
-      return true
-    else
-      return false
-    end
+
+  def instances
+    self.v2_instances
   end
 
-  # This will remove all instances in a project, whether they were created by
-  #   the project or not.
-  def destroy_all
-    c = self.get_connection
-    c.servers.each do |s|
-      server = c.get_server(s[:id])
-      if !server.delete!
-        Rails.logger.error "Unable to delete server on backend: #{server.inspect}"
-        return false
-      end
-    end
-    self.v2_instances.each do |i|
-      if not i.update_attributes(:deployment_completed => false, :deployment_started => false, :reachable => false)
-        Rails.logger.error "Unable to update instance after destroying on backend: #{i.inspect}"
-        return false
-      end
-    end
-    return true
-  end
-
-  # This checks all instances and returns a hash in the format:
-  #   {v2_instance_id => ["deployed"|"in_progress"|"undeployed"]}
-  def check_all_deployed
-    c = self.get_connection
-    servers = c.servers.map {|s| s[:id]}
-    deployment_hash = Hash.new
-    self.v2_instances.each do |i|
-      if servers.include?(i.uuid) 
-        if i.deployment_completed && !i.deployment_started
-          deployment_hash[i.id] = "deployed"
-        else
-          deployment_hash[i.id] = "in_progress"
-        end
-      else
-        deployment_hash[i.id] = "undeployed"
-      end
-    end
-    deployment_hash
-  end
-
-  def all_deployed?
-    all_deployed = true
-    self.v2_instances.each do |i|
-      next if i.deployment_completed && !i.deployment_started
-      all_deployed = false
-      break
-    end
-    all_deployed
-  end
-
-  def none_deployed?
-    none_deployed = true
-    self.v2_instances.each do |i|
-      next if !i.deployment_completed && !i.deployment_started
-      none_deployed = false
-      break
-    end
-    none_deployed 
+  def find_instance(instance_id)
+    V2Instance.find(instance_id)
   end
 
   def apply_template(content, assign_floating_ips=true)
@@ -163,10 +100,6 @@ class V2Project < ActiveRecord::Base
             :mongodb_admin_username => self.mongodb_admin_username,
             :mongodb_admin_password => self.mongodb_admin_password,
            }
-  end
-
-  def available_floating_ips
-    self.floating_ips - self.v2_instances.map {|i| i.floating_ip }
   end
 
   def valid_gear_sizes
@@ -383,28 +316,6 @@ EOF
       raise "Unrecognized dns configuration file requested."
     end
     conf
-  end
-
-  private
-
-  def destroy_instances
-    Rails.logger.info "Removing all instances in tenant"
-    c = self.get_connection
-    c.servers.each do |s|
-      server = c.get_server(s[:id])
-      if !server.delete!
-        Rails.logger.error "Unable to delete server on backend: #{server.inspect}"
-        return false
-      end
-    end
-    self.v2_instances.each do |inst| 
-      begin
-        inst.destroy
-      rescue => e
-        Rails.logger.error "Could not remove instance #{inst.fqdn}: #{e.message}"
-      end
-    end
-    Rails.logger.info "All instances removed"
   end
 
 end
