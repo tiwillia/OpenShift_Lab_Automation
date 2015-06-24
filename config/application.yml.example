@@ -15,4 +15,9 @@ types:
   - "activemq"
   - "datastore"
   - "named"
+gear_sizes:
+  - "small"
+  - "medium"
+  - "large"
+  - "xpaas"
 data_dir: "/home/USER/Projects/labs/tmp" # Not used when running on OpenShift
