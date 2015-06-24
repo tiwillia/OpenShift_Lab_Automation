@@ -9,21 +9,6 @@ class V3Instance < ActiveRecord::Base
     V3Project.find(self.v3_project_id)
   end
 
-  def deployed?
-  end
-
-  def install_log
-  end
-
-  def get_console
-  end
-
-  def deploy(deployment_id)
-  end
-
-  def undeploy
-  end
-
   def cloud_init
   end
 

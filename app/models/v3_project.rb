@@ -22,7 +22,4 @@ class V3Project < ActiveRecord::Base
   def apply_template
   end
 
-  def available_floating_ips
-  end
-
 end
