@@ -39,6 +39,11 @@ module RailsApp
     config.autoload_paths += %W(#{config.root}/lib)
     config.autoload_paths += Dir["#{config.root}/lib/**/"]
 
+    # Concerns!!!
+    # https://richonrails.com/articles/rails-4-code-concerns-in-active-record-models
+    config.autoload_paths += Dir[ Rails.root.join('app', 'models', "concerns", '**/') ]
+    config.autoload_paths += Dir[ Rails.root.join('app', 'controllers', "concerns", '**/') ]
+
     config.threadsafe! unless File.split($0).last == 'rake' # unless this is a rake task
 
     # Mailer configuration
