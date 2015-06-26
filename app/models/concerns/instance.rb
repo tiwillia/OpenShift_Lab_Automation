@@ -105,6 +105,60 @@ module Instance
     end
   end
 
+  # Get only volumes attached to this instance
+  def volumes
+    vols = project.volumes_full
+    c = project.get_connection("compute")
+    attachments = c.list_attachments(self.uuid)[:volumeAttachments]
+    attached_vol_ids = attachments.map {|a| a[:volumeId] }
+    vols.select {|volume| attached_vol_ids.include? volume.id }
+  end
+
+  def attach_new_volume(size)
+    volume_name = "#{self.id.to_s}_#{self.name}"
+    if volume = project.create_volume(volume_name, size)
+      return attach_existing_volume(volume.id)
+    else
+      return false
+    end
+  end
+
+  def attach_existing_volume(id)
+    c = project.get_connection("compute")
+    begin
+      c.attach_volume(self.uuid, id)
+    rescue => e
+      Rails.logger.error "Could not attach volume to instance #{self.name} for project #{project.name} with id #{id}"
+      Rails.logger.error e.message
+      Rails.logger.error e.backtrace
+      return false
+    end
+    true
+  end
+
+  def detach_all_volumes(delete=false)
+    self.volumes.each do |volume|
+      id = volume.id
+      volume.attachments.each do |attachment|
+        detach_volume(id, attachment["id"], delete)
+        project.delete_volume(id)
+      end
+    end
+  end
+
+  def detach_volume(id, attachment_id, delete=false)
+    p = project
+    c = p.get_connection("compute")
+    begin
+      c.detach_volume(self.uuid, attachment_id)
+    rescue => e
+      Rails.logger.error "Could not detach volume from instance #{self.name} for project #{project.name} with display id #{id}"
+      Rails.logger.error e.message
+      Rails.logger.error e.backtrace
+    end
+    p.delete_volume(id) if delete
+  end
+
   # Returns true or false
   # If false, also returns error message
   def reachable?
@@ -131,7 +185,7 @@ module Instance
   def deployed?
     c = project.get_connection
 
-    servers = c.servers.map {|s| s[:name]}.
+    servers = c.servers.map {|s| s[:name]}
     deployed = (servers.include? self.name)
     deployed
   end
@@ -146,7 +200,7 @@ module Instance
       end
       return true, console_url
     else
-      return false, "Instance is not deployed, or does not have a uuid properly defined".
+      return false, "Instance is not deployed, or does not have a uuid properly defined"
     end
   end
 
@@ -170,7 +224,7 @@ module Instance
 
   def cloud_init_blank(deployment_id)
     cinit=<<EOF
-#cloud-config...............
+#cloud-config
 # vim:syntax=yaml
 hostname: #{self.safe_name}
 fqdn: #{self.fqdn}

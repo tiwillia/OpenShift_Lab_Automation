@@ -13,6 +13,10 @@ class Lab < ActiveRecord::Base
     ostack.authok?
   end
 
+  def get_keystone
+    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => self.auth_tenant, :service_type => "identity"})
+  end
+
   def get_compute(tenant = self.auth_tenant)
     OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => tenant, :service_type => "compute"})
   end
@@ -21,12 +25,12 @@ class Lab < ActiveRecord::Base
     OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => tenant, :service_type => "network"})
   end
 
-  def get_keystone
-    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => self.auth_tenant, :service_type => "identity"})
+  def get_cinder(tenant = self.auth_tenant)
+    OpenStack::Connection.create({:username => self.username, :api_key => self.password, :auth_url => self.api_url, :authtenant_name => tenant, :service_type => "volume"})
   end
 
 private
-  
+
   def can_connect
     if not alive?
       errors.add(:connection, "could not be made.")

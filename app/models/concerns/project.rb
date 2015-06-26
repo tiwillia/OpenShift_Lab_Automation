@@ -165,29 +165,84 @@ module Project
 
   def flavors
     c = get_connection
-    flav_a = Array.new
-    c.flavors.each {|f| flav_a << f[:name] }
+    flav_a = c.flavors.map {|f| f[:name] }
     flav_a.sort
   end
 
   def images
     c = get_connection
-    image_a = Array.new
-    c.images.each {|i| image_a << i[:name]}
+    image_a = c.images.map {|i| i[:name]}
     image_a.sort
   end
 
   def floating_ips
     c = get_connection
-    ip_a = Array.new
-    c.floating_ips.each {|i| ip_a << i.ip}
+    ip_a = c.floating_ips.map {|i| i.ip}
     ip_a.sort_by {|ip| ip.split('.').last.to_i }
+  end
+
+  # Returns only volume display names
+  def volumes
+    c = get_connection("cinder")
+    vol_a = c.volumes.map {|v| v.display_name}
+  end
+
+  def volumes_full
+    c = get_connection("cinder")
+    c.volumes
+  end
+
+  # size is in GiB
+  def create_volume(display_name, size)
+    c = get_connection("cinder")
+    begin
+      vol = c.create_volume({:display_name => display_name, :size => size})
+      until vol.status == "available"
+        vol = c.get_volume(vol.id)
+      end
+    rescue => e
+      Rails.logger.error "Could not create volume for project #{self.name} with size #{size}GiB and display name #{display_name}"
+      Rails.logger.error e.message
+      Rails.logger.error e.backtrace
+      return false
+    end
+    vol
+  end
+
+  # display_name, for instances, is always instance.id + "_" + instance.name
+  def delete_volume(id)
+    c = get_connection("cinder")
+    vol = c.get_volume(id)
+    begin
+      vol = c.delete_volume(id)
+    rescue => e
+      Rails.logger.error "Could not delete volume for project #{self.name} with display name #{display_name}"
+      Rails.logger.error e.message
+      Rails.logger.error e.backtrace
+      return false
+    end if vol.present?
+    true
+  end
+
+  def get_volume(id)
+    c = get_connection("cinder")
+    begin
+      c.get_volume(id)
+    rescue
+      Rails.logger.error "Could not find volume with id #{opt[:id]}"
+      nil
+    end
+  end
+
+  def get_volume_by_display_name(display_name)
+    c = get_connection("cinder")
+    vol = c.volumes.select {|v| v.display_name == opt[:display_name] }
+    nil unless vol.present?
   end
 
   def available_floating_ips
     self.floating_ips - instances.map {|i| i.floating_ip }
   end
-
 
   # Returns a hash with the following keys:
   # :max_isntances
@@ -214,12 +269,14 @@ module Project
 
   def get_connection(type = "compute")
     case type
-    when "compute"
+    when "compute", "nova"
       Lab.find(self.lab_id).get_compute(self.name)
-    when "identity"
+    when "identity", "keystone"
       Lab.find(self.lab_id).get_keystone
-    when "network"
+    when "network", "neutron"
       Lab.find(self.lab_id).get_neutron(self.name)
+    when "volume", "cinder"
+      Lab.find(self.lab_id).get_cinder(self.name)
     end
   end
 
