@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-        <h4 class="modal-title">Edit V2 OpenShift Instance</h4>
+        <h4 class="modal-title">Edit V3 OpenShift Instance</h4>
       </div>
       <div class="modal-body">
         <p>Each instance within an OpenShift environment will be of one or more of the following types: broker,node,activemq,mongodb,datastore,named. For a complete environment, at least one instance must contain each of these types.</p>
@@ -15,17 +15,13 @@
             </div>
             <div class="form-group">
               <%= f.label "Types", :class => "control-label" %><br>
-              <% ["broker","named","datastore", "activemq", "node"].each do |inst_type| %>
+              <% ["master","named","node", "router"].each do |inst_type| %>
               <label class="checkbox-inline" for="instance">
-                <% if inst_type == "node" %>
-                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes edit_instance_check_box_node", :v2_instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
-                <% else %> 
-                  <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes", :v2_instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
-                <% end %>
+                <%= f.check_box :types, {:multiple => true, :class => "edit_instance_check_boxes", :v3_instance_id => @instance.id}, inst_type, nil %><%= inst_type.titleize %>
               </label>
               <% end %><br>
               <label class="checkbox-inline" for="instance"> 
-                <%= f.check_box :no_openshift, {:class => "edit_instance_check_box_no_openshift", :v2_instance_id => @instance.id}, true, false %>Blank host (no OpenShift)
+                <%= f.check_box :no_openshift, {:class => "edit_instance_check_box_no_openshift", :v3_instance_id => @instance.id}, true, false %>Blank host (no OpenShift)
               </label> 
             </div>
             <div class="form-group">
@@ -46,18 +42,14 @@
                 <%= f.text_field :root_password, :class => "form-control", :value => @instance.root_password %>
             </div>
             <div class="form-group">
-              <%= f.label "Gear Size (Node only)", :class => "control-label" %>
-              <% if @instance.types.include?("node")%>
-                <%= f.select :gear_size, options_for_select(@gear_sizes, @instance.gear_size), {}, {:class => "form-control edit_instance_gear_size", :v2_instance_id => @instance.id} %>
-              <% else %>
-                  <%= f.select :gear_size, options_for_select(@gear_sizes, @instance.gear_size), {}, {:class => "form-control edit_instance_gear_size", :disabled => true, :v2_instance_id => @instance.id} %>
-              <% end %>
+              <%= f.label "Docker Storage (in GB)", :class => "control-label" %>
+                <%= f.text_field :volume_storage_gb, :class => "form-control", :value => @instance.volume_storage_gb %>
             </div>
           </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <%= f.hidden_field :v2_project_id, :value => v2_project_id %>
+          <%= f.hidden_field :v3_project_id, :value => v3_project_id %>
           <%= f.submit 'Submit', :class => "btn btn-primary" %>
         <% end %>
       </div>

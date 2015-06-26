@@ -1,8 +1,14 @@
 module Instance
   extend ActiveSupport::Concern
 
+  require 'base64'
+
   included do
+    serialize :types
     before_save :determine_fqdn
+    before_save :ensure_types
+    validates :name, :floating_ip, :root_password, :flavor, :image, presence: true
+    validates :root_password, length: { minimum: 3}
   end
 
   def safe_name
@@ -85,8 +91,14 @@ module Instance
 
     self.update_attributes(:uuid => server_id, :internal_ip => server.accessipv4)
 
-    true
+    if self.volume_storage_gb > 0
+      unless self.attach_new_volume(self.volume_storage_gb)
+        Rails.logger.error "Could not attach volume for instance: #{self.fqdn} in project: #{p.name}."
+        return false
+      end
+    end
 
+    true
   end
 
   def undeploy
@@ -133,7 +145,6 @@ module Instance
       Rails.logger.error e.backtrace
       return false
     end
-    true
   end
 
   def detach_all_volumes(delete=false)
@@ -277,6 +288,16 @@ private
   def determine_fqdn
     fqdn = self.safe_name + "." + project.domain
     self.fqdn = fqdn
+  end
+
+  # Ensure types exists and
+  # ensure types does not contain duplicates or arrays.
+  def ensure_types
+    if self.types.nil?
+      self.types
+    else
+      self.types = self.types.flatten.uniq
+    end
   end
 
 end

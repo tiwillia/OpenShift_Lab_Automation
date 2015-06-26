@@ -1,17 +1,12 @@
 class V2Instance < ActiveRecord::Base
-  # attr_accessible :title, :body
 
   include Instance
 
   belongs_to :v2_project
 
-  serialize :types
   serialize :install_variables
 
-  before_save :ensure_types_exists
-
-  validates :name, :floating_ip, :root_password, :flavor, :image, :v2_project, presence: true
-  validates :root_password, length: { minimum: 3 }
+  validates :v2_project, presence: true
 
   def project
     V2Project.find(self.v2_project_id)
@@ -24,7 +19,7 @@ class V2Instance < ActiveRecord::Base
 
     # Establish the base
     cinit=<<EOF
-#cloud-config               
+#cloud-config
 # vim:syntax=yaml
 hostname: #{self.safe_name}
 fqdn: #{self.fqdn}
@@ -323,14 +318,6 @@ private
 
     return variables
 
-  end
-
-  def ensure_types_exists
-    if self.types.nil?
-      self.types = []
-    else
-      self.types = self.types.flatten.uniq
-    end 
   end
 
 end

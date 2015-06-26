@@ -246,15 +246,15 @@ before_filter :is_logged_in?, :only => :check_out
 private
 
   def new_project_params
-    params.require(:project).permit!
+    params.require(:v2_project).permit!
   end
 
   def edit_project_params
-    params.require(:project).permit!
+    params.require(:v2_project).permit!
   end
 
   def dns_conf_params
-    params.require(:project).permit(:id, :dns_conf_file)
+    params.require(:v2_project).permit(:id, :dns_conf_file)
   end
 
   def can_edit?

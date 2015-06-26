@@ -184,7 +184,7 @@ $(document).ready(function() {
     });
   });
 
-  $(".console_link").click(function(e){
+  $(".v2_console_link").click(function(e){
     // prevent the default shit from occuring
     e.preventDefault();
 

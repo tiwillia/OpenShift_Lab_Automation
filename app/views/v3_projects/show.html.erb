@@ -35,7 +35,7 @@
           <tr class="instance_row" v3_instance_id="<%= inst.id %>">
             <% if logged_in? %>
               <td class="text-center">
-                <a href="#console_row_<%= inst.id %>" class="console_link" id="console_link_<%= inst.id %>" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span>
+                <a href="#console_row_<%= inst.id %>" class="v3_console_link" id="console_link_<%= inst.id %>" data-instance="<%= inst.id %>"><span class="glyphicon glyphicon-search" id="console_glyph_<%= inst.id %>"></span>
                 </a>
               </td>
             <% end %>
@@ -116,9 +116,11 @@
     <a class="btn btn-default reachable_button_all" v3_instance_ids="<%= @v3_instance_id_list.join(',') %>" >Check all for reachability</a>
   </div>
   <div class="col-md-2">
+  <!-- Templates for v3 not implemented
     <a class="btn btn-default" data-toggle="modal" data-target="#newTemplate" id="new_template_button">
       <div id="new_template_button_content">Save to template</div>
     </a>
+  --!>
   </div>
   <div class="col-md-1"></div>
   <div class="col-md-2">
@@ -205,7 +207,8 @@
     </div>
   </div>
   <%= render :template => "v3_instances/new", :locals => {:v3_project_id => @project.id} %>
-  <%= render :template => "templates/new", :locals => {:v3_project_id => @project.id, :template => @template} %>
+  <!-- Templates for v3 not implemented-->
+  <%# render :template => "templates/new", :locals => {:v3_project_id => @project.id, :template => @template} %>
   <%= render :template => "v3_instances/install_log" %>
 <% end %>
 <% @project.v3_instances.each do |inst| %>

@@ -1,0 +1,28 @@
+<% if @instance.no_openshift %>
+  curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"success","v3_instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id %>/instance_message &>> /root/.install_log
+<% else %>
+  ansible-playbook ~/openshift-ansible/playbooks/byo/config.yml &>> /root/.install_log
+  if [ $? == "0" ]; then
+    <% if @instance.types.include?("named") %>
+      echo "Configuring DNS for cloud servers..." &>> /root/.install_log
+      mkdir /var/named/static/
+      curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"named"}}' <%= CONFIG[:URL] %>/v3_projects/<%= @instance.v3_project_id %>/dns_conf_file > /etc/named.conf
+      curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"static-global"}}' <%= CONFIG[:URL] %>/v3_projects/<%= @instance.v3_project_id %>/dns_conf_file > /var/named/static/<%= @domain %>-global.db
+      curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"static-internal"}}' <%= CONFIG[:URL] %>/v3_projects/<%= @instance.v3_project_id %>/dns_conf_file > /var/named/static/<%= @domain %>-internal.db
+      curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"wildcard"}}' <%= CONFIG[:URL] %>/v3_projects/<%= @instance.v3_project_id %>/dns_conf_file > /var/named/dynamic/apps.<%= @domain %>.db
+      curl -H 'Content-Type: application/json' -X POST --data '{"project":{"dns_conf_file":"static-ips"}}' <%= CONFIG[:URL] %>/v3_projects/<%= @instance.v3_project_id %>/dns_conf_file > /var/named/static/192.168.1.db
+      chown -R named:named /var/named/dynamic/ /var/named/static/ /var/named/data
+      service named restart &>> /root/.install_log
+    <% end %>
+    # Create router
+    oadm router router1 --credentials=/etc/openshift/master/openshift-router.kubeconfig --images='registry.access.redhat.com/openshift3/ose-${component}:${version}'
+    # Create docker registry
+    # TODO Need to make this production-ready by using persistent storage
+    oadm registry --config=/etc/openshift/master/admin.kubeconfig --credentials=/etc/openshift/master/openshift-registry.kubeconfig --images='registry.access.redhat.com/openshift3/ose-${component}:${version}' --mount-host=/var/registry_storage
+    curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"success","v3_instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id %>/instance_message &>> /root/.install_log
+    echo "SUCCESS" >> /root/.install_log
+  else
+    curl -H "Content-Type: application/json" -X POST --data '{"deployment":{"message":"failure","v3_instance_id":"<%= @instance.id %>"}}' <%= CONFIG[:URL] %>/deployments/<%= @deployment.id%>/instance_message &>> /root/.install_log
+    echo "FAILURE" >> /root/.install_log
+  fi
+<% end %>

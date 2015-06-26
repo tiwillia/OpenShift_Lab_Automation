@@ -3,11 +3,12 @@ module Project
 
   included do
     belongs_to :lab
-    has_many :deployments
+    has_many :deployments, :as => :deployable
     before_create :create_on_backend
     before_destroy :destroy_backend
     before_destroy :destroy_instances
     before_destroy :destroy_deployments
+    validates :name,:domain,:lab,:ose_version, presence: true
   end
 
   def deploy_all(user_id)

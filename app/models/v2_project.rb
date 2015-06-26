@@ -1,11 +1,8 @@
 class V2Project < ActiveRecord::Base
-  require 'base64'
 
   include Project
 
   has_many :v2_instances
-
-  validates :name,:domain,:lab,:ose_version, presence: true
 
   def instances
     self.v2_instances

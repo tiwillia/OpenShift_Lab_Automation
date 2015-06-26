@@ -1,0 +1,12 @@
+[OSEv3:children]
+masters
+nodes
+[OSEv3:vars]
+ansible_ssh_user=root
+deployment_type=enterprise
+[masters]
+<%= @details[:master_hostname] %>
+[nodes]
+<% @details[:node_hostnames].each do |node_hostname| %>
+<%= node_hostname %>
+<% end %>

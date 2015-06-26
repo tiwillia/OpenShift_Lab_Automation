@@ -59,9 +59,10 @@ before_filter :is_logged_in?, :only => :check_out
     @limits = @project.limits
     @gear_sizes = CONFIG[:gear_sizes]
     @v3_instance_id_list = @project.v3_instances.map {|i| i.id}
-    @template = Template.new(:v3_project_id => @project.id)
-
-    @most_recent_deployment = @project.deployments.last
+    #@template = Template.new(:v3_project_id => @project.id)
+    # TODO above and below
+#    @most_recent_deployment = @project.deployments.last
+    @most_recent_deployment = nil
     @deployment_status = "unknown"
     case
     when @most_recent_deployment.nil?
@@ -246,15 +247,15 @@ before_filter :is_logged_in?, :only => :check_out
 private
 
   def new_project_params
-    params.require(:project).permit!
+    params.require(:v3_project).permit!
   end
 
   def edit_project_params
-    params.require(:project).permit!
+    params.require(:v3_project).permit!
   end
 
   def dns_conf_params
-    params.require(:project).permit(:id, :dns_conf_file)
+    params.require(:v3_project).permit(:id, :dns_conf_file)
   end
 
   def can_edit?

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150624193305) do
+ActiveRecord::Schema.define(:version => 20150629174936) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0, :null => false
@@ -30,18 +30,20 @@ ActiveRecord::Schema.define(:version => 20150624193305) do
   add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
 
   create_table "deployments", :force => true do |t|
-    t.integer  "v2_project_id"
     t.integer  "started_by"
     t.text     "action"
-    t.boolean  "complete",       :default => false
-    t.boolean  "started",        :default => false
+    t.boolean  "complete",        :default => false
+    t.boolean  "started",         :default => false
     t.datetime "started_time"
     t.datetime "completed_time"
-    t.datetime "created_at",                        :null => false
-    t.datetime "updated_at",                        :null => false
+    t.datetime "created_at",                         :null => false
+    t.datetime "updated_at",                         :null => false
     t.integer  "v2_instance_id"
     t.text     "status"
     t.integer  "job_id"
+    t.integer  "deployable_id"
+    t.string   "deployable_type"
+    t.integer  "v3_instance_id"
   end
 
   create_table "labs", :force => true do |t|
@@ -101,6 +103,7 @@ ActiveRecord::Schema.define(:version => 20150624193305) do
     t.datetime "last_checked_reachable"
     t.boolean  "no_openshift",           :default => false
     t.string   "uuid"
+    t.integer  "volume_storage_gb",      :default => 0
   end
 
   create_table "v2_projects", :force => true do |t|
@@ -136,6 +139,7 @@ ActiveRecord::Schema.define(:version => 20150624193305) do
 
   create_table "v3_instances", :force => true do |t|
     t.text     "name"
+    t.text     "types"
     t.text     "floating_ip"
     t.text     "internal_ip"
     t.text     "fqdn"
@@ -143,13 +147,14 @@ ActiveRecord::Schema.define(:version => 20150624193305) do
     t.text     "root_password"
     t.string   "flavor"
     t.string   "image"
-    t.boolean  "deployment_started"
-    t.boolean  "deployment_completed"
-    t.boolean  "reachable"
+    t.boolean  "deployment_started",     :default => false
+    t.boolean  "deployment_completed",   :default => false
+    t.boolean  "reachable",              :default => false
     t.datetime "last_checked_reachable"
+    t.integer  "volume_storage_gb",      :default => 5
     t.string   "uuid"
-    t.datetime "created_at",             :null => false
-    t.datetime "updated_at",             :null => false
+    t.datetime "created_at",                                :null => false
+    t.datetime "updated_at",                                :null => false
   end
 
   create_table "v3_projects", :force => true do |t|
