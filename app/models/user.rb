@@ -37,6 +37,7 @@ private
   end
 
   def unified_get(username)
+    username.gsub!('"','')
     url = "https://unified.gsslab.rdu2.redhat.com/sfdc_user?sso_username=#{username}"
     uri = URI.parse(url)
     http = Net::HTTP.new(uri.host, uri.port)
